@@ -10,7 +10,7 @@ export default async function HomePage() {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, car_photo_url, rank_tier), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, rank_tier), athlete_cars(photo_url, position), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .limit(6);
@@ -25,9 +25,9 @@ export default async function HomePage() {
     athlete_profiles: {
       modality: string | null;
       category: string | null;
-      car_photo_url: string | null;
       rank_tier: RankTier | null;
     } | null;
+    athlete_cars: { photo_url: string | null; position: number }[];
     social_links: { followers: number | null; avg_interactions: number | null }[];
   };
 
@@ -45,7 +45,10 @@ export default async function HomePage() {
         id: p.id,
         name: p.name,
         photo_url: p.photo_url,
-        car_photo_url: p.athlete_profiles?.car_photo_url ?? null,
+        car_photo_url:
+          [...p.athlete_cars]
+            .sort((a, b) => a.position - b.position)
+            .find((c) => c.photo_url)?.photo_url ?? null,
         city: p.city,
         state: p.state,
         modality: p.athlete_profiles?.modality ?? null,

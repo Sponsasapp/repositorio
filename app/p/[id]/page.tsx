@@ -30,29 +30,54 @@ async function getPiloto(id: string) {
 
   if (!profile || profile.type !== "athlete") return null;
 
-  const [{ data: athlete }, { data: socials }, { data: packages }, { data: auth }] =
-    await Promise.all([
-      supabase
-        .from("athlete_profiles")
-        .select("*")
-        .eq("profile_id", id)
-        .maybeSingle(),
-      supabase
-        .from("social_links")
-        .select("*")
-        .eq("profile_id", id)
-        .order("followers", { ascending: false, nullsFirst: false }),
-      supabase
-        .from("athlete_packages")
-        .select("*")
-        .eq("athlete_id", id)
-        .order("position"),
-      supabase.auth.getUser(),
-    ]);
+  const [
+    { data: athlete },
+    { data: cars },
+    { data: achievements },
+    { data: socials },
+    { data: packages },
+    { data: auth },
+  ] = await Promise.all([
+    supabase
+      .from("athlete_profiles")
+      .select("*")
+      .eq("profile_id", id)
+      .maybeSingle(),
+    supabase
+      .from("athlete_cars")
+      .select("*")
+      .eq("athlete_id", id)
+      .order("position"),
+    supabase
+      .from("athlete_achievements")
+      .select("*")
+      .eq("athlete_id", id)
+      .order("position"),
+    supabase
+      .from("social_links")
+      .select("*")
+      .eq("profile_id", id)
+      .order("followers", { ascending: false, nullsFirst: false }),
+    supabase
+      .from("athlete_packages")
+      .select("*")
+      .eq("athlete_id", id)
+      .order("position"),
+    supabase.auth.getUser(),
+  ]);
+
+  const achievementsSorted = (achievements ?? []).slice().sort((a, b) => {
+    const ya = Number(a.year) || 0;
+    const yb = Number(b.year) || 0;
+    if (ya !== yb) return yb - ya;
+    return a.position - b.position;
+  });
 
   return {
     profile,
     athlete,
+    cars: cars ?? [],
+    achievements: achievementsSorted,
     socials: socials ?? [],
     packages: packages ?? [],
     viewerId: auth.user?.id ?? null,
@@ -82,8 +107,19 @@ export default async function PerfilPublicoPage({
   const data = await getPiloto(id);
   if (!data) notFound();
 
-  const { profile, athlete, socials, packages, viewerId } = data;
+  const { profile, athlete, cars, achievements, socials, packages, viewerId } =
+    data;
   const isOwner = viewerId === profile.id;
+
+  const carPhoto = cars.find((c) => c.photo_url)?.photo_url ?? null;
+  const listLabel = athlete?.list_name
+    ? [
+        athlete.list_name,
+        athlete.list_number != null ? `nº ${athlete.list_number}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : null;
 
   const followers = socials.reduce((s, l) => s + (l.followers ?? 0), 0);
   const reach = socials.reduce((s, l) => s + (l.avg_reach ?? 0), 0);
@@ -147,19 +183,14 @@ export default async function PerfilPublicoPage({
 
       {/* Corpo */}
       <div className="mx-auto -mt-12 max-w-5xl px-6 pb-20">
-        {athlete?.car_photo_url && (
+        {carPhoto && (
           <div className="border-border bg-card mb-6 overflow-hidden rounded-xl border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={athlete.car_photo_url}
-              alt={athlete.car ?? "Carro do piloto"}
+              src={carPhoto}
+              alt={cars[0]?.name ?? "Carro do piloto"}
               className="max-h-[380px] w-full object-cover"
             />
-            {athlete.car && (
-              <p className="text-muted-foreground px-4 py-2 text-sm">
-                {athlete.car}
-              </p>
-            )}
           </div>
         )}
         <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
@@ -183,17 +214,71 @@ export default async function PerfilPublicoPage({
               </Panel>
             )}
 
-            {(athlete?.team ||
-              athlete?.car ||
-              athlete?.championship ||
-              athlete?.results) && (
-              <Panel title="Carreira">
-                <dl className="grid gap-2 text-sm">
-                  <Row label="Equipe" value={athlete?.team} />
-                  <Row label="Carro" value={athlete?.car} />
-                  <Row label="Campeonato" value={athlete?.championship} />
-                  <Row label="Resultados" value={athlete?.results} />
-                </dl>
+            {cars.length > 0 && (
+              <Panel title={cars.length > 1 ? "Carros" : "Carro"}>
+                <ul className="flex flex-col divide-y">
+                  {cars.map((c) => (
+                    <li
+                      key={c.id}
+                      className="flex gap-3 py-3 first:pt-0 last:pb-0"
+                    >
+                      {c.photo_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.photo_url}
+                          alt={c.name}
+                          className="size-16 shrink-0 rounded-md object-cover"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{c.name}</p>
+                        {c.team && (
+                          <p className="text-muted-foreground text-xs">
+                            {c.team}
+                          </p>
+                        )}
+                        {c.championships && (
+                          <p className="text-muted-foreground mt-0.5 text-xs">
+                            {c.championships}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            )}
+
+            {(achievements.length > 0 || athlete?.results) && (
+              <Panel title="Conquistas">
+                {achievements.length > 0 ? (
+                  <ul className="flex flex-col divide-y">
+                    {achievements.map((a) => (
+                      <li
+                        key={a.id}
+                        className="flex items-baseline gap-3 py-2.5 first:pt-0 last:pb-0"
+                      >
+                        {a.year && (
+                          <span className="text-muted-foreground font-[family-name:var(--font-heading)] shrink-0 text-sm">
+                            {a.year}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{a.title}</p>
+                          {a.detail && (
+                            <p className="text-muted-foreground text-xs">
+                              {a.detail}
+                            </p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground text-sm whitespace-pre-line">
+                    {athlete?.results}
+                  </p>
+                )}
               </Panel>
             )}
 
@@ -271,6 +356,24 @@ export default async function PerfilPublicoPage({
               </Button>
             </div>
 
+            {listLabel && (
+              <Panel title="Lista">
+                <p className="text-sm font-medium">{listLabel}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {athlete?.list_position != null && (
+                    <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
+                      {athlete.list_position}º na lista
+                    </span>
+                  )}
+                  {athlete?.list_shark_tank && (
+                    <span className="bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs font-semibold">
+                      Shark Tank
+                    </span>
+                  )}
+                </div>
+              </Panel>
+            )}
+
             {packages.length > 0 ? (
               <Panel title="Tabela de preços">
                 <ul className="flex flex-col divide-y">
@@ -345,16 +448,6 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div>
       <p className="font-[family-name:var(--font-heading)] text-3xl">{value}</p>
       <p className="text-muted-foreground text-xs">{label}</p>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value?: string | null }) {
-  if (!value) return null;
-  return (
-    <div className="grid grid-cols-[110px_1fr] gap-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="whitespace-pre-line">{value}</dd>
     </div>
   );
 }

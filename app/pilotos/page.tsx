@@ -38,7 +38,7 @@ export default async function PilotosPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, car_photo_url, desired_value_min, rank_tier, rank_score), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, desired_value_min, rank_tier, rank_score), athlete_cars(photo_url, position), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .order("name");
@@ -53,11 +53,11 @@ export default async function PilotosPage({
     athlete_profiles: {
       modality: string | null;
       category: string | null;
-      car_photo_url: string | null;
       desired_value_min: number | null;
       rank_tier: RankTier | null;
       rank_score: number | null;
     } | null;
+    athlete_cars: { photo_url: string | null; position: number }[];
     social_links: { followers: number | null; avg_interactions: number | null }[];
   };
 
@@ -107,7 +107,7 @@ export default async function PilotosPage({
         id: p.id,
         name: p.name,
         photo_url: p.photo_url,
-        car_photo_url: p.athlete_profiles?.car_photo_url ?? null,
+        car_photo_url: carPhoto(p.athlete_cars),
         city: p.city,
         state: p.state,
         modality: p.athlete_profiles?.modality ?? null,
@@ -193,6 +193,15 @@ export default async function PilotosPage({
         )}
       </div>
     </AppShell>
+  );
+}
+
+function carPhoto(
+  cars: { photo_url: string | null; position: number }[],
+): string | null {
+  return (
+    [...cars].sort((a, b) => a.position - b.position).find((c) => c.photo_url)
+      ?.photo_url ?? null
   );
 }
 

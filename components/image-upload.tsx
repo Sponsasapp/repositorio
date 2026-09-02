@@ -14,16 +14,23 @@ export function ImageUpload({
   initial,
   shape = "square",
   hint,
+  onChange,
 }: {
-  name: string;
+  name?: string;
   initial: string | null;
   shape?: "square" | "circle";
   hint?: string;
+  onChange?: (url: string) => void;
 }) {
-  const [url, setUrl] = useState(initial ?? "");
+  const [url, setUrlState] = useState(initial ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const setUrl = (u: string) => {
+    setUrlState(u);
+    onChange?.(u);
+  };
 
   async function onFile(file: File) {
     setError(null);
@@ -66,7 +73,7 @@ export function ImageUpload({
 
   return (
     <div className="flex items-center gap-4">
-      <input type="hidden" name={name} value={url} />
+      {name && <input type="hidden" name={name} value={url} />}
       <input
         ref={inputRef}
         type="file"

@@ -59,11 +59,36 @@ export type AthleteProfile = {
   sponsor_categories: string[] | null;
   offered_deliverables: string[] | null;
   availability_notes: string | null;
+  list_name: string | null;
+  list_number: number | null;
+  list_position: number | null;
+  list_shark_tank: boolean;
   rank_score: number | null;
   rank_tier: RankTier | null;
   rank_factors: RankFactors | null;
   rank_updated_at: string | null;
   updated_at: string;
+};
+
+export type AthleteCar = {
+  id: string;
+  athlete_id: string;
+  name: string;
+  team: string | null;
+  championships: string | null;
+  photo_url: string | null;
+  position: number;
+  created_at: string;
+};
+
+export type AthleteAchievement = {
+  id: string;
+  athlete_id: string;
+  title: string;
+  year: string | null;
+  detail: string | null;
+  position: number;
+  created_at: string;
 };
 
 export type CompanyProfile = {
@@ -225,6 +250,14 @@ export type Database = {
       athlete_packages: TableDef<
         AthletePackage,
         "id" | "description" | "price" | "position" | "created_at"
+      >;
+      athlete_cars: TableDef<
+        AthleteCar,
+        "id" | "team" | "championships" | "photo_url" | "position" | "created_at"
+      >;
+      athlete_achievements: TableDef<
+        AthleteAchievement,
+        "id" | "year" | "detail" | "position" | "created_at"
       >;
       opportunities: TableDef<
         Opportunity,

@@ -10,6 +10,11 @@ export type PerfilState = { ok?: true; error?: string } | undefined;
 
 const num = (v: FormDataEntryValue | null): number | null => parseNumberBR(v);
 
+const int = (v: FormDataEntryValue | null): number | null => {
+  const n = parseNumberBR(v);
+  return n == null ? null : Math.round(n);
+};
+
 function text(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim();
   return s || null;
@@ -66,16 +71,13 @@ export async function salvarPerfilPiloto(
     .eq("id", user.id);
   if (e1) return { error: "Não foi possível salvar os dados básicos." };
 
+  const listNumber = int(formData.get("list_number"));
+
   // 2. athlete_profiles (upsert)
   const { error: e2 } = await supabase.from("athlete_profiles").upsert({
     profile_id: user.id,
     modality: text(formData.get("modality")),
     category: text(formData.get("category")),
-    team: text(formData.get("team")),
-    car: text(formData.get("car")),
-    car_photo_url: text(formData.get("car_photo_url")),
-    championship: text(formData.get("championship")),
-    results: text(formData.get("results")),
     desired_value_min: minV,
     desired_value_max: maxV,
     sponsor_categories: [
@@ -88,9 +90,35 @@ export async function salvarPerfilPiloto(
     ],
     offered_deliverables: formData.getAll("offered_deliverables").map(String),
     availability_notes: text(formData.get("availability_notes")),
+    list_name: text(formData.get("list_name")),
+    list_number: listNumber,
+    list_position: listNumber != null ? int(formData.get("list_position")) : null,
+    list_shark_tank:
+      listNumber != null && formData.get("list_shark_tank") != null,
     updated_at: new Date().toISOString(),
   });
   if (e2) return { error: "Não foi possível salvar os dados esportivos." };
+
+  // 2b. athlete_cars — substitui tudo
+  const carRows = parseCars(formData.get("cars"), user.id);
+  await supabase.from("athlete_cars").delete().eq("athlete_id", user.id);
+  if (carRows.length > 0) {
+    const { error: eCars } = await supabase.from("athlete_cars").insert(carRows);
+    if (eCars) return { error: "Não foi possível salvar os carros." };
+  }
+
+  // 2c. athlete_achievements — substitui tudo
+  const achRows = parseAchievements(formData.get("achievements"), user.id);
+  await supabase
+    .from("athlete_achievements")
+    .delete()
+    .eq("athlete_id", user.id);
+  if (achRows.length > 0) {
+    const { error: eAch } = await supabase
+      .from("athlete_achievements")
+      .insert(achRows);
+    if (eAch) return { error: "Não foi possível salvar as conquistas." };
+  }
 
   // 3. social_links — substitui tudo do piloto pelas plataformas preenchidas
   const platforms = ["instagram", "tiktok", "youtube", "facebook"];
@@ -158,6 +186,51 @@ function parsePackages(raw: FormDataEntryValue | null, athleteId: string) {
       };
     })
     .filter((p) => p.title.length > 0);
+}
+
+function parseCars(raw: FormDataEntryValue | null, athleteId: string) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map((c, i) => {
+      const item = c as Record<string, unknown>;
+      return {
+        athlete_id: athleteId,
+        name: String(item.name ?? "").trim(),
+        team: String(item.team ?? "").trim() || null,
+        championships: String(item.championships ?? "").trim() || null,
+        photo_url: String(item.photo_url ?? "").trim() || null,
+        position: i,
+      };
+    })
+    .filter((c) => c.name.length > 0);
+}
+
+function parseAchievements(raw: FormDataEntryValue | null, athleteId: string) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map((a, i) => {
+      const item = a as Record<string, unknown>;
+      return {
+        athlete_id: athleteId,
+        title: String(item.title ?? "").trim(),
+        year: String(item.year ?? "").trim() || null,
+        detail: String(item.detail ?? "").trim() || null,
+        position: i,
+      };
+    })
+    .filter((a) => a.title.length > 0);
 }
 
 export async function salvarPerfilEmpresa(

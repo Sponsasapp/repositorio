@@ -41,20 +41,35 @@ export default async function PerfilPage() {
     );
   }
 
-  const [{ data: athlete }, { data: socials }, { data: packages }] =
-    await Promise.all([
-      supabase
-        .from("athlete_profiles")
-        .select("*")
-        .eq("profile_id", user.id)
-        .maybeSingle(),
-      supabase.from("social_links").select("*").eq("profile_id", user.id),
-      supabase
-        .from("athlete_packages")
-        .select("*")
-        .eq("athlete_id", user.id)
-        .order("position"),
-    ]);
+  const [
+    { data: athlete },
+    { data: cars },
+    { data: achievements },
+    { data: socials },
+    { data: packages },
+  ] = await Promise.all([
+    supabase
+      .from("athlete_profiles")
+      .select("*")
+      .eq("profile_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("athlete_cars")
+      .select("*")
+      .eq("athlete_id", user.id)
+      .order("position"),
+    supabase
+      .from("athlete_achievements")
+      .select("*")
+      .eq("athlete_id", user.id)
+      .order("position"),
+    supabase.from("social_links").select("*").eq("profile_id", user.id),
+    supabase
+      .from("athlete_packages")
+      .select("*")
+      .eq("athlete_id", user.id)
+      .order("position"),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -76,6 +91,8 @@ export default async function PerfilPage() {
       <PerfilPilotoForm
         profile={profile}
         athlete={athlete ?? null}
+        cars={cars ?? []}
+        achievements={achievements ?? []}
         socials={socials ?? []}
         packages={packages ?? []}
         rateCardLimit={profile.plan === "pro" ? null : PLAN_LIMITS.rateCardItems}
