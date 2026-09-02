@@ -74,8 +74,8 @@ export default async function PatrocinioPage({
   const entregas = (dlvData ?? []) as unknown as DeliverableRow[];
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-2xl px-6 py-10">
+    <div className="flex-1">
+      <div className="mx-auto max-w-2xl">
         <Link
           href="/patrocinios"
           className="text-muted-foreground text-sm hover:text-foreground"
@@ -291,7 +291,7 @@ export default async function PatrocinioPage({
           </form>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 

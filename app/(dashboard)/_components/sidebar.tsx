@@ -3,17 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const LINKS: { href: string; label: string; soon?: boolean }[] = [
-  { href: "/dashboard", label: "Painel" },
-  { href: "/perfil", label: "Meu perfil" },
-  { href: "/pilotos", label: "Explorar pilotos" },
-  { href: "/oportunidades", label: "Oportunidades" },
-  { href: "/propostas", label: "Propostas" },
-  { href: "/patrocinios", label: "Patrocínios" },
-  { href: "/entregas", label: "Entregas" },
-  { href: "/configuracoes", label: "Configurações" },
-];
+import { NAV_LINKS } from "./nav-links";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -23,7 +13,7 @@ export function Sidebar() {
       <Link href="/dashboard" className="mb-6 px-2 text-xl">
         Spon<span className="text-primary font-bold">sas</span>
       </Link>
-      {LINKS.map((link) => {
+      {NAV_LINKS.map((link) => {
         const active =
           pathname === link.href || pathname.startsWith(link.href + "/");
         return (

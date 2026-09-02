@@ -47,8 +47,8 @@ export default async function EntregasPage() {
   );
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="flex-1">
+      <div className="mx-auto max-w-3xl">
         <h1 className="text-4xl">Entregas</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Todas as entregas dos seus patrocínios.
@@ -57,7 +57,7 @@ export default async function EntregasPage() {
         <Bloco titulo="Em aberto" rows={pendentes} vazio="Nada em aberto." />
         <Bloco titulo="Concluídas" rows={concluidas} vazio="Nada ainda." />
       </div>
-    </main>
+    </div>
   );
 }
 

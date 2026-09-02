@@ -34,8 +34,8 @@ export default async function PropostasPage() {
   const enviadas = rows.filter((r) => r.from_profile_id === user.id);
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="flex-1">
+      <div className="mx-auto max-w-3xl">
         <h1 className="text-4xl">Propostas</h1>
 
         <Bloco
@@ -51,7 +51,7 @@ export default async function PropostasPage() {
           vazio="Você ainda não enviou propostas."
         />
       </div>
-    </main>
+    </div>
   );
 }
 

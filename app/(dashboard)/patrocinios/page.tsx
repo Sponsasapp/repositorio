@@ -37,8 +37,8 @@ export default async function PatrociniosPage() {
   const rows = (data ?? []) as unknown as Row[];
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="flex-1">
+      <div className="mx-auto max-w-3xl">
         <h1 className="text-4xl">Patrocínios</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Acordos fechados a partir de propostas aceitas.
@@ -80,6 +80,6 @@ export default async function PatrociniosPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

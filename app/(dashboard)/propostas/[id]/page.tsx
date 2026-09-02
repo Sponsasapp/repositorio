@@ -57,8 +57,8 @@ export default async function PropostaPage({
   }
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-2xl px-6 py-10">
+    <div className="flex-1">
+      <div className="mx-auto max-w-2xl">
         <Link
           href="/propostas"
           className="text-muted-foreground text-sm hover:text-foreground"
@@ -171,7 +171,7 @@ export default async function PropostaPage({
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 

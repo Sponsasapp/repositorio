@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MenuIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
@@ -9,20 +11,34 @@ const NAV = [
   { href: "/para-empresas", label: "Para empresas" },
   { href: "/para-pilotos", label: "Para pilotos" },
   { href: "/planos", label: "Planos" },
+  { href: "/pilotos", label: "Ver pilotos" },
 ];
 
 export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   return (
-    <header className="border-border border-b">
+    <header className="border-border relative border-b">
       <div className="mx-auto flex max-w-[1120px] items-center justify-between px-6 py-5">
         <Link href="/" className="text-xl">
           Spon<span className="text-primary font-bold">sas</span>
         </Link>
 
         <nav className="hidden gap-8 text-sm font-medium md:flex">
-          {NAV.map((n) => (
+          {NAV.slice(0, 4).map((n) => (
             <Link
               key={n.href}
               href={n.href}
@@ -38,7 +54,12 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="lg" className="hidden sm:inline-flex">
+          <Button
+            asChild
+            variant="ghost"
+            size="lg"
+            className="hidden sm:inline-flex"
+          >
             <Link href="/pilotos">Ver pilotos</Link>
           </Button>
           {isLoggedIn ? (
@@ -47,16 +68,82 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             </Button>
           ) : (
             <>
-              <Button asChild variant="ghost" size="lg">
+              <Button
+                asChild
+                variant="ghost"
+                size="lg"
+                className="hidden sm:inline-flex"
+              >
                 <Link href="/login">Entrar</Link>
               </Button>
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="hidden sm:inline-flex">
                 <Link href="/cadastro">Criar conta</Link>
               </Button>
             </>
           )}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="Abrir menu"
+            className="text-foreground flex size-9 items-center justify-center rounded-md md:hidden"
+          >
+            <MenuIcon className="size-5" />
+          </button>
         </div>
       </div>
+
+      {open && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setOpen(false)}
+          />
+          <div className="bg-background absolute inset-y-0 right-0 flex w-72 max-w-[85%] flex-col p-5">
+            <div className="mb-6 flex items-center justify-between">
+              <span className="text-xl">
+                Spon<span className="text-primary font-bold">sas</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Fechar menu"
+                className="text-muted-foreground hover:text-foreground flex size-8 items-center justify-center"
+              >
+                <XIcon className="size-5" />
+              </button>
+            </div>
+
+            <nav className="flex flex-col gap-1">
+              {NAV.map((n) => (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className="text-foreground rounded-md px-2 py-2.5 text-sm"
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="mt-6 flex flex-col gap-2 border-t pt-6">
+              {isLoggedIn ? (
+                <Button asChild size="lg">
+                  <Link href="/dashboard">Painel</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild size="lg">
+                    <Link href="/cadastro">Criar conta</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/login">Entrar</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

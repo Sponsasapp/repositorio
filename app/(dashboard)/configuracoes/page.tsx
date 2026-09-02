@@ -73,7 +73,7 @@ export default async function ConfiguracoesPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-2xl flex-1 px-6 py-10">
+    <div className="mx-auto max-w-2xl">
       <h1 className="text-4xl">Configurações</h1>
 
       <section className="border-primary bg-card mt-8 rounded-xl border border-l-3 p-5">
@@ -147,6 +147,6 @@ export default async function ConfiguracoesPage() {
           </Button>
         </form>
       )}
-    </main>
+    </div>
   );
 }
