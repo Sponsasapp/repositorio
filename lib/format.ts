@@ -52,6 +52,14 @@ export function paymentSummary(t: Terms): string {
   return [cash, trade].filter(Boolean).join(" + ") || "A combinar";
 }
 
+/** "YYYY-MM-DD" (date sem hora) -> "15/09/2026", sem deslocamento de fuso. */
+export function formatDateBR(dateOnly: string | null | undefined): string {
+  if (!dateOnly) return "—";
+  const [y, m, d] = dateOnly.slice(0, 10).split("-");
+  if (!y || !m || !d) return dateOnly;
+  return `${d}/${m}/${y}`;
+}
+
 export function initials(name: string): string {
   return name
     .trim()

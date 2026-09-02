@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { paymentSummary } from "@/lib/format";
+import { paymentSummary, formatDateBR } from "@/lib/format";
 import { SPONSORSHIP_STATUS } from "@/lib/sponsorship";
 import type { Sponsorship } from "@/lib/types/database.types";
 
@@ -66,7 +66,7 @@ export default async function PatrociniosPage() {
                       {s.duration_months ? ` · ${s.duration_months} meses` : ""}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      Início {new Date(s.start_date).toLocaleDateString("pt-BR")}
+                      Início {formatDateBR(s.start_date)}
                     </p>
                   </div>
                   <span

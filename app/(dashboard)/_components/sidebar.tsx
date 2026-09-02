@@ -11,7 +11,7 @@ const LINKS = [
   { href: "/oportunidades", label: "Oportunidades" },
   { href: "/propostas", label: "Propostas" },
   { href: "/patrocinios", label: "Patrocínios" },
-  { href: "/entregas", label: "Entregas", soon: true },
+  { href: "/entregas", label: "Entregas" },
   { href: "/configuracoes", label: "Configurações", soon: true },
 ];
 
