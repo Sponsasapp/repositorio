@@ -6,6 +6,7 @@ import {
   type OpportunityCardData,
 } from "@/components/opportunity-card";
 import { Button } from "@/components/ui/button";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
   title: "Oportunidades — Sponsas",
@@ -56,16 +57,9 @@ export default async function OportunidadesPage() {
   }
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <Link
-          href="/"
-          className="text-muted-foreground text-sm hover:text-foreground"
-        >
-          ← Sponsas
-        </Link>
-
-        <div className="mt-4 flex items-end justify-between gap-4">
+    <AppShell>
+      <div className="mx-auto max-w-5xl">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl">Oportunidades</h1>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -107,7 +101,7 @@ export default async function OportunidadesPage() {
           )}
         </section>
       </div>
-    </main>
+    </AppShell>
   );
 }
 

@@ -74,6 +74,7 @@ export async function salvarPerfilPiloto(
     category: text(formData.get("category")),
     team: text(formData.get("team")),
     car: text(formData.get("car")),
+    car_photo_url: text(formData.get("car_photo_url")),
     championship: text(formData.get("championship")),
     results: text(formData.get("results")),
     desired_value_min: minV,

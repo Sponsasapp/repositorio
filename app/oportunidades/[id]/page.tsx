@@ -11,6 +11,7 @@ import {
 } from "../actions";
 import { ApplyForm } from "./apply-form";
 import { Button } from "@/components/ui/button";
+import { AppShell } from "@/components/app-shell";
 import type { Opportunity } from "@/lib/types/database.types";
 
 type OppWithCompany = Opportunity & {
@@ -112,8 +113,8 @@ export default async function OportunidadePage({
   const local = [company?.city, company?.state].filter(Boolean).join(", ");
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <AppShell>
+      <div className="mx-auto max-w-3xl">
         <Link
           href="/oportunidades"
           className="text-muted-foreground text-sm hover:text-foreground"
@@ -366,6 +367,6 @@ export default async function OportunidadePage({
           </section>
         )}
       </div>
-    </main>
+    </AppShell>
   );
 }

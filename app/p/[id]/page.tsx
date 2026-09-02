@@ -147,6 +147,21 @@ export default async function PerfilPublicoPage({
 
       {/* Corpo */}
       <div className="mx-auto -mt-12 max-w-5xl px-6 pb-20">
+        {athlete?.car_photo_url && (
+          <div className="border-border bg-card mb-6 overflow-hidden rounded-xl border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={athlete.car_photo_url}
+              alt={athlete.car ?? "Carro do piloto"}
+              className="max-h-[380px] w-full object-cover"
+            />
+            {athlete.car && (
+              <p className="text-muted-foreground px-4 py-2 text-sm">
+                {athlete.car}
+              </p>
+            )}
+          </div>
+        )}
         <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
           <div className="flex flex-col gap-5">
             <Panel title="Métricas">

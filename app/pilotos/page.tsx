@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BR_UF } from "@/lib/br";
 import { RANK_TIERS, RANK_TIER_ORDER } from "@/lib/rank";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
+import { AppShell } from "@/components/app-shell";
 import type { RankTier } from "@/lib/types/database.types";
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ export default async function PilotosPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, desired_value_min, rank_tier, rank_score), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, car_photo_url, desired_value_min, rank_tier, rank_score), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .order("name");
@@ -52,6 +53,7 @@ export default async function PilotosPage({
     athlete_profiles: {
       modality: string | null;
       category: string | null;
+      car_photo_url: string | null;
       desired_value_min: number | null;
       rank_tier: RankTier | null;
       rank_score: number | null;
@@ -105,6 +107,7 @@ export default async function PilotosPage({
         id: p.id,
         name: p.name,
         photo_url: p.photo_url,
+        car_photo_url: p.athlete_profiles?.car_photo_url ?? null,
         city: p.city,
         state: p.state,
         modality: p.athlete_profiles?.modality ?? null,
@@ -124,12 +127,9 @@ export default async function PilotosPage({
   );
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <Link href="/" className="text-muted-foreground text-sm hover:text-foreground">
-          ← Sponsas
-        </Link>
-        <h1 className="mt-4 text-4xl">Pilotos</h1>
+    <AppShell>
+      <div className="mx-auto max-w-5xl">
+        <h1 className="text-4xl">Pilotos</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           {pilots.length} {pilots.length === 1 ? "piloto" : "pilotos"}
           {hasFilters ? " com esses filtros" : " no total"}.
@@ -192,7 +192,7 @@ export default async function PilotosPage({
           </div>
         )}
       </div>
-    </main>
+    </AppShell>
   );
 }
 

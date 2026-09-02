@@ -51,6 +51,7 @@ export type AthleteProfile = {
   category: string | null;
   team: string | null;
   car: string | null;
+  car_photo_url: string | null;
   championship: string | null;
   results: string | null;
   desired_value_min: number | null;

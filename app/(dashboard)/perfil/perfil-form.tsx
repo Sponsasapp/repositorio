@@ -105,6 +105,16 @@ export function PerfilPilotoForm({
             <Input id="car" name="car" defaultValue={athlete?.car ?? ""} />
           </Field>
         </div>
+        <Field
+          label="Foto do carro"
+          hint="Muita marca reconhece o carro antes do piloto."
+        >
+          <ImageUpload
+            name="car_photo_url"
+            initial={athlete?.car_photo_url ?? null}
+            shape="square"
+          />
+        </Field>
         <Field label="Campeonato" htmlFor="championship">
           <Input
             id="championship"

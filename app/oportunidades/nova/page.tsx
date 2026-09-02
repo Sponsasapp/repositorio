@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OpportunityForm } from "./opportunity-form";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = { title: "Nova oportunidade — Sponsas" };
 
@@ -21,8 +22,8 @@ export default async function NovaOportunidadePage() {
   if (profile?.type !== "company") redirect("/oportunidades");
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-2xl px-6 py-10">
+    <AppShell>
+      <div className="mx-auto max-w-2xl">
         <Link
           href="/oportunidades"
           className="text-muted-foreground text-sm hover:text-foreground"
@@ -36,6 +37,6 @@ export default async function NovaOportunidadePage() {
         </p>
         <OpportunityForm />
       </div>
-    </main>
+    </AppShell>
   );
 }

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { formatCompact, initials } from "@/lib/format";
 import { tierInfo } from "@/lib/rank";
+import { cn } from "@/lib/utils";
 import type { RankTier } from "@/lib/types/database.types";
 
 export type PilotCardData = {
   id: string;
   name: string;
   photo_url: string | null;
+  car_photo_url: string | null;
   city: string | null;
   state: string | null;
   modality: string | null;
@@ -25,8 +27,22 @@ export function PilotCard({ pilot }: { pilot: PilotCardData }) {
   return (
     <Link
       href={`/p/${pilot.id}`}
-      className="border-border border-l-primary bg-card hover:border-l-primary/60 flex flex-col rounded-lg border border-l-3 p-5 transition-colors"
+      className="border-border border-l-primary bg-card hover:border-l-primary/60 flex flex-col overflow-hidden rounded-lg border border-l-3 transition-colors"
     >
+      {pilot.car_photo_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={pilot.car_photo_url}
+          alt=""
+          className="aspect-[16/9] w-full object-cover"
+        />
+      )}
+      <div
+        className={cn(
+          "flex flex-1 flex-col p-5",
+          pilot.car_photo_url && "pt-4",
+        )}
+      >
       <div className="bg-navy text-navy-foreground mb-3.5 flex size-11 items-center justify-center overflow-hidden rounded-full text-base">
         {pilot.photo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -74,6 +90,7 @@ export function PilotCard({ pilot }: { pilot: PilotCardData }) {
             engajamento
           </span>
         )}
+      </div>
       </div>
     </Link>
   );
