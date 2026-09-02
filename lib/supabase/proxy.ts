@@ -48,13 +48,11 @@ export async function updateSession(request: NextRequest) {
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/perfil") ||
-    pathname.startsWith("/oportunidades") ||
+    pathname === "/oportunidades/nova" ||
     pathname.startsWith("/propostas") ||
     pathname.startsWith("/patrocinios") ||
     pathname.startsWith("/entregas") ||
-    pathname.startsWith("/configuracoes") ||
-    pathname.startsWith("/explorar-pilotos") ||
-    pathname.startsWith("/explorar-empresas");
+    pathname.startsWith("/configuracoes");
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
