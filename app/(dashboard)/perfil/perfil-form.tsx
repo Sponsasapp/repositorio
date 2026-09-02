@@ -1,8 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { salvarPerfilPiloto, type PerfilState } from "./actions";
+import {
+  salvarPerfilPiloto,
+  buscarDadosYoutube,
+  type PerfilState,
+} from "./actions";
 import { Section, Field, UfSelect } from "./_ui";
 import { OFFERED_DELIVERABLES, SPONSOR_CATEGORIES } from "@/lib/deliverables";
 import type {
@@ -195,9 +199,9 @@ export function PerfilPilotoForm({
       {/* ---- Redes sociais ---- */}
       <Section title="Redes sociais">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          Informe seguidores, alcance médio e interações médias por post. O
-          engajamento (interações ÷ seguidores) é calculado sozinho — ajuste se
-          tiver o número real.
+          No YouTube, cole o @ ou a URL do canal e os números vêm sozinhos. Nas
+          outras redes, informe seguidores, alcance médio e interações médias por
+          post — o engajamento (interações ÷ seguidores) é calculado sozinho.
         </p>
         <div className="flex flex-col gap-5">
           {PLATFORMS.map((p) => (
@@ -248,6 +252,9 @@ function SocialRow({
   );
   // Vira true quando o usuário edita o engajamento à mão nesta sessão.
   const [engTouched, setEngTouched] = useState(false);
+  const [url, setUrl] = useState(initial?.url ?? "");
+  const [ytFetching, startYtFetch] = useTransition();
+  const [ytError, setYtError] = useState<string | null>(null);
 
   function recalc(f: string, i: string) {
     if (engTouched) return;
@@ -258,15 +265,56 @@ function SocialRow({
     setEngagement(rate == null ? "" : String(Math.round(rate * 10) / 10));
   }
 
+  function puxarYoutube() {
+    setYtError(null);
+    startYtFetch(async () => {
+      const r = await buscarDadosYoutube(url);
+      if (!r.ok) {
+        setYtError(r.error);
+        return;
+      }
+      if (r.data.followers != null) setFollowers(String(r.data.followers));
+      if (r.data.avgReach != null) setReach(String(r.data.avgReach));
+      if (r.data.avgInteractions != null)
+        setInteractions(String(r.data.avgInteractions));
+      if (r.data.engagementRate != null) {
+        setEngagement(String(r.data.engagementRate));
+        setEngTouched(true);
+      }
+    });
+  }
+
+  const isYoutube = platform.key === "youtube";
+
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm font-semibold">{platform.label}</p>
       <Input
         name={`social_${platform.key}_url`}
         type="url"
-        defaultValue={initial?.url ?? ""}
-        placeholder="URL do perfil"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder={isYoutube ? "@canal ou URL do canal" : "URL do perfil"}
       />
+      {isYoutube && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={puxarYoutube}
+            disabled={ytFetching || !url.trim()}
+            className="border-border text-muted-foreground hover:text-foreground rounded-md border border-dashed px-3 py-1.5 text-xs disabled:opacity-50"
+          >
+            {ytFetching ? "Buscando…" : "Puxar dados do canal"}
+          </button>
+          {ytError ? (
+            <span className="text-destructive text-xs">{ytError}</span>
+          ) : (
+            <span className="text-muted-foreground text-xs">
+              Também atualiza sozinho ao salvar.
+            </span>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <MiniField label="Seguidores">
           <Input

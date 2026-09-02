@@ -5,8 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
 import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
 import { BR_UF } from "@/lib/br";
+import { fetchYouTubeStats } from "@/lib/youtube";
 
 export type PerfilState = { ok?: true; error?: string } | undefined;
+
+/** Chamado pelo formulário para preencher a linha do YouTube. */
+export async function buscarDadosYoutube(url: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Sessão expirada." };
+  return fetchYouTubeStats(url);
+}
 
 const num = (v: FormDataEntryValue | null): number | null => parseNumberBR(v);
 
@@ -184,6 +195,19 @@ export async function salvarPerfilPiloto(
         r.avg_interactions ||
         r.engagement_rate,
     );
+
+  // YouTube: se tem URL, puxa os números automáticos da API (sobrescreve o que
+  // veio do form). Se a API falhar ou não estiver configurada, mantém o manual.
+  const ytRow = rows.find((r) => r.platform === "youtube");
+  if (ytRow?.url) {
+    const yt = await fetchYouTubeStats(ytRow.url);
+    if (yt.ok) {
+      ytRow.followers = yt.data.followers ?? ytRow.followers;
+      ytRow.avg_reach = yt.data.avgReach ?? ytRow.avg_reach;
+      ytRow.avg_interactions = yt.data.avgInteractions ?? ytRow.avg_interactions;
+      ytRow.engagement_rate = yt.data.engagementRate ?? ytRow.engagement_rate;
+    }
+  }
 
   await supabase.from("social_links").delete().eq("profile_id", user.id);
   if (rows.length > 0) {
