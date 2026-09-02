@@ -5,8 +5,8 @@ import { useActionState, useEffect, useState } from "react";
 import { redefinirSenha, type AuthState } from "../actions";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 
 type Status = "checking" | "ok" | "invalid";
 
@@ -75,10 +75,9 @@ export function RedefinirForm() {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="password">Nova senha</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           minLength={8}
           required

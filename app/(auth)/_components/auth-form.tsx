@@ -6,6 +6,7 @@ import { login, signup, type AuthState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 
 export function AuthForm({
   mode,
@@ -77,10 +78,9 @@ export function AuthForm({
             </Link>
           )}
         </div>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           minLength={mode === "signup" ? 8 : undefined}
           required
