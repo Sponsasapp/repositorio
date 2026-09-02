@@ -121,7 +121,13 @@ export default async function ConfiguracoesPage() {
           </ul>
           <p className="text-muted-foreground mt-3 text-sm">
             No momento o upgrade é manual (PIX). Fale com a gente pelo e-mail{" "}
-            <span className="text-foreground">contato@sponsas.com</span>.
+            <a
+              href="mailto:sponsasapp@gmail.com"
+              className="text-foreground underline"
+            >
+              sponsasapp@gmail.com
+            </a>
+            .
           </p>
 
           {isDev && (
