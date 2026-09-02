@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { formatCompact, initials } from "@/lib/format";
+import { tierInfo } from "@/lib/rank";
+import type { RankTier } from "@/lib/types/database.types";
 
 export type PilotCardData = {
   id: string;
@@ -11,6 +13,7 @@ export type PilotCardData = {
   category: string | null;
   followers: number;
   engagement: number | null;
+  tier: RankTier | null;
 };
 
 export function PilotCard({ pilot }: { pilot: PilotCardData }) {
@@ -37,7 +40,18 @@ export function PilotCard({ pilot }: { pilot: PilotCardData }) {
           </span>
         )}
       </div>
-      <h3 className="font-semibold">{pilot.name}</h3>
+      <div className="flex items-center gap-2">
+        <h3 className="font-semibold">{pilot.name}</h3>
+        {tierInfo(pilot.tier) && (
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+              tierInfo(pilot.tier)!.badgeCls
+            }`}
+          >
+            {tierInfo(pilot.tier)!.label}
+          </span>
+        )}
+      </div>
       <p className="text-muted-foreground mb-3.5 text-[13px]">{linha || "—"}</p>
       <div className="text-muted-foreground mt-auto flex gap-4 text-xs">
         <span>

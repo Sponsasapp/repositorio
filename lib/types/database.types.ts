@@ -31,6 +31,19 @@ export type Profile = {
   updated_at: string;
 };
 
+export type RankTier = "iniciante" | "bronze" | "prata" | "ouro" | "elite";
+
+export type RankFactors = {
+  prazo: number;
+  demanda: number;
+  engajamento: number;
+  atividade: number;
+  perfil: number;
+  entregas_total: number;
+  entregas_no_prazo: number;
+  entregas_aprovadas: number;
+};
+
 export type AthleteProfile = {
   profile_id: string;
   modality: string | null;
@@ -44,6 +57,10 @@ export type AthleteProfile = {
   sponsor_categories: string[] | null;
   offered_deliverables: string[] | null;
   availability_notes: string | null;
+  rank_score: number | null;
+  rank_tier: RankTier | null;
+  rank_factors: RankFactors | null;
+  rank_updated_at: string | null;
   updated_at: string;
 };
 

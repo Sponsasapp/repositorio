@@ -10,6 +10,7 @@ import {
   formatRange,
   initials,
 } from "@/lib/format";
+import { tierInfo } from "@/lib/rank";
 import { Button } from "@/components/ui/button";
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -128,7 +129,14 @@ export default async function PerfilPublicoPage({
               )}
             </div>
             <div>
-              <h1 className="text-5xl">{profile.name}</h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-5xl">{profile.name}</h1>
+                {tierInfo(athlete?.rank_tier) && (
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
+                    Rank Sponsas: {tierInfo(athlete?.rank_tier)!.label}
+                  </span>
+                )}
+              </div>
               {linha && (
                 <p className="mt-1 text-sm text-white/70">{linha}</p>
               )}

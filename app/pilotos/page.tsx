@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BR_UF } from "@/lib/br";
+import { RANK_TIERS, RANK_TIER_ORDER } from "@/lib/rank";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
+import type { RankTier } from "@/lib/types/database.types";
 
 export const metadata: Metadata = {
   title: "Pilotos — Sponsas",
@@ -21,6 +23,7 @@ type SP = {
   categoria?: string;
   uf?: string;
   orcamento?: string;
+  rank?: string;
 };
 
 export default async function PilotosPage({
@@ -34,7 +37,7 @@ export default async function PilotosPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, athlete_profiles!inner(modality, category, desired_value_min), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, athlete_profiles!inner(modality, category, desired_value_min, rank_tier, rank_score), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .order("name");
@@ -49,6 +52,8 @@ export default async function PilotosPage({
       modality: string | null;
       category: string | null;
       desired_value_min: number | null;
+      rank_tier: RankTier | null;
+      rank_score: number | null;
     } | null;
     social_links: { followers: number | null; avg_interactions: number | null }[];
   };
@@ -68,6 +73,7 @@ export default async function PilotosPage({
       if (sp.modalidade && ap?.modality !== sp.modalidade) return false;
       if (sp.categoria && ap?.category !== sp.categoria) return false;
       if (sp.uf && p.state !== sp.uf) return false;
+      if (sp.rank && ap?.rank_tier !== sp.rank) return false;
       if (
         orcMax != null &&
         ap?.desired_value_min != null &&
@@ -76,6 +82,11 @@ export default async function PilotosPage({
         return false;
       return true;
     })
+    .sort(
+      (a, b) =>
+        (b.athlete_profiles?.rank_score ?? -1) -
+        (a.athlete_profiles?.rank_score ?? -1),
+    )
     .map((p) => {
       const followers = p.social_links.reduce(
         (s, l) => s + (l.followers ?? 0),
@@ -93,6 +104,7 @@ export default async function PilotosPage({
         state: p.state,
         modality: p.athlete_profiles?.modality ?? null,
         category: p.athlete_profiles?.category ?? null,
+        tier: p.athlete_profiles?.rank_tier ?? null,
         followers,
         engagement:
           followers > 0 && interactions > 0
@@ -102,7 +114,7 @@ export default async function PilotosPage({
     });
 
   const hasFilters = Boolean(
-    sp.q || sp.modalidade || sp.categoria || sp.uf || sp.orcamento,
+    sp.q || sp.modalidade || sp.categoria || sp.uf || sp.orcamento || sp.rank,
   );
 
   return (
@@ -134,6 +146,15 @@ export default async function PilotosPage({
             value={sp.orcamento}
             placeholder="Orçamento"
             options={ORCAMENTO}
+          />
+          <FilterSelect
+            name="rank"
+            value={sp.rank}
+            placeholder="Rank Sponsas"
+            options={RANK_TIER_ORDER.map((t) => ({
+              value: t,
+              label: RANK_TIERS[t].label,
+            }))}
           />
           <div className="flex gap-2 sm:col-span-2 lg:col-span-6">
             <button
