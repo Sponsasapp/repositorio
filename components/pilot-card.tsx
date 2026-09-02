@@ -14,6 +14,7 @@ export type PilotCardData = {
   followers: number;
   engagement: number | null;
   tier: RankTier | null;
+  isPro?: boolean;
 };
 
 export function PilotCard({ pilot }: { pilot: PilotCardData }) {
@@ -42,6 +43,11 @@ export function PilotCard({ pilot }: { pilot: PilotCardData }) {
       </div>
       <div className="flex items-center gap-2">
         <h3 className="font-semibold">{pilot.name}</h3>
+        {pilot.isPro && (
+          <span className="bg-navy text-navy-foreground rounded-full px-2 py-0.5 text-[10px] font-semibold">
+            PRO
+          </span>
+        )}
         {tierInfo(pilot.tier) && (
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${

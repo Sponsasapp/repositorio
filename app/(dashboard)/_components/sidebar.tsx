@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const LINKS = [
+const LINKS: { href: string; label: string; soon?: boolean }[] = [
   { href: "/dashboard", label: "Painel" },
   { href: "/perfil", label: "Meu perfil" },
   { href: "/pilotos", label: "Explorar pilotos" },
@@ -12,7 +12,7 @@ const LINKS = [
   { href: "/propostas", label: "Propostas" },
   { href: "/patrocinios", label: "Patrocínios" },
   { href: "/entregas", label: "Entregas" },
-  { href: "/configuracoes", label: "Configurações", soon: true },
+  { href: "/configuracoes", label: "Configurações" },
 ];
 
 export function Sidebar() {

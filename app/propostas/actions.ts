@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
+import { PLAN_LIMITS, limitMessage, startOfMonthISO } from "@/lib/plan";
 import type { ProposalPaymentType } from "@/lib/types/database.types";
 
 export type PropostaState = { ok?: true; error?: string } | undefined;
@@ -34,7 +35,7 @@ export async function enviarProposta(
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, type")
+    .select("id, type, plan")
     .in("id", [user.id, to]);
 
   const me = profiles?.find((p) => p.id === user.id);
@@ -44,6 +45,17 @@ export async function enviarProposta(
     return {
       error: "Propostas são entre uma empresa e um piloto.",
     };
+  }
+
+  if (me.plan === "free") {
+    const { count } = await supabase
+      .from("proposals")
+      .select("id", { count: "exact", head: true })
+      .eq("from_profile_id", user.id)
+      .gte("created_at", startOfMonthISO());
+    if ((count ?? 0) >= PLAN_LIMITS.proposalsPerMonth) {
+      return { error: limitMessage("proposalsPerMonth") };
+    }
   }
 
   const paymentType = String(

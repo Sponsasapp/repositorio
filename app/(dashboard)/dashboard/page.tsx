@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, type")
+    .select("name, type, plan")
     .eq("id", user.id)
     .single();
 
@@ -30,7 +30,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="text-4xl">Olá, {primeiroNome}</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-4xl">Olá, {primeiroNome}</h1>
+        <Link
+          href="/configuracoes"
+          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+            profile?.plan === "pro"
+              ? "bg-navy text-navy-foreground"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {profile?.plan === "pro" ? "PRO" : "Free"}
+        </Link>
+      </div>
       <p className="text-muted-foreground mt-1 text-sm">
         {profile?.type === "company"
           ? "Resumo das suas campanhas e patrocínios."

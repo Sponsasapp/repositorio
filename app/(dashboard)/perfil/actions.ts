@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { parseCsv } from "@/lib/deliverables";
 import { parseNumberBR } from "@/lib/num";
+import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
 import { BR_UF } from "@/lib/br";
 
 export type PerfilState = { ok?: true; error?: string } | undefined;
@@ -35,6 +36,17 @@ export async function salvarPerfilPiloto(
 
   // Tabela de preços define a faixa de valor (resumo usado em busca/filtro).
   const pkgRows = parsePackages(formData.get("packages"), user.id);
+
+  if (pkgRows.length > PLAN_LIMITS.rateCardItems) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .single();
+    if (prof?.plan === "free") {
+      return { error: limitMessage("rateCardItems") };
+    }
+  }
   const prices = pkgRows
     .map((p) => p.price)
     .filter((n): n is number => n != null);

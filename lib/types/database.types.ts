@@ -27,6 +27,7 @@ export type Profile = {
   city: string | null;
   state: string | null;
   bio: string | null;
+  plan: PlanTier;
   created_at: string;
   updated_at: string;
 };
@@ -194,7 +195,13 @@ export type Database = {
     Tables: {
       profiles: TableDef<
         Profile,
-        "photo_url" | "city" | "state" | "bio" | "created_at" | "updated_at"
+        | "photo_url"
+        | "city"
+        | "state"
+        | "bio"
+        | "plan"
+        | "created_at"
+        | "updated_at"
       >;
       athlete_profiles: TableDef<
         AthleteProfile,

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
+import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
 
 export type OppState = { ok?: true; error?: string } | undefined;
 
@@ -29,11 +30,22 @@ export async function criarOportunidade(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("type")
+    .select("type, plan")
     .eq("id", user.id)
     .single();
   if (profile?.type !== "company") {
     return { error: "Só empresas podem criar oportunidades." };
+  }
+
+  if (profile.plan === "free") {
+    const { count } = await supabase
+      .from("opportunities")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", user.id)
+      .eq("status", "open");
+    if ((count ?? 0) >= PLAN_LIMITS.openOpportunities) {
+      return { error: limitMessage("openOpportunities") };
+    }
   }
 
   const title = text(formData.get("title"));

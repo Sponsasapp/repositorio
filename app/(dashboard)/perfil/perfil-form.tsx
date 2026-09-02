@@ -27,11 +27,13 @@ export function PerfilPilotoForm({
   athlete,
   socials,
   packages,
+  rateCardLimit,
 }: {
   profile: Profile;
   athlete: AthleteProfile | null;
   socials: SocialLink[];
   packages: AthletePackage[];
+  rateCardLimit: number | null;
 }) {
   const [state, formAction, pending] = useActionState<PerfilState, FormData>(
     salvarPerfilPiloto,
@@ -180,8 +182,10 @@ export function PerfilPilotoForm({
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
           O que uma marca pode contratar e por quanto. Ex: “Adesivo no carro”,
           “Pacote 3 stories/semana”, “Stories + reels”.
+          {rateCardLimit != null &&
+            ` Plano Free: até ${rateCardLimit} itens.`}
         </p>
-        <PriceTable initial={packages} />
+        <PriceTable initial={packages} limit={rateCardLimit} />
       </Section>
 
       {/* ---- Redes sociais ---- */}
@@ -323,7 +327,13 @@ function MiniField({
 
 type PkgDraft = { title: string; description: string; price: string };
 
-function PriceTable({ initial }: { initial: AthletePackage[] }) {
+function PriceTable({
+  initial,
+  limit,
+}: {
+  initial: AthletePackage[];
+  limit: number | null;
+}) {
   const [rows, setRows] = useState<PkgDraft[]>(
     initial.length > 0
       ? initial.map((p) => ({
@@ -342,6 +352,7 @@ function PriceTable({ initial }: { initial: AthletePackage[] }) {
     setRows((r) => [...r, { title: "", description: "", price: "" }]);
 
   const payload = JSON.stringify(rows.filter((r) => r.title.trim().length > 0));
+  const atLimit = limit != null && rows.length >= limit;
 
   return (
     <div className="flex flex-col gap-3">
@@ -381,13 +392,22 @@ function PriceTable({ initial }: { initial: AthletePackage[] }) {
           </button>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={add}
-        className="border-border text-muted-foreground hover:text-foreground self-start rounded-md border border-dashed px-3 py-1.5 text-sm"
-      >
-        + Adicionar item
-      </button>
+      {atLimit ? (
+        <p className="text-muted-foreground text-xs">
+          Limite do plano Free atingido ({limit} itens).{" "}
+          <a href="/configuracoes" className="underline">
+            Ver PRO
+          </a>
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={add}
+          className="border-border text-muted-foreground hover:text-foreground self-start rounded-md border border-dashed px-3 py-1.5 text-sm"
+        >
+          + Adicionar item
+        </button>
+      )}
     </div>
   );
 }

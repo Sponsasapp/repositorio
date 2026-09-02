@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { PLAN_LIMITS } from "@/lib/plan";
 import { PerfilPilotoForm } from "./perfil-form";
 import { PerfilEmpresaForm } from "./perfil-empresa-form";
 
@@ -77,6 +78,7 @@ export default async function PerfilPage() {
         athlete={athlete ?? null}
         socials={socials ?? []}
         packages={packages ?? []}
+        rateCardLimit={profile.plan === "pro" ? null : PLAN_LIMITS.rateCardItems}
       />
     </div>
   );

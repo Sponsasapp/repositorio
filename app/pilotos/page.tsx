@@ -37,7 +37,7 @@ export default async function PilotosPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, athlete_profiles!inner(modality, category, desired_value_min, rank_tier, rank_score), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, desired_value_min, rank_tier, rank_score), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .order("name");
@@ -48,6 +48,7 @@ export default async function PilotosPage({
     photo_url: string | null;
     city: string | null;
     state: string | null;
+    plan: "free" | "pro";
     athlete_profiles: {
       modality: string | null;
       category: string | null;
@@ -82,11 +83,15 @@ export default async function PilotosPage({
         return false;
       return true;
     })
-    .sort(
-      (a, b) =>
+    .sort((a, b) => {
+      // PRO primeiro, depois por rank
+      const pro = (b.plan === "pro" ? 1 : 0) - (a.plan === "pro" ? 1 : 0);
+      if (pro !== 0) return pro;
+      return (
         (b.athlete_profiles?.rank_score ?? -1) -
-        (a.athlete_profiles?.rank_score ?? -1),
-    )
+        (a.athlete_profiles?.rank_score ?? -1)
+      );
+    })
     .map((p) => {
       const followers = p.social_links.reduce(
         (s, l) => s + (l.followers ?? 0),
@@ -105,6 +110,7 @@ export default async function PilotosPage({
         modality: p.athlete_profiles?.modality ?? null,
         category: p.athlete_profiles?.category ?? null,
         tier: p.athlete_profiles?.rank_tier ?? null,
+        isPro: p.plan === "pro",
         followers,
         engagement:
           followers > 0 && interactions > 0
