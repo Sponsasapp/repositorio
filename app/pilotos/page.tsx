@@ -129,11 +129,21 @@ export default async function PilotosPage({
   return (
     <AppShell>
       <div className="mx-auto max-w-5xl">
-        <h1 className="text-4xl">Pilotos</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {pilots.length} {pilots.length === 1 ? "piloto" : "pilotos"}
-          {hasFilters ? " com esses filtros" : " no total"}.
-        </p>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-4xl">Pilotos</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {pilots.length} {pilots.length === 1 ? "piloto" : "pilotos"}
+              {hasFilters ? " com esses filtros" : " no total"}.
+            </p>
+          </div>
+          <Link
+            href="/empresas"
+            className="text-foreground shrink-0 text-sm underline underline-offset-2"
+          >
+            Ver empresas
+          </Link>
+        </div>
 
         {/* Filtros — form GET, sem JS */}
         <form className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">

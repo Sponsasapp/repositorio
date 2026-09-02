@@ -32,10 +32,20 @@ export default async function PerfilPage() {
 
     return (
       <div className="mx-auto max-w-2xl">
-        <h1 className="text-4xl">Meu perfil</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Os dados da sua empresa e da campanha que você quer rodar.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl">Meu perfil</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Os dados da sua empresa e da campanha que você quer rodar.
+            </p>
+          </div>
+          <Link
+            href={`/e/${user.id}`}
+            className="text-foreground shrink-0 text-sm underline underline-offset-2"
+          >
+            Ver perfil público
+          </Link>
+        </div>
         <PerfilEmpresaForm profile={profile} company={company ?? null} />
       </div>
     );

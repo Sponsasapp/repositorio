@@ -13,6 +13,7 @@ const NAV = [
   { href: "/para-pilotos", label: "Para pilotos" },
   { href: "/planos", label: "Planos" },
   { href: "/pilotos", label: "Ver pilotos" },
+  { href: "/empresas", label: "Ver empresas" },
 ];
 
 export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
