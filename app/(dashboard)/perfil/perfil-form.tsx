@@ -14,6 +14,7 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/image-upload";
 
 const PLATFORMS = [
   { key: "instagram", label: "Instagram" },
@@ -69,17 +70,12 @@ export function PerfilPilotoForm({
         <Field label="Bio" htmlFor="bio" hint="Um parágrafo curto sobre você.">
           <Textarea id="bio" name="bio" defaultValue={profile.bio ?? ""} rows={3} />
         </Field>
-        <Field
-          label="Foto (URL)"
-          htmlFor="photo_url"
-          hint="Link de uma imagem. Upload direto entra depois."
-        >
-          <Input
-            id="photo_url"
+        <Field label="Foto">
+          <ImageUpload
             name="photo_url"
-            type="url"
-            defaultValue={profile.photo_url ?? ""}
-            placeholder="https://..."
+            initial={profile.photo_url}
+            shape="circle"
+            hint="JPG, PNG ou WebP, até 3 MB."
           />
         </Field>
       </Section>

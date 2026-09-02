@@ -17,11 +17,13 @@ const NAV = [
 export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
 
-  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -118,6 +120,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <Link
                   key={n.href}
                   href={n.href}
+                  onClick={close}
                   className="text-foreground rounded-md px-2 py-2.5 text-sm"
                 >
                   {n.label}
@@ -128,15 +131,21 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             <div className="mt-6 flex flex-col gap-2 border-t pt-6">
               {isLoggedIn ? (
                 <Button asChild size="lg">
-                  <Link href="/dashboard">Painel</Link>
+                  <Link href="/dashboard" onClick={close}>
+                    Painel
+                  </Link>
                 </Button>
               ) : (
                 <>
                   <Button asChild size="lg">
-                    <Link href="/cadastro">Criar conta</Link>
+                    <Link href="/cadastro" onClick={close}>
+                      Criar conta
+                    </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline">
-                    <Link href="/login">Entrar</Link>
+                    <Link href="/login" onClick={close}>
+                      Entrar
+                    </Link>
                   </Button>
                 </>
               )}

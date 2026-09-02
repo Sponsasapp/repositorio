@@ -8,6 +8,7 @@ import type { Profile, CompanyProfile } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/image-upload";
 
 export function PerfilEmpresaForm({
   profile,
@@ -76,17 +77,12 @@ export function PerfilEmpresaForm({
             />
           </Field>
         </div>
-        <Field
-          label="Logo (URL)"
-          htmlFor="photo_url"
-          hint="Link de uma imagem. Upload direto entra depois."
-        >
-          <Input
-            id="photo_url"
+        <Field label="Logo">
+          <ImageUpload
             name="photo_url"
-            type="url"
-            defaultValue={profile.photo_url ?? ""}
-            placeholder="https://..."
+            initial={profile.photo_url}
+            shape="square"
+            hint="JPG, PNG ou WebP, até 3 MB."
           />
         </Field>
         <Field label="Descrição da empresa" htmlFor="description">

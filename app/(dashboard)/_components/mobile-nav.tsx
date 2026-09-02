@@ -11,14 +11,14 @@ import { NAV_LINKS } from "./nav-links";
 export function MobileNav({ email }: { email?: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-
-  // Fecha ao trocar de rota.
-  useEffect(() => setOpen(false), [pathname]);
+  const close = () => setOpen(false);
 
   // Trava o scroll do body enquanto aberto + fecha no Esc.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -66,6 +66,7 @@ export function MobileNav({ email }: { email?: string }) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={close}
                   className={cn(
                     "rounded-md px-3 py-2.5 text-sm",
                     active
