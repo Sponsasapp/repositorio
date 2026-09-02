@@ -47,8 +47,11 @@ Identidade "SaaS premium", não "site de carro". Tokens em `app/globals.css`:
 ## Ordem de construção
 
 1. ✅ Setup (Next + Tailwind + shadcn + Supabase libs)
-2. Migration do schema + confirmar RLS
-3. Auth (login/cadastro com escolha piloto/empresa)
+2. ✅ Migration do schema + RLS (11 tabelas, 26 policies, trigger de signup)
+   - `0002_fix_handle_new_user.sql`: trigger precisou de `search_path = ''` + schema qualificado
+3. ✅ Auth — cadastro/login/logout via Server Actions, escolha piloto/empresa,
+   guarda de rotas no `proxy.ts`, `/auth/confirm` para o fluxo de e-mail.
+   Dev: "Confirm email" desligado no Supabase (religar + SMTP na V2).
 4. Perfil piloto (CRUD) → 5. Perfil empresa (CRUD)
 6. Perfis públicos → 7. Busca/filtro de pilotos
 8. Oportunidades → 9. Propostas → 10. `sponsorship` automático ao aceitar

@@ -3,8 +3,21 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="flex flex-1 items-center">
-      <div className="mx-auto w-full max-w-[1120px] px-6 py-24">
+    <main className="flex flex-1 flex-col">
+      <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-6 py-6">
+        <span className="text-xl">
+          Spon<span className="text-primary font-bold">sas</span>
+        </span>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="lg">
+            <Link href="/login">Entrar</Link>
+          </Button>
+          <Button asChild size="lg">
+            <Link href="/cadastro">Criar conta</Link>
+          </Button>
+        </div>
+      </header>
+      <div className="mx-auto flex w-full max-w-[1120px] flex-1 items-center px-6 py-20">
         <div className="max-w-2xl">
           <p className="mb-4 text-sm font-medium text-muted-foreground">
             Spon<span className="text-primary">sas</span> — Sponsorship made simple
@@ -28,7 +41,7 @@ export default function Home() {
             </Button>
           </div>
           <p className="mt-16 text-sm text-muted-foreground">
-            Setup inicial pronto. Próximo passo: autenticação.
+            Em construção · autenticação no ar. Próximo: perfis.
           </p>
         </div>
       </div>
