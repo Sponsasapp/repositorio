@@ -10,6 +10,9 @@ export default function Home() {
         </span>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="lg">
+            <Link href="/pilotos">Ver pilotos</Link>
+          </Button>
+          <Button asChild variant="ghost" size="lg">
             <Link href="/login">Entrar</Link>
           </Button>
           <Button asChild size="lg">

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/dashboard", label: "Painel" },
   { href: "/perfil", label: "Meu perfil" },
+  { href: "/pilotos", label: "Explorar pilotos" },
   { href: "/oportunidades", label: "Oportunidades", soon: true },
   { href: "/propostas", label: "Propostas", soon: true },
   { href: "/patrocinios", label: "Patrocínios", soon: true },
