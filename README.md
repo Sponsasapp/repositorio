@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sponsas — Sponsorship Made Simple
 
-## Getting Started
+Plataforma web que conecta **marcas** a **pilotos** (foco: arrancada / automobilismo BR)
+para fechar e acompanhar patrocínios.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) · TypeScript · Tailwind v4 · shadcn/ui
+- **Supabase** (Postgres + Auth + RLS) via `@supabase/ssr`
+- Deploy: **Vercel** + **Supabase Cloud**
+
+## Rodando localmente
 
 ```bash
+npm install
+cp .env.example .env.local   # preencha com os valores do seu projeto Supabase
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variável | Onde achar |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | idem (publishable / anon key) |
+| `NEXT_PUBLIC_SITE_URL` | URL pública do site (ex: `https://sponsas.vercel.app`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | só para scripts locais — **não** usado em runtime |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Banco de dados
 
-## Learn More
+Migrations em [`supabase/migrations/`](supabase/migrations/), aplicadas em ordem
+(`0001` → `0007`) no SQL Editor do Supabase ou via CLI. Incluem o schema, RLS,
+triggers de signup, cálculo do **Rank Sponsas** e espelho de plano Free/PRO.
 
-To learn more about Next.js, take a look at the following resources:
+Para regenerar os tipos após mudanças no schema:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx supabase gen types typescript --project-id <ref> > lib/types/database.types.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estrutura
 
-## Deploy on Vercel
+```
+app/
+  (marketing)/     páginas públicas (home, como-funciona, planos, ...)
+  (auth)/          login, cadastro
+  (dashboard)/     painel + perfil (com sidebar)
+  pilotos/ p/[id]/ oportunidades/ propostas/ patrocinios/ entregas/ configuracoes/
+lib/
+  supabase/        client (browser), server (RSC/actions), proxy (sessão)
+  rank.ts plan.ts format.ts ...
+supabase/migrations/
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Convenções e ordem de construção em [`AGENTS.md`](AGENTS.md).
