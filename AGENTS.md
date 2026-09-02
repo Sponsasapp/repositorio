@@ -60,7 +60,10 @@ Identidade "SaaS premium", não "site de carro". Tokens em `app/globals.css`:
 12. ✅ Dashboards + **Rank Sponsas** (score no banco, migration `0006`)
 13. ✅ Planos Free/PRO (migration `0007`, upgrade manual, sem gateway)
 14. ✅ Páginas de marketing (`app/(marketing)`)
-15. 🔜 Deploy — repo em github.com/Sponsas-App/repositorio; falta importar no Vercel
+15. ✅ Deploy — Vercel (`repositorio-pink-eta.vercel.app`) + Supabase Cloud.
+    Repo: github.com/Sponsasapp/repositorio. Push em `main` → redeploy automático.
+    Pós-deploy: ajustar `NEXT_PUBLIC_SITE_URL`, redirect URLs no Supabase,
+    religar "Confirm email" + SMTP antes de abrir ao público.
 
 Extras além do handoff (pedidos do dono):
 - Tabela de preços do piloto (`athlete_packages`, migration `0004`)
