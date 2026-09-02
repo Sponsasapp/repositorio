@@ -6,6 +6,7 @@ import { deliverableLabel } from "@/lib/deliverables";
 import {
   formatBRL,
   formatCompact,
+  formatDateBR,
   formatNumber,
   formatRange,
   initials,
@@ -379,7 +380,7 @@ export default async function PerfilPublicoPage({
               <Panel title="Lista">
                 <p className="text-sm font-medium">{listLabel}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {athlete?.list_position != null && (
+                  {athlete?.list_member && athlete?.list_position != null && (
                     <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
                       Posição atual: {athlete.list_position}º
                     </span>
@@ -387,6 +388,8 @@ export default async function PerfilPublicoPage({
                   {athlete?.list_shark_tank && (
                     <span className="bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs font-semibold">
                       Shark Tank
+                      {athlete.list_shark_tank_date &&
+                        ` · próxima etapa ${formatDateBR(athlete.list_shark_tank_date)}`}
                     </span>
                   )}
                 </div>

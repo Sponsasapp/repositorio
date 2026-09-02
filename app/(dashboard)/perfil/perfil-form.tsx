@@ -175,7 +175,8 @@ export function PerfilPilotoForm({
       {/* ---- Lista ---- */}
       <Section title="Lista">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          A lista de arrancada de que você faz parte e sua posição atual nela.
+          A lista de arrancada de que você participa. Marque se faz parte dela
+          (e sua posição) e se está no Shark Tank (e a data da próxima etapa).
         </p>
         <ListaField athlete={athlete} />
       </Section>
@@ -611,8 +612,11 @@ function OutrasConquistas({ initial }: { initial: AthleteAchievement[] }) {
 }
 
 function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
+  const [member, setMember] = useState(athlete?.list_member ?? false);
+  const [shark, setShark] = useState(athlete?.list_shark_tank ?? false);
+
   return (
-    <div className="grid grid-cols-[1fr_130px] items-start gap-3">
+    <div className="flex flex-col gap-3">
       <MiniField label="Lista">
         <Input
           name="list_name"
@@ -620,25 +624,49 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
           placeholder="Ex: Lista 011, Lista 015"
         />
       </MiniField>
-      <MiniField label="Atual posição">
-        <Input
-          name="list_position"
-          defaultValue={
-            athlete?.list_position != null ? String(athlete.list_position) : ""
-          }
-          inputMode="numeric"
-          placeholder="Ex: 3"
+
+      <label className="flex cursor-pointer items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="list_member"
+          checked={member}
+          onChange={(e) => setMember(e.target.checked)}
+          className="accent-primary"
         />
-      </MiniField>
-      <label className="col-span-2 flex cursor-pointer items-center gap-2 text-sm">
+        Faço parte desta lista
+      </label>
+      {member && (
+        <MiniField label="Minha posição na lista">
+          <Input
+            name="list_position"
+            defaultValue={
+              athlete?.list_position != null ? String(athlete.list_position) : ""
+            }
+            inputMode="numeric"
+            placeholder="Ex: 3"
+          />
+        </MiniField>
+      )}
+
+      <label className="flex cursor-pointer items-center gap-2 text-sm">
         <input
           type="checkbox"
           name="list_shark_tank"
-          defaultChecked={athlete?.list_shark_tank ?? false}
+          checked={shark}
+          onChange={(e) => setShark(e.target.checked)}
           className="accent-primary"
         />
-        Estou no Shark Tank desta lista
+        Estou no Shark Tank
       </label>
+      {shark && (
+        <MiniField label="Data da próxima etapa do Shark Tank">
+          <Input
+            name="list_shark_tank_date"
+            type="date"
+            defaultValue={athlete?.list_shark_tank_date ?? ""}
+          />
+        </MiniField>
+      )}
     </div>
   );
 }

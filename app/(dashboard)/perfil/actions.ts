@@ -72,6 +72,8 @@ export async function salvarPerfilPiloto(
   if (e1) return { error: "Não foi possível salvar os dados básicos." };
 
   const listName = text(formData.get("list_name"));
+  const listMember = listName != null && formData.get("list_member") != null;
+  const listShark = listName != null && formData.get("list_shark_tank") != null;
 
   // 2. athlete_profiles (upsert)
   const { error: e2 } = await supabase.from("athlete_profiles").upsert({
@@ -91,8 +93,12 @@ export async function salvarPerfilPiloto(
     offered_deliverables: formData.getAll("offered_deliverables").map(String),
     availability_notes: text(formData.get("availability_notes")),
     list_name: listName,
-    list_position: listName ? int(formData.get("list_position")) : null,
-    list_shark_tank: listName != null && formData.get("list_shark_tank") != null,
+    list_member: listMember,
+    list_position: listMember ? int(formData.get("list_position")) : null,
+    list_shark_tank: listShark,
+    list_shark_tank_date: listShark
+      ? text(formData.get("list_shark_tank_date"))
+      : null,
     updated_at: new Date().toISOString(),
   });
   if (e2) return { error: "Não foi possível salvar os dados esportivos." };

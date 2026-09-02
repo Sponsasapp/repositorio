@@ -60,8 +60,10 @@ export type AthleteProfile = {
   offered_deliverables: string[] | null;
   availability_notes: string | null;
   list_name: string | null;
+  list_member: boolean;
   list_position: number | null;
   list_shark_tank: boolean;
+  list_shark_tank_date: string | null;
   rank_score: number | null;
   rank_tier: RankTier | null;
   rank_factors: RankFactors | null;
