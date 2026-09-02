@@ -72,8 +72,11 @@ export async function salvarPerfilPiloto(
   if (e1) return { error: "Não foi possível salvar os dados básicos." };
 
   const listName = text(formData.get("list_name"));
-  const listMember = listName != null && formData.get("list_member") != null;
-  const listShark = listName != null && formData.get("list_shark_tank") != null;
+  const listStatus = String(formData.get("list_status") ?? "none");
+  // Ser membro da lista e estar no Shark Tank são estados excludentes: o Shark
+  // Tank é a disputa para entrar na lista.
+  const listMember = listName != null && listStatus === "member";
+  const listShark = listName != null && listStatus === "shark";
 
   // 2. athlete_profiles (upsert)
   const { error: e2 } = await supabase.from("athlete_profiles").upsert({

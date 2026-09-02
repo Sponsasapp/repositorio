@@ -175,8 +175,9 @@ export function PerfilPilotoForm({
       {/* ---- Lista ---- */}
       <Section title="Lista">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          A lista de arrancada de que você participa. Marque se faz parte dela
-          (e sua posição) e se está no Shark Tank (e a data da próxima etapa).
+          A lista de arrancada de que você participa. Ou você já está na lista
+          (com uma posição), ou está no Shark Tank disputando uma vaga — nunca
+          os dois ao mesmo tempo.
         </p>
         <ListaField athlete={athlete} />
       </Section>
@@ -611,9 +612,30 @@ function OutrasConquistas({ initial }: { initial: AthleteAchievement[] }) {
   );
 }
 
+type ListStatus = "none" | "member" | "shark";
+
 function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
-  const [member, setMember] = useState(athlete?.list_member ?? false);
-  const [shark, setShark] = useState(athlete?.list_shark_tank ?? false);
+  const [status, setStatus] = useState<ListStatus>(
+    athlete?.list_shark_tank
+      ? "shark"
+      : athlete?.list_member
+        ? "member"
+        : "none",
+  );
+
+  const opt = (value: ListStatus, label: string) => (
+    <label className="flex cursor-pointer items-center gap-2 text-sm">
+      <input
+        type="radio"
+        name="list_status"
+        value={value}
+        checked={status === value}
+        onChange={() => setStatus(value)}
+        className="accent-primary"
+      />
+      {label}
+    </label>
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -625,17 +647,13 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
         />
       </MiniField>
 
-      <label className="flex cursor-pointer items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="list_member"
-          checked={member}
-          onChange={(e) => setMember(e.target.checked)}
-          className="accent-primary"
-        />
-        Faço parte desta lista
-      </label>
-      {member && (
+      <div className="flex flex-col gap-2">
+        {opt("none", "Ainda não estou nesta lista")}
+        {opt("member", "Faço parte da lista")}
+        {opt("shark", "Estou no Shark Tank (disputando vaga na lista)")}
+      </div>
+
+      {status === "member" && (
         <MiniField label="Minha posição na lista">
           <Input
             name="list_position"
@@ -647,18 +665,7 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
           />
         </MiniField>
       )}
-
-      <label className="flex cursor-pointer items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="list_shark_tank"
-          checked={shark}
-          onChange={(e) => setShark(e.target.checked)}
-          className="accent-primary"
-        />
-        Estou no Shark Tank
-      </label>
-      {shark && (
+      {status === "shark" && (
         <MiniField label="Data da próxima etapa do Shark Tank">
           <Input
             name="list_shark_tank_date"
