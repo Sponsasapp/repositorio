@@ -53,6 +53,12 @@ export function PerfilPilotoForm({
 
   const social = (p: string) => socials.find((s) => s.platform === p);
 
+  const carsInit = cars.map((c) => ({
+    ...c,
+    conquistas: achievements.filter((a) => a.car_id === c.id),
+  }));
+  const outrasIniciais = achievements.filter((a) => !a.car_id);
+
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-6">
       {/* ---- Dados básicos ---- */}
@@ -146,29 +152,30 @@ export function PerfilPilotoForm({
         </Field>
       </Section>
 
-      {/* ---- Carros ---- */}
+      {/* ---- Carros (sub-perfis) ---- */}
       <Section title="Carros">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          Um piloto pode ter mais de um carro, em equipes/oficinas diferentes.
-          Cada linha tem o carro e a equipe lado a lado.
+          O patrocínio é por carro. Cada carro é um sub-perfil: equipe,
+          campeonatos, foto e as conquistas feitas com ele. As conquistas de
+          todos os carros aparecem somadas no seu perfil.
         </p>
-        <CarList initial={cars} />
+        <CarList initial={carsInit} />
       </Section>
 
-      {/* ---- Conquistas ---- */}
-      <Section title="Conquistas">
+      {/* ---- Outras conquistas ---- */}
+      <Section title="Outras conquistas">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          Cada título, recorde ou colocação como um item separado. Pode usar
-          emoji no título — ex: “🏆 Campeão Regional”.
+          Títulos e recordes que não estão ligados a um carro atual — ex: carro
+          já vendido, kart, categorias antigas. Entram somados no seu perfil
+          junto com as conquistas dos carros. Pode usar emoji no título.
         </p>
-        <AchievementList initial={achievements} />
+        <OutrasConquistas initial={outrasIniciais} />
       </Section>
 
       {/* ---- Lista ---- */}
       <Section title="Lista">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          A lista de arrancada de que você faz parte. Informando o número da
-          lista, você pode registrar sua posição ou o Shark Tank.
+          A lista de arrancada de que você faz parte e sua posição atual nela.
         </p>
         <ListaField athlete={athlete} />
       </Section>
@@ -373,12 +380,85 @@ function SponsorCategories({ initial }: { initial: string[] }) {
   );
 }
 
+type AchDraft = { key: string; title: string; year: string; detail: string };
+
+const newAch = (): AchDraft => ({
+  key: crypto.randomUUID(),
+  title: "",
+  year: "",
+  detail: "",
+});
+
+/** Editor de lista de conquistas (título + ano + detalhe). Controlado pelo pai. */
+function AchievementRows({
+  rows,
+  onChange,
+  addLabel = "+ Conquista",
+}: {
+  rows: AchDraft[];
+  onChange: (next: AchDraft[]) => void;
+  addLabel?: string;
+}) {
+  const update = (i: number, patch: Partial<AchDraft>) =>
+    onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const remove = (i: number) => onChange(rows.filter((_, j) => j !== i));
+  const add = () => onChange([...rows, newAch()]);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((row, i) => (
+        <div
+          key={row.key}
+          className="border-border/70 flex flex-col gap-2 rounded-md border border-dashed p-2"
+        >
+          <div className="grid grid-cols-[1fr_80px] gap-2">
+            <Input
+              value={row.title}
+              onChange={(e) => update(i, { title: e.target.value })}
+              placeholder="Título (ex: 🏆 Campeão Paulista)"
+              aria-label="Título da conquista"
+            />
+            <Input
+              value={row.year}
+              onChange={(e) => update(i, { year: e.target.value })}
+              inputMode="numeric"
+              placeholder="Ano"
+              aria-label="Ano"
+            />
+          </div>
+          <Input
+            value={row.detail}
+            onChange={(e) => update(i, { detail: e.target.value })}
+            placeholder="Detalhe (categoria, tempo, etapa, recorde…)"
+            aria-label="Detalhe da conquista"
+          />
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="text-muted-foreground hover:text-destructive self-start text-xs"
+          >
+            Remover
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="border-border text-muted-foreground hover:text-foreground self-start rounded-md border border-dashed px-2 py-1 text-xs"
+      >
+        {addLabel}
+      </button>
+    </div>
+  );
+}
+
 type CarDraft = {
   key: string;
   name: string;
   team: string;
   championships: string;
   photo_url: string;
+  conquistas: AchDraft[];
 };
 
 const newCar = (): CarDraft => ({
@@ -387,9 +467,12 @@ const newCar = (): CarDraft => ({
   team: "",
   championships: "",
   photo_url: "",
+  conquistas: [],
 });
 
-function CarList({ initial }: { initial: AthleteCar[] }) {
+type CarInit = AthleteCar & { conquistas: AthleteAchievement[] };
+
+function CarList({ initial }: { initial: CarInit[] }) {
   const [rows, setRows] = useState<CarDraft[]>(
     initial.length > 0
       ? initial.map((c) => ({
@@ -398,6 +481,12 @@ function CarList({ initial }: { initial: AthleteCar[] }) {
           team: c.team ?? "",
           championships: c.championships ?? "",
           photo_url: c.photo_url ?? "",
+          conquistas: c.conquistas.map((a) => ({
+            key: a.id,
+            title: a.title,
+            year: a.year ?? "",
+            detail: a.detail ?? "",
+          })),
         }))
       : [newCar()],
   );
@@ -416,22 +505,29 @@ function CarList({ initial }: { initial: AthleteCar[] }) {
         team: r.team.trim(),
         championships: r.championships.trim(),
         photo_url: r.photo_url,
+        conquistas: r.conquistas
+          .filter((a) => a.title.trim().length > 0)
+          .map((a) => ({
+            title: a.title.trim(),
+            year: a.year.trim(),
+            detail: a.detail.trim(),
+          })),
       })),
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <input type="hidden" name="cars" value={payload} />
       {rows.map((row, i) => (
         <div
           key={row.key}
-          className="border-border flex flex-col gap-2 rounded-md border p-3"
+          className="border-border bg-background/40 flex flex-col gap-2 rounded-md border border-l-2 p-3"
         >
           <div className="grid grid-cols-2 gap-2">
             <Input
               value={row.name}
               onChange={(e) => update(i, { name: e.target.value })}
-              placeholder="Carro (ex: Opala 76)"
+              placeholder="Carro (ex: Gol G4)"
               aria-label="Carro"
             />
             <Input
@@ -453,10 +549,19 @@ function CarList({ initial }: { initial: AthleteCar[] }) {
             hint="Foto do carro (opcional)."
             onChange={(u) => update(i, { photo_url: u })}
           />
+          <div className="mt-1 flex flex-col gap-1.5">
+            <span className="text-muted-foreground text-[11px]">
+              Conquistas com este carro
+            </span>
+            <AchievementRows
+              rows={row.conquistas}
+              onChange={(next) => update(i, { conquistas: next })}
+            />
+          </div>
           <button
             type="button"
             onClick={() => remove(i)}
-            className="text-muted-foreground hover:text-destructive self-start text-xs"
+            className="text-muted-foreground hover:text-destructive mt-1 self-start text-xs"
           >
             Remover carro
           </button>
@@ -473,134 +578,67 @@ function CarList({ initial }: { initial: AthleteCar[] }) {
   );
 }
 
-type AchDraft = { title: string; year: string; detail: string };
-
-function AchievementList({ initial }: { initial: AthleteAchievement[] }) {
+function OutrasConquistas({ initial }: { initial: AthleteAchievement[] }) {
   const [rows, setRows] = useState<AchDraft[]>(
-    initial.length > 0
-      ? initial.map((a) => ({
-          title: a.title,
-          year: a.year ?? "",
-          detail: a.detail ?? "",
-        }))
-      : [{ title: "", year: "", detail: "" }],
+    initial.map((a) => ({
+      key: a.id,
+      title: a.title,
+      year: a.year ?? "",
+      detail: a.detail ?? "",
+    })),
   );
 
-  const update = (i: number, patch: Partial<AchDraft>) =>
-    setRows((r) => r.map((row, j) => (j === i ? { ...row, ...patch } : row)));
-  const remove = (i: number) =>
-    setRows((r) =>
-      r.length > 1 ? r.filter((_, j) => j !== i) : [{ title: "", year: "", detail: "" }],
-    );
-  const add = () =>
-    setRows((r) => [...r, { title: "", year: "", detail: "" }]);
-
   const payload = JSON.stringify(
-    rows.filter((r) => r.title.trim().length > 0),
+    rows
+      .filter((r) => r.title.trim().length > 0)
+      .map((r) => ({
+        title: r.title.trim(),
+        year: r.year.trim(),
+        detail: r.detail.trim(),
+      })),
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <input type="hidden" name="achievements" value={payload} />
-      {rows.map((row, i) => (
-        <div
-          key={i}
-          className="border-border flex flex-col gap-2 rounded-md border p-3"
-        >
-          <div className="grid grid-cols-[1fr_90px] gap-2">
-            <Input
-              value={row.title}
-              onChange={(e) => update(i, { title: e.target.value })}
-              placeholder="Título (ex: 🏆 Campeão Regional)"
-              aria-label="Título da conquista"
-            />
-            <Input
-              value={row.year}
-              onChange={(e) => update(i, { year: e.target.value })}
-              inputMode="numeric"
-              placeholder="Ano"
-              aria-label="Ano"
-            />
-          </div>
-          <Input
-            value={row.detail}
-            onChange={(e) => update(i, { detail: e.target.value })}
-            placeholder="Detalhe (opcional): recorde, tempo, etapa…"
-            aria-label="Detalhe da conquista"
-          />
-          <button
-            type="button"
-            onClick={() => remove(i)}
-            className="text-muted-foreground hover:text-destructive self-start text-xs"
-          >
-            Remover
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={add}
-        className="border-border text-muted-foreground hover:text-foreground self-start rounded-md border border-dashed px-3 py-1.5 text-sm"
-      >
-        + Adicionar conquista
-      </button>
-    </div>
+    <>
+      <input type="hidden" name="outras_conquistas" value={payload} />
+      <AchievementRows
+        rows={rows}
+        onChange={setRows}
+        addLabel="+ Adicionar conquista"
+      />
+    </>
   );
 }
 
 function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
-  const [name, setName] = useState(athlete?.list_name ?? "");
-  const [number, setNumber] = useState(
-    athlete?.list_number != null ? String(athlete.list_number) : "",
-  );
-  const showPos = number.trim().length > 0;
-
   return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-[1fr_130px] gap-2">
-        <MiniField label="Nome da lista">
-          <Input
-            name="list_name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: Racha da BR-101"
-          />
-        </MiniField>
-        <MiniField label="Número da lista">
-          <Input
-            name="list_number"
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            inputMode="numeric"
-            placeholder="Ex: 10, 20"
-          />
-        </MiniField>
-      </div>
-      {showPos && (
-        <div className="grid grid-cols-[130px_1fr] items-end gap-3">
-          <MiniField label="Sua posição na lista">
-            <Input
-              name="list_position"
-              defaultValue={
-                athlete?.list_position != null
-                  ? String(athlete.list_position)
-                  : ""
-              }
-              inputMode="numeric"
-              placeholder="Ex: 3"
-            />
-          </MiniField>
-          <label className="flex h-9 cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="list_shark_tank"
-              defaultChecked={athlete?.list_shark_tank ?? false}
-              className="accent-primary"
-            />
-            Estou no Shark Tank desta lista
-          </label>
-        </div>
-      )}
+    <div className="grid grid-cols-[1fr_130px] items-start gap-3">
+      <MiniField label="Lista">
+        <Input
+          name="list_name"
+          defaultValue={athlete?.list_name ?? ""}
+          placeholder="Ex: Lista 011, Lista 015"
+        />
+      </MiniField>
+      <MiniField label="Atual posição">
+        <Input
+          name="list_position"
+          defaultValue={
+            athlete?.list_position != null ? String(athlete.list_position) : ""
+          }
+          inputMode="numeric"
+          placeholder="Ex: 3"
+        />
+      </MiniField>
+      <label className="col-span-2 flex cursor-pointer items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="list_shark_tank"
+          defaultChecked={athlete?.list_shark_tank ?? false}
+          className="accent-primary"
+        />
+        Estou no Shark Tank desta lista
+      </label>
     </div>
   );
 }

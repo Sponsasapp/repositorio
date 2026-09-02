@@ -112,14 +112,9 @@ export default async function PerfilPublicoPage({
   const isOwner = viewerId === profile.id;
 
   const carPhoto = cars.find((c) => c.photo_url)?.photo_url ?? null;
-  const listLabel = athlete?.list_name
-    ? [
-        athlete.list_name,
-        athlete.list_number != null ? `nº ${athlete.list_number}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : null;
+  const listLabel = athlete?.list_name ?? null;
+  const carAchievements = (carId: string) =>
+    achievements.filter((a) => a.car_id === carId);
 
   const followers = socials.reduce((s, l) => s + (l.followers ?? 0), 0);
   const reach = socials.reduce((s, l) => s + (l.avg_reach ?? 0), 0);
@@ -217,34 +212,58 @@ export default async function PerfilPublicoPage({
             {cars.length > 0 && (
               <Panel title={cars.length > 1 ? "Carros" : "Carro"}>
                 <ul className="flex flex-col divide-y">
-                  {cars.map((c) => (
-                    <li
-                      key={c.id}
-                      className="flex gap-3 py-3 first:pt-0 last:pb-0"
-                    >
-                      {c.photo_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={c.photo_url}
-                          alt={c.name}
-                          className="size-16 shrink-0 rounded-md object-cover"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{c.name}</p>
-                        {c.team && (
-                          <p className="text-muted-foreground text-xs">
-                            {c.team}
-                          </p>
+                  {cars.map((c) => {
+                    const conq = carAchievements(c.id);
+                    return (
+                      <li key={c.id} className="py-4 first:pt-0 last:pb-0">
+                        <div className="flex gap-3">
+                          {c.photo_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={c.photo_url}
+                              alt={c.name}
+                              className="size-16 shrink-0 rounded-md object-cover"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium">{c.name}</p>
+                            {c.team && (
+                              <p className="text-muted-foreground text-xs">
+                                {c.team}
+                              </p>
+                            )}
+                            {c.championships && (
+                              <p className="text-muted-foreground mt-0.5 text-xs">
+                                {c.championships}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {conq.length > 0 && (
+                          <ul className="border-border mt-3 flex flex-col gap-1.5 border-l pl-3 text-sm">
+                            {conq.map((a) => (
+                              <li key={a.id} className="flex gap-2">
+                                {a.year && (
+                                  <span className="text-muted-foreground shrink-0">
+                                    {a.year}
+                                  </span>
+                                )}
+                                <span>
+                                  {a.title}
+                                  {a.detail && (
+                                    <span className="text-muted-foreground">
+                                      {" "}
+                                      — {a.detail}
+                                    </span>
+                                  )}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
                         )}
-                        {c.championships && (
-                          <p className="text-muted-foreground mt-0.5 text-xs">
-                            {c.championships}
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               </Panel>
             )}
@@ -362,7 +381,7 @@ export default async function PerfilPublicoPage({
                 <div className="mt-2 flex flex-wrap gap-2">
                   {athlete?.list_position != null && (
                     <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
-                      {athlete.list_position}º na lista
+                      Posição atual: {athlete.list_position}º
                     </span>
                   )}
                   {athlete?.list_shark_tank && (

@@ -71,7 +71,7 @@ export async function salvarPerfilPiloto(
     .eq("id", user.id);
   if (e1) return { error: "Não foi possível salvar os dados básicos." };
 
-  const listNumber = int(formData.get("list_number"));
+  const listName = text(formData.get("list_name"));
 
   // 2. athlete_profiles (upsert)
   const { error: e2 } = await supabase.from("athlete_profiles").upsert({
@@ -90,29 +90,62 @@ export async function salvarPerfilPiloto(
     ],
     offered_deliverables: formData.getAll("offered_deliverables").map(String),
     availability_notes: text(formData.get("availability_notes")),
-    list_name: text(formData.get("list_name")),
-    list_number: listNumber,
-    list_position: listNumber != null ? int(formData.get("list_position")) : null,
-    list_shark_tank:
-      listNumber != null && formData.get("list_shark_tank") != null,
+    list_name: listName,
+    list_position: listName ? int(formData.get("list_position")) : null,
+    list_shark_tank: listName != null && formData.get("list_shark_tank") != null,
     updated_at: new Date().toISOString(),
   });
   if (e2) return { error: "Não foi possível salvar os dados esportivos." };
 
-  // 2b. athlete_cars — substitui tudo
-  const carRows = parseCars(formData.get("cars"), user.id);
+  // 2b. Carros (sub-perfis) + conquistas — substitui tudo.
+  // As conquistas de cada carro caem via ON DELETE CASCADE; as "outras"
+  // (car_id nulo) apagamos aqui junto com o resto.
+  const carsParsed = parseCars(formData.get("cars"));
+  const outras = parseAchievements(formData.get("outras_conquistas"));
+
+  await supabase.from("athlete_achievements").delete().eq("athlete_id", user.id);
   await supabase.from("athlete_cars").delete().eq("athlete_id", user.id);
-  if (carRows.length > 0) {
-    const { error: eCars } = await supabase.from("athlete_cars").insert(carRows);
+
+  let insertedCars: { id: string; position: number }[] = [];
+  if (carsParsed.length > 0) {
+    const { data: cd, error: eCars } = await supabase
+      .from("athlete_cars")
+      .insert(
+        carsParsed.map((c, i) => ({
+          athlete_id: user.id,
+          name: c.name,
+          team: c.team,
+          championships: c.championships,
+          photo_url: c.photo_url,
+          position: i,
+        })),
+      )
+      .select("id, position");
     if (eCars) return { error: "Não foi possível salvar os carros." };
+    insertedCars = cd ?? [];
   }
 
-  // 2c. athlete_achievements — substitui tudo
-  const achRows = parseAchievements(formData.get("achievements"), user.id);
-  await supabase
-    .from("athlete_achievements")
-    .delete()
-    .eq("athlete_id", user.id);
+  const posToId = new Map(insertedCars.map((c) => [c.position, c.id]));
+  const achRows = [
+    ...carsParsed.flatMap((c, i) =>
+      c.conquistas.map((a, j) => ({
+        athlete_id: user.id,
+        car_id: posToId.get(i) ?? null,
+        title: a.title,
+        year: a.year,
+        detail: a.detail,
+        position: j,
+      })),
+    ),
+    ...outras.map((a, j) => ({
+      athlete_id: user.id,
+      car_id: null as string | null,
+      title: a.title,
+      year: a.year,
+      detail: a.detail,
+      position: j,
+    })),
+  ];
   if (achRows.length > 0) {
     const { error: eAch } = await supabase
       .from("athlete_achievements")
@@ -188,7 +221,23 @@ function parsePackages(raw: FormDataEntryValue | null, athleteId: string) {
     .filter((p) => p.title.length > 0);
 }
 
-function parseCars(raw: FormDataEntryValue | null, athleteId: string) {
+type AchInput = { title: string; year: string | null; detail: string | null };
+
+function parseAchList(raw: unknown): AchInput[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((a) => {
+      const item = a as Record<string, unknown>;
+      return {
+        title: String(item.title ?? "").trim(),
+        year: String(item.year ?? "").trim() || null,
+        detail: String(item.detail ?? "").trim() || null,
+      };
+    })
+    .filter((a) => a.title.length > 0);
+}
+
+function parseCars(raw: FormDataEntryValue | null) {
   let parsed: unknown;
   try {
     parsed = JSON.parse(String(raw ?? "[]"));
@@ -197,40 +246,27 @@ function parseCars(raw: FormDataEntryValue | null, athleteId: string) {
   }
   if (!Array.isArray(parsed)) return [];
   return parsed
-    .map((c, i) => {
+    .map((c) => {
       const item = c as Record<string, unknown>;
       return {
-        athlete_id: athleteId,
         name: String(item.name ?? "").trim(),
         team: String(item.team ?? "").trim() || null,
         championships: String(item.championships ?? "").trim() || null,
         photo_url: String(item.photo_url ?? "").trim() || null,
-        position: i,
+        conquistas: parseAchList(item.conquistas),
       };
     })
     .filter((c) => c.name.length > 0);
 }
 
-function parseAchievements(raw: FormDataEntryValue | null, athleteId: string) {
+function parseAchievements(raw: FormDataEntryValue | null): AchInput[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(String(raw ?? "[]"));
   } catch {
     return [];
   }
-  if (!Array.isArray(parsed)) return [];
-  return parsed
-    .map((a, i) => {
-      const item = a as Record<string, unknown>;
-      return {
-        athlete_id: athleteId,
-        title: String(item.title ?? "").trim(),
-        year: String(item.year ?? "").trim() || null,
-        detail: String(item.detail ?? "").trim() || null,
-        position: i,
-      };
-    })
-    .filter((a) => a.title.length > 0);
+  return parseAchList(parsed);
 }
 
 export async function salvarPerfilEmpresa(

@@ -60,7 +60,6 @@ export type AthleteProfile = {
   offered_deliverables: string[] | null;
   availability_notes: string | null;
   list_name: string | null;
-  list_number: number | null;
   list_position: number | null;
   list_shark_tank: boolean;
   rank_score: number | null;
@@ -84,6 +83,7 @@ export type AthleteCar = {
 export type AthleteAchievement = {
   id: string;
   athlete_id: string;
+  car_id: string | null;
   title: string;
   year: string | null;
   detail: string | null;
@@ -257,7 +257,7 @@ export type Database = {
       >;
       athlete_achievements: TableDef<
         AthleteAchievement,
-        "id" | "year" | "detail" | "position" | "created_at"
+        "id" | "car_id" | "year" | "detail" | "position" | "created_at"
       >;
       opportunities: TableDef<
         Opportunity,
