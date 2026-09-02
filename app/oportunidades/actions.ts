@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
 import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
+import { notifyUser } from "@/lib/email";
 
 export type OppState = { ok?: true; error?: string } | undefined;
 
@@ -105,6 +107,27 @@ export async function candidatarse(
     return { error: "Não foi possível enviar a candidatura." };
   }
 
+  const { data: opp } = await supabase
+    .from("opportunities")
+    .select("title, company_id")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+  if (opp) {
+    after(() =>
+      notifyUser(opp.company_id, {
+        subject: "Nova candidatura na sua oportunidade",
+        title: `${me?.name ?? "Um piloto"} se candidatou`,
+        body: `Você recebeu uma nova candidatura para "${opp.title}".`,
+        cta: { label: "Ver candidatura", path: `/oportunidades/${opportunityId}` },
+      }),
+    );
+  }
+
   revalidatePath(`/oportunidades/${opportunityId}`);
   return { ok: true };
 }
@@ -123,6 +146,35 @@ export async function responderCandidatura(formData: FormData): Promise<void> {
     .from("applications")
     .update({ status: decision as "accepted" | "rejected" })
     .eq("id", applicationId);
+
+  if (decision === "accepted") {
+    const { data: app } = await supabase
+      .from("applications")
+      .select("athlete_id, opportunity_id")
+      .eq("id", applicationId)
+      .maybeSingle();
+    if (app?.athlete_id) {
+      const { data: opp } = await supabase
+        .from("opportunities")
+        .select("title")
+        .eq("id", app.opportunity_id)
+        .maybeSingle();
+      const athleteId = app.athlete_id;
+      after(() =>
+        notifyUser(athleteId, {
+          subject: "Sua candidatura foi aceita",
+          title: "Candidatura aceita",
+          body: `A empresa aceitou sua candidatura${
+            opp?.title ? ` para "${opp.title}"` : ""
+          }. Você já pode enviar uma proposta.`,
+          cta: {
+            label: "Ver oportunidade",
+            path: `/oportunidades/${opportunityId}`,
+          },
+        }),
+      );
+    }
+  }
 
   revalidatePath(`/oportunidades/${opportunityId}`);
 }

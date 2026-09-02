@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { deliverableLabel } from "@/lib/deliverables";
+import { notifyUser } from "@/lib/email";
 
 export type EntregaState = { ok?: true; error?: string } | undefined;
 
@@ -114,7 +117,7 @@ export async function avaliarEntrega(formData: FormData): Promise<void> {
   // Só a empresa do patrocínio aprova/rejeita.
   const { data: sp } = await supabase
     .from("sponsorships")
-    .select("company_id")
+    .select("company_id, athlete_id")
     .eq("id", sponsorshipId)
     .maybeSingle();
   if (!sp || sp.company_id !== user.id) return;
@@ -123,6 +126,33 @@ export async function avaliarEntrega(formData: FormData): Promise<void> {
     .from("deliverables")
     .update({ status: decision as "approved" | "rejected" })
     .eq("id", deliverableId);
+
+  const { data: dlv } = await supabase
+    .from("deliverables")
+    .select("type")
+    .eq("id", deliverableId)
+    .maybeSingle();
+  const label = dlv ? deliverableLabel(dlv.type) : "Uma entrega";
+  after(() =>
+    notifyUser(sp.athlete_id, {
+      subject:
+        decision === "approved"
+          ? "Entrega aprovada"
+          : "Entrega recusada — precisa de ajuste",
+      title:
+        decision === "approved"
+          ? `${label}: aprovada`
+          : `${label}: recusada`,
+      body:
+        decision === "approved"
+          ? "A empresa aprovou a comprovação desta entrega."
+          : "A empresa pediu ajuste. Envie uma nova comprovação.",
+      cta: {
+        label: "Ver patrocínio",
+        path: `/patrocinios/${sponsorshipId}`,
+      },
+    }),
+  );
 
   revalidatePath(`/patrocinios/${sponsorshipId}`);
   revalidatePath("/entregas");

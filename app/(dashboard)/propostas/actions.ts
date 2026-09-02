@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
 import { PLAN_LIMITS, limitMessage, startOfMonthISO } from "@/lib/plan";
+import { notifyUser } from "@/lib/email";
 import type { ProposalPaymentType } from "@/lib/types/database.types";
 
 export type PropostaState = { ok?: true; error?: string } | undefined;
@@ -100,6 +102,20 @@ export async function enviarProposta(
     return { error: "Não foi possível enviar a proposta." };
   }
 
+  const { data: sender } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+  after(() =>
+    notifyUser(to, {
+      subject: "Você recebeu uma proposta",
+      title: `Proposta de ${sender?.name ?? "uma empresa"}`,
+      body: "Uma nova proposta de patrocínio chegou para você. Abra para ver os termos e responder.",
+      cta: { label: "Ver proposta", path: `/propostas/${data.id}` },
+    }),
+  );
+
   revalidatePath("/propostas");
   redirect(`/propostas/${data.id}`);
 }
@@ -159,6 +175,18 @@ export async function responderProposta(formData: FormData): Promise<void> {
   if (spErr || !sponsorship) return;
 
   await supabase.from("proposals").update({ status: "accepted" }).eq("id", id);
+
+  after(() =>
+    notifyUser(proposal.from_profile_id, {
+      subject: "Sua proposta foi aceita",
+      title: "Proposta aceita — patrocínio criado",
+      body: "A outra parte aceitou sua proposta. O patrocínio já está ativo, com os termos combinados.",
+      cta: {
+        label: "Ver patrocínio",
+        path: `/patrocinios/${sponsorship.id}`,
+      },
+    }),
+  );
 
   revalidatePath(`/propostas/${id}`);
   revalidatePath("/propostas");
