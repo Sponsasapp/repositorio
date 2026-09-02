@@ -9,6 +9,7 @@ import type {
   Profile,
   AthleteProfile,
   SocialLink,
+  AthletePackage,
 } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +26,12 @@ export function PerfilPilotoForm({
   profile,
   athlete,
   socials,
+  packages,
 }: {
   profile: Profile;
   athlete: AthleteProfile | null;
   socials: SocialLink[];
+  packages: AthletePackage[];
 }) {
   const [state, formAction, pending] = useActionState<PerfilState, FormData>(
     salvarPerfilPiloto,
@@ -123,26 +126,6 @@ export function PerfilPilotoForm({
             rows={3}
           />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Valor desejado — mín. (R$/mês)" htmlFor="desired_value_min">
-            <Input
-              id="desired_value_min"
-              name="desired_value_min"
-              inputMode="numeric"
-              defaultValue={athlete?.desired_value_min ?? ""}
-              placeholder="1000"
-            />
-          </Field>
-          <Field label="Valor desejado — máx. (R$/mês)" htmlFor="desired_value_max">
-            <Input
-              id="desired_value_max"
-              name="desired_value_max"
-              inputMode="numeric"
-              defaultValue={athlete?.desired_value_max ?? ""}
-              placeholder="5000"
-            />
-          </Field>
-        </div>
         <Field
           label="Entregas que oferece"
           hint="Marque o que você consegue entregar."
@@ -192,11 +175,21 @@ export function PerfilPilotoForm({
         </Field>
       </Section>
 
+      {/* ---- Tabela de preços ---- */}
+      <Section title="Tabela de preços">
+        <p className="text-muted-foreground -mt-2 mb-1 text-xs">
+          O que uma marca pode contratar e por quanto. Ex: “Adesivo no carro”,
+          “Pacote 3 stories/semana”, “Stories + reels”.
+        </p>
+        <PriceTable initial={packages} />
+      </Section>
+
       {/* ---- Redes sociais ---- */}
       <Section title="Redes sociais">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          O engajamento é calculado sozinho a partir de alcance ÷ seguidores.
-          Você pode ajustar se tiver o número real.
+          Informe seguidores, alcance médio e interações médias por post. O
+          engajamento (interações ÷ seguidores) é calculado sozinho — ajuste se
+          tiver o número real.
         </p>
         <div className="flex flex-col gap-5">
           {PLATFORMS.map((p) => (
@@ -239,17 +232,22 @@ function SocialRow({
     initial?.followers?.toString() ?? "",
   );
   const [reach, setReach] = useState(initial?.avg_reach?.toString() ?? "");
+  const [interactions, setInteractions] = useState(
+    initial?.avg_interactions?.toString() ?? "",
+  );
   const [engagement, setEngagement] = useState(
     initial?.engagement_rate?.toString() ?? "",
   );
   // Vira true quando o usuário edita o engajamento à mão nesta sessão.
   const [engTouched, setEngTouched] = useState(false);
 
-  function recalc(f: string, r: string) {
+  function recalc(f: string, i: string) {
     if (engTouched) return;
     const fn = onlyDigits(f);
-    const rn = onlyDigits(r);
-    setEngagement(fn > 0 && rn > 0 ? String(Math.round((rn / fn) * 1000) / 10) : "");
+    const inn = onlyDigits(i);
+    // engajamento = interações médias ÷ seguidores × 100, limitado a 100%
+    const rate = fn > 0 && inn > 0 ? Math.min((inn / fn) * 100, 100) : null;
+    setEngagement(rate == null ? "" : String(Math.round(rate * 10) / 10));
   }
 
   return (
@@ -261,39 +259,135 @@ function SocialRow({
         defaultValue={initial?.url ?? ""}
         placeholder="URL do perfil"
       />
-      <div className="grid grid-cols-3 gap-2">
-        <Input
-          name={`social_${platform.key}_followers`}
-          inputMode="numeric"
-          value={followers}
-          onChange={(e) => {
-            setFollowers(e.target.value);
-            recalc(e.target.value, reach);
-          }}
-          placeholder="Seguidores"
-        />
-        <Input
-          name={`social_${platform.key}_avg_reach`}
-          inputMode="numeric"
-          value={reach}
-          onChange={(e) => {
-            setReach(e.target.value);
-            recalc(followers, e.target.value);
-          }}
-          placeholder="Alcance médio"
-        />
-        <Input
-          name={`social_${platform.key}_engagement_rate`}
-          inputMode="numeric"
-          value={engagement}
-          onChange={(e) => {
-            setEngagement(e.target.value);
-            setEngTouched(true);
-          }}
-          placeholder="Engaj. %"
-          aria-label="Taxa de engajamento (%)"
-        />
+      <div className="grid grid-cols-2 gap-2">
+        <MiniField label="Seguidores">
+          <Input
+            name={`social_${platform.key}_followers`}
+            inputMode="numeric"
+            value={followers}
+            onChange={(e) => {
+              setFollowers(e.target.value);
+              recalc(e.target.value, interactions);
+            }}
+          />
+        </MiniField>
+        <MiniField label="Alcance médio">
+          <Input
+            name={`social_${platform.key}_avg_reach`}
+            inputMode="numeric"
+            value={reach}
+            onChange={(e) => setReach(e.target.value)}
+          />
+        </MiniField>
+        <MiniField label="Interações médias/post">
+          <Input
+            name={`social_${platform.key}_avg_interactions`}
+            inputMode="numeric"
+            value={interactions}
+            onChange={(e) => {
+              setInteractions(e.target.value);
+              recalc(followers, e.target.value);
+            }}
+          />
+        </MiniField>
+        <MiniField label="Engajamento %">
+          <Input
+            name={`social_${platform.key}_engagement_rate`}
+            inputMode="numeric"
+            value={engagement}
+            onChange={(e) => {
+              setEngagement(e.target.value);
+              setEngTouched(true);
+            }}
+          />
+        </MiniField>
       </div>
+    </div>
+  );
+}
+
+function MiniField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-muted-foreground text-[11px]">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+type PkgDraft = { title: string; description: string; price: string };
+
+function PriceTable({ initial }: { initial: AthletePackage[] }) {
+  const [rows, setRows] = useState<PkgDraft[]>(
+    initial.length > 0
+      ? initial.map((p) => ({
+          title: p.title,
+          description: p.description ?? "",
+          price: p.price != null ? String(p.price) : "",
+        }))
+      : [{ title: "", description: "", price: "" }],
+  );
+
+  const update = (i: number, patch: Partial<PkgDraft>) =>
+    setRows((r) => r.map((row, j) => (j === i ? { ...row, ...patch } : row)));
+  const remove = (i: number) =>
+    setRows((r) => (r.length > 1 ? r.filter((_, j) => j !== i) : r));
+  const add = () =>
+    setRows((r) => [...r, { title: "", description: "", price: "" }]);
+
+  const payload = JSON.stringify(rows.filter((r) => r.title.trim().length > 0));
+
+  return (
+    <div className="flex flex-col gap-3">
+      <input type="hidden" name="packages" value={payload} />
+      {rows.map((row, i) => (
+        <div
+          key={i}
+          className="border-border flex flex-col gap-2 rounded-md border p-3"
+        >
+          <div className="grid grid-cols-[1fr_130px] gap-2">
+            <Input
+              value={row.title}
+              onChange={(e) => update(i, { title: e.target.value })}
+              placeholder="Item (ex: Adesivo no carro)"
+              aria-label="Título do item"
+            />
+            <Input
+              value={row.price}
+              onChange={(e) => update(i, { price: e.target.value })}
+              inputMode="numeric"
+              placeholder="R$"
+              aria-label="Preço"
+            />
+          </div>
+          <Input
+            value={row.description}
+            onChange={(e) => update(i, { description: e.target.value })}
+            placeholder="Descrição (opcional)"
+            aria-label="Descrição do item"
+          />
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="text-muted-foreground hover:text-destructive self-start text-xs"
+          >
+            Remover
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="border-border text-muted-foreground hover:text-foreground self-start rounded-md border border-dashed px-3 py-1.5 text-sm"
+      >
+        + Adicionar item
+      </button>
     </div>
   );
 }

@@ -67,8 +67,19 @@ export type SocialLink = {
   url: string | null;
   followers: number | null;
   avg_reach: number | null;
+  avg_interactions: number | null;
   engagement_rate: number | null;
   updated_at: string;
+};
+
+export type AthletePackage = {
+  id: string;
+  athlete_id: string;
+  title: string;
+  description: string | null;
+  price: number | null;
+  position: number;
+  created_at: string;
 };
 
 export type Opportunity = {
@@ -175,8 +186,13 @@ export type Database = {
         | "url"
         | "followers"
         | "avg_reach"
+        | "avg_interactions"
         | "engagement_rate"
         | "updated_at"
+      >;
+      athlete_packages: TableDef<
+        AthletePackage,
+        "id" | "description" | "price" | "position" | "created_at"
       >;
       opportunities: TableDef<
         Opportunity,

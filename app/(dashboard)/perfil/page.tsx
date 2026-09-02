@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PerfilPilotoForm } from "./perfil-form";
@@ -39,26 +40,43 @@ export default async function PerfilPage() {
     );
   }
 
-  const [{ data: athlete }, { data: socials }] = await Promise.all([
-    supabase
-      .from("athlete_profiles")
-      .select("*")
-      .eq("profile_id", user.id)
-      .maybeSingle(),
-    supabase.from("social_links").select("*").eq("profile_id", user.id),
-  ]);
+  const [{ data: athlete }, { data: socials }, { data: packages }] =
+    await Promise.all([
+      supabase
+        .from("athlete_profiles")
+        .select("*")
+        .eq("profile_id", user.id)
+        .maybeSingle(),
+      supabase.from("social_links").select("*").eq("profile_id", user.id),
+      supabase
+        .from("athlete_packages")
+        .select("*")
+        .eq("athlete_id", user.id)
+        .order("position"),
+    ]);
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-4xl">Meu perfil</h1>
-      <p className="text-muted-foreground mt-1 text-sm">
-        É o que as marcas veem quando encontram você. Redes sociais são
-        preenchidas manualmente por enquanto.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-4xl">Meu perfil</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            É o que as marcas veem quando encontram você. Redes sociais são
+            preenchidas manualmente por enquanto.
+          </p>
+        </div>
+        <Link
+          href={`/p/${user.id}`}
+          className="text-foreground shrink-0 text-sm underline underline-offset-2"
+        >
+          Ver perfil público
+        </Link>
+      </div>
       <PerfilPilotoForm
         profile={profile}
         athlete={athlete ?? null}
         socials={socials ?? []}
+        packages={packages ?? []}
       />
     </div>
   );

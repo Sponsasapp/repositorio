@@ -3,16 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { parseCsv } from "@/lib/deliverables";
+import { parseNumberBR } from "@/lib/num";
 import { BR_UF } from "@/lib/br";
 
 export type PerfilState = { ok?: true; error?: string } | undefined;
 
-function num(v: FormDataEntryValue | null): number | null {
-  const s = String(v ?? "").replace(/\./g, "").replace(",", ".").trim();
-  if (!s) return null;
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-}
+const num = (v: FormDataEntryValue | null): number | null => parseNumberBR(v);
 
 function text(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim();
@@ -37,11 +33,13 @@ export async function salvarPerfilPiloto(
     return { error: "Estado (UF) inválido." };
   }
 
-  const minV = num(formData.get("desired_value_min"));
-  const maxV = num(formData.get("desired_value_max"));
-  if (minV !== null && maxV !== null && minV > maxV) {
-    return { error: "O valor mínimo não pode ser maior que o máximo." };
-  }
+  // Tabela de preços define a faixa de valor (resumo usado em busca/filtro).
+  const pkgRows = parsePackages(formData.get("packages"), user.id);
+  const prices = pkgRows
+    .map((p) => p.price)
+    .filter((n): n is number => n != null);
+  const minV = prices.length > 0 ? Math.min(...prices) : null;
+  const maxV = prices.length > 0 ? Math.max(...prices) : null;
 
   // 1. profiles
   const { error: e1 } = await supabase
@@ -84,10 +82,18 @@ export async function salvarPerfilPiloto(
       url: text(formData.get(`social_${platform}_url`)),
       followers: num(formData.get(`social_${platform}_followers`)),
       avg_reach: num(formData.get(`social_${platform}_avg_reach`)),
+      avg_interactions: num(formData.get(`social_${platform}_avg_interactions`)),
       engagement_rate: num(formData.get(`social_${platform}_engagement_rate`)),
       updated_at: new Date().toISOString(),
     }))
-    .filter((r) => r.url || r.followers || r.avg_reach || r.engagement_rate);
+    .filter(
+      (r) =>
+        r.url ||
+        r.followers ||
+        r.avg_reach ||
+        r.avg_interactions ||
+        r.engagement_rate,
+    );
 
   await supabase.from("social_links").delete().eq("profile_id", user.id);
   if (rows.length > 0) {
@@ -95,9 +101,44 @@ export async function salvarPerfilPiloto(
     if (e3) return { error: "Não foi possível salvar as redes sociais." };
   }
 
+  // 4. athlete_packages — tabela de preços (substitui tudo)
+  await supabase.from("athlete_packages").delete().eq("athlete_id", user.id);
+  if (pkgRows.length > 0) {
+    const { error: e4 } = await supabase
+      .from("athlete_packages")
+      .insert(pkgRows);
+    if (e4) return { error: "Não foi possível salvar a tabela de preços." };
+  }
+
   revalidatePath("/perfil");
   revalidatePath("/dashboard");
+  revalidatePath(`/p/${user.id}`);
   return { ok: true };
+}
+
+function parsePackages(raw: FormDataEntryValue | null, athleteId: string) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map((p, i) => {
+      const item = p as Record<string, unknown>;
+      const title = String(item.title ?? "").trim();
+      const description = String(item.description ?? "").trim();
+      const priceNum = parseNumberBR(item.price);
+      return {
+        athlete_id: athleteId,
+        title,
+        description: description || null,
+        price: priceNum != null && priceNum > 0 ? priceNum : null,
+        position: i,
+      };
+    })
+    .filter((p) => p.title.length > 0);
 }
 
 export async function salvarPerfilEmpresa(
