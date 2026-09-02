@@ -40,8 +40,9 @@ export default async function DashboardPage() {
       <div className="border-primary bg-card mt-8 rounded-lg border border-l-3 p-5">
         <p className="text-sm font-semibold">Comece pelo seu perfil</p>
         <p className="text-muted-foreground mt-1 text-sm">
-          Preencha seus dados esportivos, redes sociais e o que você oferece a um
-          patrocinador. É o que as marcas veem.
+          {profile?.type === "company"
+            ? "Preencha os dados da empresa e o objetivo da campanha. É o que os pilotos veem."
+            : "Preencha seus dados esportivos, redes sociais e o que você oferece a um patrocinador. É o que as marcas veem."}
         </p>
         <Button asChild size="lg" className="mt-4">
           <Link href="/perfil">Editar meu perfil</Link>

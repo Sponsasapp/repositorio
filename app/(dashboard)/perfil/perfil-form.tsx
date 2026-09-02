@@ -3,8 +3,8 @@
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { salvarPerfilPiloto, type PerfilState } from "./actions";
+import { Section, Field, UfSelect } from "./_ui";
 import { OFFERED_DELIVERABLES } from "@/lib/deliverables";
-import { BR_UF } from "@/lib/br";
 import type {
   Profile,
   AthleteProfile,
@@ -12,7 +12,6 @@ import type {
 } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const PLATFORMS = [
@@ -59,19 +58,7 @@ export function PerfilPilotoForm({
             />
           </Field>
           <Field label="UF" htmlFor="state">
-            <select
-              id="state"
-              name="state"
-              defaultValue={profile.state ?? ""}
-              className="border-input h-9 w-full rounded-lg border bg-transparent px-2 text-sm"
-            >
-              <option value="">—</option>
-              {BR_UF.map((uf) => (
-                <option key={uf} value={uf}>
-                  {uf}
-                </option>
-              ))}
-            </select>
+            <UfSelect defaultValue={profile.state} />
           </Field>
         </div>
         <Field label="Bio" htmlFor="bio" hint="Um parágrafo curto sobre você.">
@@ -307,41 +294,6 @@ function SocialRow({
           aria-label="Taxa de engajamento (%)"
         />
       </div>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="border-primary bg-card rounded-lg border border-l-3 p-5">
-      <h2 className="mb-4 text-xl">{title}</h2>
-      <div className="flex flex-col gap-4">{children}</div>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  hint,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={htmlFor}>{label}</Label>
-      {children}
-      {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
     </div>
   );
 }

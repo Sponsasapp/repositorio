@@ -99,3 +99,53 @@ export async function salvarPerfilPiloto(
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+export async function salvarPerfilEmpresa(
+  _prev: PerfilState,
+  formData: FormData,
+): Promise<PerfilState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  const name = text(formData.get("name"));
+  if (!name) return { error: "O nome da empresa é obrigatório." };
+
+  const uf = text(formData.get("state"));
+  if (uf && !BR_UF.includes(uf as (typeof BR_UF)[number])) {
+    return { error: "Estado (UF) inválido." };
+  }
+
+  const { error: e1 } = await supabase
+    .from("profiles")
+    .update({
+      name,
+      city: text(formData.get("city")),
+      state: uf,
+      photo_url: text(formData.get("photo_url")),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+  if (e1) return { error: "Não foi possível salvar os dados da empresa." };
+
+  const { error: e2 } = await supabase.from("company_profiles").upsert({
+    profile_id: user.id,
+    segment: text(formData.get("segment")),
+    website: text(formData.get("website")),
+    instagram: text(formData.get("instagram")),
+    description: text(formData.get("description")),
+    campaign_goal: text(formData.get("campaign_goal")),
+    target_audience: text(formData.get("target_audience")),
+    budget: num(formData.get("budget")),
+    campaign_duration_months: num(formData.get("campaign_duration_months")),
+    region_of_interest: text(formData.get("region_of_interest")),
+    updated_at: new Date().toISOString(),
+  });
+  if (e2) return { error: "Não foi possível salvar os dados da campanha." };
+
+  revalidatePath("/perfil");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
