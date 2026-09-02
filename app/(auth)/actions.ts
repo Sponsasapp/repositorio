@@ -54,6 +54,8 @@ export async function signup(
     return { error: "A senha precisa de ao menos 8 caracteres." };
   if (type !== "athlete" && type !== "company")
     return { error: "Escolha se você é piloto ou empresa." };
+  if (formData.get("consent") !== "on")
+    return { error: "Aceite os Termos e a Política de Privacidade para continuar." };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -83,4 +85,45 @@ export async function logout(): Promise<void> {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/login");
+}
+
+export async function solicitarReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Informe seu e-mail." };
+
+  const supabase = await createClient();
+  // Sucesso ou não, a resposta é a mesma (não revela se o e-mail existe).
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${SITE_URL}/redefinir-senha`,
+  });
+
+  redirect("/recuperar-senha/enviado");
+}
+
+export async function redefinirSenha(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8)
+    return { error: "A senha precisa de ao menos 8 caracteres." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      error: "Link inválido ou expirado. Peça um novo e-mail de redefinição.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: traduzErro(error.message) };
+
+  revalidatePath("/", "layout");
+  redirect("/login?redefinida=1");
 }

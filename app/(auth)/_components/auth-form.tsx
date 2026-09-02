@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label";
 export function AuthForm({
   mode,
   next,
+  notice,
 }: {
   mode: "login" | "signup";
   next?: string;
+  notice?: string;
 }) {
   const action = mode === "login" ? login : signup;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
@@ -22,6 +24,11 @@ export function AuthForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {notice && (
+        <p className="border-success/30 bg-success-soft text-success rounded-md border-l-2 px-3 py-2 text-sm">
+          {notice}
+        </p>
+      )}
       <div className="mb-1">
         <h1 className="text-3xl">
           {mode === "login" ? "Entrar" : "Criar conta"}
@@ -59,7 +66,17 @@ export function AuthForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Senha</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Senha</Label>
+          {mode === "login" && (
+            <Link
+              href="/recuperar-senha"
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
+              Esqueci minha senha
+            </Link>
+          )}
+        </div>
         <Input
           id="password"
           name="password"
@@ -69,6 +86,32 @@ export function AuthForm({
           required
         />
       </div>
+
+      {mode === "signup" && (
+        <label className="text-muted-foreground flex items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            name="consent"
+            className="accent-primary mt-0.5"
+            required
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link href="/termos" className="text-foreground underline" target="_blank">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link
+              href="/privacidade"
+              className="text-foreground underline"
+              target="_blank"
+            >
+              Política de Privacidade
+            </Link>
+            .
+          </span>
+        </label>
+      )}
 
       {next && <input type="hidden" name="next" value={next} />}
 

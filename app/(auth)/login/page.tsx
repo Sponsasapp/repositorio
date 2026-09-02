@@ -6,8 +6,16 @@ export const metadata: Metadata = { title: "Entrar — Sponsas" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; erro?: string }>;
+  searchParams: Promise<{ next?: string; erro?: string; redefinida?: string }>;
 }) {
-  const { next } = await searchParams;
-  return <AuthForm mode="login" next={next} />;
+  const { next, erro, redefinida } = await searchParams;
+
+  const notice =
+    redefinida === "1"
+      ? "Senha redefinida. Entre com a nova senha."
+      : erro === "confirmacao"
+        ? "Não foi possível confirmar. O link pode ter expirado — tente entrar ou peça um novo."
+        : undefined;
+
+  return <AuthForm mode="login" next={next} notice={notice} />;
 }
