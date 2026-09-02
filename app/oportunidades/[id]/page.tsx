@@ -216,6 +216,17 @@ export default async function OportunidadePage({
                 <p className="text-muted-foreground mt-2 text-xs">
                   Enviada {timeAgo(myApplication.created_at)}
                 </p>
+                {myApplication.status === "accepted" && (
+                  <div className="mt-3">
+                    <Button asChild size="sm">
+                      <Link
+                        href={`/propostas/nova?para=${opp.company_id}&oportunidade=${id}`}
+                      >
+                        Enviar proposta
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <ApplyForm opportunityId={id} />
@@ -337,6 +348,16 @@ export default async function OportunidadePage({
                           Recusar
                         </Button>
                       </form>
+                    )}
+
+                    {app.status === "accepted" && athlete && (
+                      <Button asChild size="sm" className="self-start">
+                        <Link
+                          href={`/propostas/nova?para=${athlete.id}&oportunidade=${id}`}
+                        >
+                          Enviar proposta
+                        </Link>
+                      </Button>
                     )}
                   </div>
                 );

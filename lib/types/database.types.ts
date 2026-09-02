@@ -13,6 +13,7 @@ export type ProfileType = "athlete" | "company";
 export type OpportunityStatus = "open" | "closed";
 export type ApplicationStatus = "pending" | "accepted" | "rejected";
 export type ProposalStatus = "pending" | "accepted" | "rejected" | "withdrawn";
+export type ProposalPaymentType = "cash" | "trade" | "mixed";
 export type SponsorshipStatus = "active" | "ended" | "cancelled";
 export type DeliverableStatus = "pending" | "submitted" | "approved" | "rejected";
 export type PlanTier = "free" | "pro";
@@ -114,6 +115,9 @@ export type Proposal = {
   deliverables: string[] | null;
   message: string | null;
   status: ProposalStatus;
+  payment_type: ProposalPaymentType;
+  trade_description: string | null;
+  trade_value: number | null;
   created_at: string;
 };
 
@@ -126,6 +130,9 @@ export type Sponsorship = {
   duration_months: number | null;
   start_date: string;
   status: SponsorshipStatus;
+  payment_type: ProposalPaymentType;
+  trade_description: string | null;
+  trade_value: number | null;
   created_at: string;
 };
 
@@ -218,6 +225,9 @@ export type Database = {
         | "deliverables"
         | "message"
         | "status"
+        | "payment_type"
+        | "trade_description"
+        | "trade_value"
         | "created_at"
       >;
       sponsorships: TableDef<
@@ -228,6 +238,9 @@ export type Database = {
         | "duration_months"
         | "start_date"
         | "status"
+        | "payment_type"
+        | "trade_description"
+        | "trade_value"
         | "created_at"
       >;
       deliverables: TableDef<

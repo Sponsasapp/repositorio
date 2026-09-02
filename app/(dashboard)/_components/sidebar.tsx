@@ -9,8 +9,8 @@ const LINKS = [
   { href: "/perfil", label: "Meu perfil" },
   { href: "/pilotos", label: "Explorar pilotos" },
   { href: "/oportunidades", label: "Oportunidades" },
-  { href: "/propostas", label: "Propostas", soon: true },
-  { href: "/patrocinios", label: "Patrocínios", soon: true },
+  { href: "/propostas", label: "Propostas" },
+  { href: "/patrocinios", label: "Patrocínios" },
   { href: "/entregas", label: "Entregas", soon: true },
   { href: "/configuracoes", label: "Configurações", soon: true },
 ];
