@@ -74,14 +74,38 @@ async function getPiloto(id: string) {
     return a.position - b.position;
   });
 
+  const viewerId = auth.user?.id ?? null;
+
+  // Valores (preços dos pacotes, faixa desejada) são informação pessoal do
+  // piloto: só o dono e empresas veem. Outros pilotos/visitantes, não.
+  let viewerType: string | null = null;
+  if (viewerId) {
+    const { data: viewer } = await supabase
+      .from("profiles")
+      .select("type")
+      .eq("id", viewerId)
+      .maybeSingle();
+    viewerType = viewer?.type ?? null;
+  }
+  const canSeeValues = viewerId === id || viewerType === "company";
+
+  const safePackages = canSeeValues
+    ? (packages ?? [])
+    : (packages ?? []).map((p) => ({ ...p, price: null }));
+  const safeAthlete =
+    athlete && !canSeeValues
+      ? { ...athlete, desired_value_min: null, desired_value_max: null }
+      : athlete;
+
   return {
     profile,
-    athlete,
+    athlete: safeAthlete,
     cars: cars ?? [],
     achievements: achievementsSorted,
     socials: socials ?? [],
-    packages: packages ?? [],
-    viewerId: auth.user?.id ?? null,
+    packages: safePackages,
+    viewerId,
+    canSeeValues,
   };
 }
 
@@ -108,14 +132,28 @@ export default async function PerfilPublicoPage({
   const data = await getPiloto(id);
   if (!data) notFound();
 
-  const { profile, athlete, cars, achievements, socials, packages, viewerId } =
-    data;
+  const {
+    profile,
+    athlete,
+    cars,
+    achievements,
+    socials,
+    packages,
+    viewerId,
+    canSeeValues,
+  } = data;
   const isOwner = viewerId === profile.id;
 
   const carPhoto = cars.find((c) => c.photo_url)?.photo_url ?? null;
-  const listLabel = athlete?.list_name ?? null;
   const carAchievements = (carId: string) =>
     achievements.filter((a) => a.car_id === carId);
+
+  const listState =
+    athlete?.list_member && athlete.list_name
+      ? ({ name: athlete.list_name, kind: "member" } as const)
+      : athlete?.list_shark_tank && athlete.list_name
+        ? ({ name: athlete.list_name, kind: "shark" } as const)
+        : null;
 
   const followers = socials.reduce((s, l) => s + (l.followers ?? 0), 0);
   const reach = socials.reduce((s, l) => s + (l.avg_reach ?? 0), 0);
@@ -376,25 +414,32 @@ export default async function PerfilPublicoPage({
               </Button>
             </div>
 
-            {listLabel && (
-              <Panel title="Lista">
-                <p className="text-sm font-medium">{listLabel}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {athlete?.list_member && athlete?.list_position != null && (
-                    <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
-                      Posição atual: {athlete.list_position}º
-                    </span>
-                  )}
-                  {athlete?.list_shark_tank && (
-                    <span className="bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs font-semibold">
-                      Shark Tank
-                      {athlete.list_shark_tank_date &&
-                        ` · próxima etapa ${formatDateBR(athlete.list_shark_tank_date)}`}
-                    </span>
-                  )}
-                </div>
-              </Panel>
-            )}
+            <Panel title="Lista">
+              {listState ? (
+                <>
+                  <p className="text-sm font-medium">{listState.name}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {listState.kind === "member" &&
+                      athlete?.list_position != null && (
+                        <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
+                          Posição atual: {athlete.list_position}º
+                        </span>
+                      )}
+                    {listState.kind === "shark" && (
+                      <span className="bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs font-semibold">
+                        Shark Tank
+                        {athlete?.list_shark_tank_date &&
+                          ` · próxima etapa ${formatDateBR(athlete.list_shark_tank_date)}`}
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Não faz parte de nenhuma lista.
+                </p>
+              )}
+            </Panel>
 
             {packages.length > 0 ? (
               <Panel title="Tabela de preços">
@@ -409,14 +454,24 @@ export default async function PerfilPublicoPage({
                           </p>
                         )}
                       </div>
-                      <span className="font-[family-name:var(--font-heading)] shrink-0 text-lg">
-                        {pkg.price != null ? formatBRL(pkg.price) : "sob consulta"}
-                      </span>
+                      {canSeeValues && (
+                        <span className="font-[family-name:var(--font-heading)] shrink-0 text-lg">
+                          {pkg.price != null
+                            ? formatBRL(pkg.price)
+                            : "sob consulta"}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
+                {!canSeeValues && (
+                  <p className="text-muted-foreground mt-3 text-xs">
+                    Os valores ficam visíveis para empresas.
+                  </p>
+                )}
               </Panel>
             ) : (
+              canSeeValues &&
               faixa && (
                 <Panel title="Valor desejado">
                   <p className="text-sm">

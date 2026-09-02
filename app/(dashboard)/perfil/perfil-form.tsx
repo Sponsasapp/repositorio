@@ -175,9 +175,8 @@ export function PerfilPilotoForm({
       {/* ---- Lista ---- */}
       <Section title="Lista">
         <p className="text-muted-foreground -mt-2 mb-1 text-xs">
-          A lista de arrancada de que você participa. Ou você já está na lista
-          (com uma posição), ou está no Shark Tank disputando uma vaga — nunca
-          os dois ao mesmo tempo.
+          Ou você já está numa lista de arrancada (com uma posição), ou está no
+          Shark Tank disputando uma vaga — nunca os dois ao mesmo tempo.
         </p>
         <ListaField athlete={athlete} />
       </Section>
@@ -639,20 +638,21 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <MiniField label="Lista">
-        <Input
-          name="list_name"
-          defaultValue={athlete?.list_name ?? ""}
-          placeholder="Ex: Lista 011, Lista 015"
-        />
-      </MiniField>
-
       <div className="flex flex-col gap-2">
-        {opt("none", "Ainda não estou nesta lista")}
-        {opt("member", "Faço parte da lista")}
+        {opt("none", "Não faço parte de nenhuma lista")}
+        {opt("member", "Faço parte de uma lista")}
         {opt("shark", "Estou no Shark Tank (disputando vaga na lista)")}
       </div>
 
+      {status !== "none" && (
+        <MiniField label="Qual lista">
+          <Input
+            name="list_name"
+            defaultValue={athlete?.list_name ?? ""}
+            placeholder="Ex: Lista 011, Lista 015"
+          />
+        </MiniField>
+      )}
       {status === "member" && (
         <MiniField label="Minha posição na lista">
           <Input

@@ -71,8 +71,9 @@ export async function salvarPerfilPiloto(
     .eq("id", user.id);
   if (e1) return { error: "Não foi possível salvar os dados básicos." };
 
-  const listName = text(formData.get("list_name"));
   const listStatus = String(formData.get("list_status") ?? "none");
+  // "none" = não faz parte de nenhuma lista (sem nome de lista).
+  const listName = listStatus === "none" ? null : text(formData.get("list_name"));
   // Ser membro da lista e estar no Shark Tank são estados excludentes: o Shark
   // Tank é a disputa para entrar na lista.
   const listMember = listName != null && listStatus === "member";
