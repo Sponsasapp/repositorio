@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deliverableLabel } from "@/lib/deliverables";
 import { formatBRL, initials } from "@/lib/format";
+import { matchesCampaignRegion } from "@/lib/regions";
 import { timeAgo } from "@/lib/relative-time";
 import {
   responderCandidatura,
@@ -11,6 +12,7 @@ import {
 } from "../actions";
 import { ApplyForm } from "./apply-form";
 import { Button } from "@/components/ui/button";
+import { RegionFit } from "@/components/region-fit";
 import { AppShell } from "@/components/app-shell";
 import type { Opportunity } from "@/lib/types/database.types";
 
@@ -74,17 +76,22 @@ export default async function OportunidadePage({
   } = await supabase.auth.getUser();
 
   let myType: string | null = null;
+  let myState: string | null = null;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("type")
+      .select("type, state")
       .eq("id", user.id)
       .single();
     myType = profile?.type ?? null;
+    myState = profile?.state ?? null;
   }
 
   const isOwner = user?.id === opp.company_id;
   const isAthlete = myType === "athlete";
+  const regionFit = isAthlete
+    ? matchesCampaignRegion(myState, opp.region)
+    : null;
 
   // Candidatos (só o dono enxerga, por RLS)
   const { data: applicationsData } = isOwner
@@ -185,6 +192,12 @@ export default async function OportunidadePage({
             </p>
           )}
         </div>
+
+        {regionFit !== null && (
+          <div className="mt-4">
+            <RegionFit fit={regionFit} region={opp.region} />
+          </div>
+        )}
 
         {/* --- Ações do piloto --- */}
         {!user && (

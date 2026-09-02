@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, initials } from "@/lib/format";
+import { matchesCampaignRegion } from "@/lib/regions";
 import { Button } from "@/components/ui/button";
+import { RegionFit } from "@/components/region-fit";
 import {
   OpportunityCard,
   type OpportunityCardData,
@@ -38,30 +40,27 @@ async function getEmpresa(id: string) {
 
   const viewerId = auth.user?.id ?? null;
   let viewerType: string | null = null;
+  let viewerState: string | null = null;
   if (viewerId) {
     const { data: viewer } = await supabase
       .from("profiles")
-      .select("type")
+      .select("type, state")
       .eq("id", viewerId)
       .maybeSingle();
     viewerType = viewer?.type ?? null;
+    viewerState = viewer?.state ?? null;
   }
-
-  // Orçamento é informação pessoal da empresa: só o dono e pilotos veem.
-  const canSeeBudget = viewerId === id || viewerType === "athlete";
-  const safeCompany =
-    company && !canSeeBudget ? { ...company, budget: null } : company;
 
   return {
     profile,
-    company: safeCompany,
+    company,
     opportunities: (opps ?? []) as unknown as Omit<
       OpportunityCardData,
       "companyName"
     >[],
     viewerId,
     viewerType,
-    canSeeBudget,
+    viewerState,
   };
 }
 
@@ -88,7 +87,7 @@ export default async function PerfilEmpresaPublicoPage({
   const data = await getEmpresa(id);
   if (!data) notFound();
 
-  const { profile, company, opportunities, viewerId, viewerType, canSeeBudget } =
+  const { profile, company, opportunities, viewerId, viewerType, viewerState } =
     data;
   const isOwner = viewerId === profile.id;
   const isAthlete = viewerType === "athlete";
@@ -101,12 +100,17 @@ export default async function PerfilEmpresaPublicoPage({
     companyName: profile.name,
   }));
 
+  const regionFit = isAthlete
+    ? matchesCampaignRegion(viewerState, company?.region_of_interest)
+    : null;
+
   const hasCampaign = Boolean(
     company?.campaign_goal ||
       company?.target_audience ||
       company?.region_of_interest ||
       company?.campaign_duration_months != null ||
-      (canSeeBudget && company?.budget != null),
+      company?.budget != null ||
+      regionFit !== null,
   );
 
   return (
@@ -167,17 +171,20 @@ export default async function PerfilEmpresaPublicoPage({
                       value={`${company.campaign_duration_months} meses`}
                     />
                   )}
-                  {canSeeBudget && company?.budget != null && (
+                  {company?.budget != null && (
                     <Row
                       label="Orçamento"
                       value={`${formatBRL(company.budget)} / mês`}
                     />
                   )}
                 </dl>
-                {!canSeeBudget && (
-                  <p className="text-muted-foreground mt-3 text-xs">
-                    O orçamento fica visível para pilotos.
-                  </p>
+                {regionFit !== null && (
+                  <div className="mt-4">
+                    <RegionFit
+                      fit={regionFit}
+                      region={company?.region_of_interest}
+                    />
+                  </div>
                 )}
               </Panel>
             )}
