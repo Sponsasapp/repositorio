@@ -52,11 +52,21 @@ Identidade "SaaS premium", não "site de carro". Tokens em `app/globals.css`:
 3. ✅ Auth — cadastro/login/logout via Server Actions, escolha piloto/empresa,
    guarda de rotas no `proxy.ts`, `/auth/confirm` para o fluxo de e-mail.
    Dev: "Confirm email" desligado no Supabase (religar + SMTP na V2).
-4. Perfil piloto (CRUD) → 5. Perfil empresa (CRUD)
-6. Perfis públicos → 7. Busca/filtro de pilotos
-8. Oportunidades → 9. Propostas → 10. `sponsorship` automático ao aceitar
-11. Entregas (lista, comprovação, aprovação)
-12. Dashboards → 13. Planos Free/PRO (sem gateway) → 14. Páginas de marketing → 15. Deploy
+4. ✅ Perfil piloto (CRUD) → 5. ✅ Perfil empresa (CRUD)
+6. ✅ Perfis públicos (`/p/[id]`) → 7. ✅ Busca/filtro de pilotos (`/pilotos`)
+8. ✅ Oportunidades → 9. ✅ Propostas (dinheiro/permuta/misto + observações)
+   → 10. ✅ `sponsorship` automático ao aceitar proposta
+11. ✅ Entregas (comprovação por link, aprovação da empresa)
+12. ✅ Dashboards + **Rank Sponsas** (score no banco, migration `0006`)
+13. ✅ Planos Free/PRO (migration `0007`, upgrade manual, sem gateway)
+14. ✅ Páginas de marketing (`app/(marketing)`)
+15. 🔜 Deploy — repo em github.com/Sponsas-App/repositorio; falta importar no Vercel
+
+Extras além do handoff (pedidos do dono):
+- Tabela de preços do piloto (`athlete_packages`, migration `0004`)
+- Engajamento = interações ÷ seguidores (migration `0003`)
+- Rank Sponsas como termômetro de valor (o handoff listava "reputação" como fora
+  do MVP, mas o dono pediu). Crescimento de seguidores no tempo = fator futuro.
 
 Fora do MVP: matching por IA, mídia kit público, mensagens internas, notificações por email,
-pagamento automatizado, APIs de redes sociais, reputação/avaliações, i18n, app mobile.
+pagamento automatizado, APIs de redes sociais, i18n, app mobile.
