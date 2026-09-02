@@ -242,11 +242,11 @@ export default async function PerfilPublicoPage({
 
           {/* Coluna lateral */}
           <div className="flex flex-col gap-5">
-            <div className="bg-foreground text-background rounded-xl p-6">
+            <div className="border-primary bg-card rounded-xl border border-l-3 p-6">
               <h3 className="text-lg font-semibold">
                 {isOwner ? "Este é o seu perfil público" : "Interessado em patrocinar?"}
               </h3>
-              <p className="mt-2 text-sm text-white/70">
+              <p className="text-muted-foreground mt-2 text-sm">
                 {isOwner
                   ? "É assim que as marcas veem você. Mantenha os dados atualizados."
                   : "Envie uma proposta direta com valor, duração e entregas esperadas."}

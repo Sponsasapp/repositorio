@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { salvarPerfilPiloto, type PerfilState } from "./actions";
 import { Section, Field, UfSelect } from "./_ui";
-import { OFFERED_DELIVERABLES } from "@/lib/deliverables";
+import { OFFERED_DELIVERABLES, SPONSOR_CATEGORIES } from "@/lib/deliverables";
 import type {
   Profile,
   AthleteProfile,
@@ -159,16 +159,8 @@ export function PerfilPilotoForm({
             })}
           </div>
         </Field>
-        <Field
-          label="Aceita patrocínio de"
-          htmlFor="sponsor_categories"
-          hint="Separe por vírgula: autopeças, lubrificantes, energéticos"
-        >
-          <Input
-            id="sponsor_categories"
-            name="sponsor_categories"
-            defaultValue={(athlete?.sponsor_categories ?? []).join(", ")}
-          />
+        <Field label="Aceita patrocínio de">
+          <SponsorCategories initial={athlete?.sponsor_categories ?? []} />
         </Field>
         <Field
           label="Disponibilidade / observações"
@@ -312,6 +304,73 @@ function SocialRow({
           />
         </MiniField>
       </div>
+    </div>
+  );
+}
+
+function SponsorCategories({ initial }: { initial: string[] }) {
+  const known = new Set<string>(SPONSOR_CATEGORIES);
+  const [checked, setChecked] = useState<Set<string>>(
+    () => new Set(initial.filter((c) => known.has(c))),
+  );
+  const extras = initial.filter((c) => !known.has(c));
+  const [outros, setOutros] = useState(extras.length > 0);
+  const [outrosText, setOutrosText] = useState(extras.join(", "));
+
+  const toggle = (c: string) =>
+    setChecked((s) => {
+      const n = new Set(s);
+      if (n.has(c)) n.delete(c);
+      else n.add(c);
+      return n;
+    });
+
+  // valor final enviado no form (hidden), separado por "|"
+  const payload = [
+    ...[...checked],
+    ...(outros
+      ? outrosText
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean)
+      : []),
+  ].join("|");
+
+  return (
+    <div className="flex flex-col gap-2">
+      <input type="hidden" name="sponsor_categories" value={payload} />
+      <div className="flex flex-wrap gap-2">
+        {SPONSOR_CATEGORIES.map((c) => (
+          <label
+            key={c}
+            className="border-border has-[:checked]:border-primary has-[:checked]:bg-accent/40 flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors"
+          >
+            <input
+              type="checkbox"
+              checked={checked.has(c)}
+              onChange={() => toggle(c)}
+              className="accent-primary"
+            />
+            {c}
+          </label>
+        ))}
+        <label className="border-border has-[:checked]:border-primary has-[:checked]:bg-accent/40 flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors">
+          <input
+            type="checkbox"
+            checked={outros}
+            onChange={(e) => setOutros(e.target.checked)}
+            className="accent-primary"
+          />
+          Outros
+        </label>
+      </div>
+      {outros && (
+        <Input
+          value={outrosText}
+          onChange={(e) => setOutrosText(e.target.value)}
+          placeholder="Ex: tintas, guincho, escola de pilotagem (separe por vírgula)"
+        />
+      )}
     </div>
   );
 }

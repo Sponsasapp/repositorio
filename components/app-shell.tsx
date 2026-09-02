@@ -1,3 +1,4 @@
+import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/app/(dashboard)/_components/sidebar";
 import { MobileNav } from "@/app/(dashboard)/_components/mobile-nav";
@@ -32,7 +33,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <header className="border-border flex items-center gap-3 border-b px-4 py-3 md:px-6">
           <MobileNav email={user.email} />
           <span className="text-lg md:hidden">
-            Spon<span className="text-primary font-bold">sas</span>
+            <Logo />
           </span>
           <span className="text-muted-foreground ml-auto hidden text-sm md:block">
             {user.email}

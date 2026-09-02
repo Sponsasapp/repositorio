@@ -1,4 +1,5 @@
 "use client";
+import { Logo } from "@/components/logo";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -36,7 +37,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
     <header className="border-border relative border-b">
       <div className="mx-auto flex max-w-[1120px] items-center justify-between px-6 py-5">
         <Link href="/" className="text-xl">
-          Spon<span className="text-primary font-bold">sas</span>
+          <Logo />
         </Link>
 
         <nav className="hidden gap-8 text-sm font-medium md:flex">
@@ -101,9 +102,9 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             onClick={() => setOpen(false)}
           />
           <div className="bg-background absolute inset-y-0 right-0 flex w-72 max-w-[85%] flex-col p-5">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex items-start justify-between">
               <span className="text-xl">
-                Spon<span className="text-primary font-bold">sas</span>
+                <Logo tagline />
               </span>
               <button
                 type="button"

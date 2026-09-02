@@ -18,6 +18,8 @@
 
   --color-navy: var(--navy);
   --color-navy-foreground: var(--navy-foreground);
+  --color-bege: var(--bege);
+  --color-bege-foreground: var(--bege-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--success-soft);
@@ -60,53 +62,59 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ============================================================
+   Sequência de cores: 1º AZUL-MARINHO (fundo principal),
+   2º LARANJA (CTA/destaque), 3º BEGE (superfícies/realces),
+   4º BRANCO (mínimo — texto sobre laranja, detalhes).
+   ============================================================ */
 :root {
   --radius: 0.5rem;
 
-  --background: #f6f5f1; /* papel neutro */
-  --foreground: #14161c; /* tinta */
+  --background: #141b2e; /* azul-marinho — fundo principal */
+  --foreground: #f4f3ef; /* bege claro — texto */
 
-  --card: #ffffff;
-  --card-foreground: #14161c;
-  --popover: #ffffff;
-  --popover-foreground: #14161c;
+  --card: #1c2540; /* superfície elevada */
+  --card-foreground: #f4f3ef;
+  --popover: #1c2540;
+  --popover-foreground: #f4f3ef;
 
-  /* laranja-avermelhado — SÓ CTA e status */
+  /* laranja — CTA e destaque (2º na sequência) */
   --primary: #ff5a1f;
   --primary-foreground: #ffffff;
 
-  /* azul-marinho — nav, blocos de destaque, botão secundário */
-  --secondary: #171f36;
-  --secondary-foreground: #ffffff;
+  /* azul mais claro — botão/superfície secundária */
+  --secondary: #26314f;
+  --secondary-foreground: #f4f3ef;
 
-  --muted: #efede7;
-  --muted-foreground: #6b6e76;
+  --muted: #212b47;
+  --muted-foreground: #9ba6c2;
 
-  /* laranja suave — hover/badge, nunca como CTA */
-  --accent: #ffe3d6;
-  --accent-foreground: #c24418;
+  --accent: #2a3554;
+  --accent-foreground: #f4f3ef;
 
-  --destructive: #c0392b;
+  --destructive: #f87171;
 
-  --border: #e4e1d8;
-  --input: #e4e1d8;
+  --border: rgba(244, 243, 239, 0.12);
+  --input: rgba(244, 243, 239, 0.16);
   --ring: #ff5a1f;
 
-  /* tokens próprios da Sponsas */
-  --navy: #171f36;
-  --navy-foreground: #ffffff;
-  --success: #2f8f5b;
-  --success-foreground: #ffffff;
-  --success-soft: #e1f3e9;
+  /* tokens próprios */
+  --navy: #0a0f1c; /* azul mais profundo — hero, sidebar, blocos que recuam */
+  --navy-foreground: #f4f3ef;
+  --bege: #f4f3ef; /* bege claro — realces (3º na sequência) */
+  --bege-foreground: #141b2e;
+  --success: #34d399;
+  --success-foreground: #0a1122;
+  --success-soft: rgba(52, 211, 153, 0.16);
 
   --chart-1: #ff5a1f;
-  --chart-2: #171f36;
-  --chart-3: #2f8f5b;
-  --chart-4: #6b6e76;
-  --chart-5: #c24418;
+  --chart-2: #f4f3ef;
+  --chart-3: #34d399;
+  --chart-4: #9ba6c2;
+  --chart-5: #ffb08c;
 
-  --sidebar: #171f36;
-  --sidebar-foreground: #b9becc;
+  --sidebar: #0a0f1c;
+  --sidebar-foreground: rgba(244, 243, 239, 0.6);
   --sidebar-primary: #ff5a1f;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgba(255, 255, 255, 0.08);
@@ -131,5 +139,13 @@
     font-weight: 700;
     line-height: 0.98;
     letter-spacing: -0.01em;
+  }
+  /* selects nativos legíveis no tema escuro */
+  select {
+    color: var(--foreground);
+  }
+  option {
+    background: #141b2e;
+    color: var(--foreground);
   }
 }

@@ -214,23 +214,27 @@ export default async function HomePage() {
       )}
 
       {/* CTA final */}
-      <section className="bg-navy text-navy-foreground">
+      <section className="bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-[1120px] flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-3xl">Comece com o plano gratuito</h2>
-            <p className="mt-2 text-sm text-white/60">
+            <p className="mt-2 text-sm text-primary-foreground/80">
               Sem cartão. Suba para o PRO quando precisar de mais.
             </p>
           </div>
           <div className="flex gap-3">
-            <Button asChild size="lg">
+            <Button
+              asChild
+              size="lg"
+              className="bg-navy text-navy-foreground hover:bg-navy/90"
+            >
               <Link href="/cadastro">Criar conta</Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="ghost"
-              className="text-white hover:text-white"
+              className="text-primary-foreground hover:bg-white/15 hover:text-primary-foreground"
             >
               <Link href="/planos">Ver planos</Link>
             </Button>

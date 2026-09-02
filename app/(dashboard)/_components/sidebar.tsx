@@ -1,4 +1,5 @@
 "use client";
+import { Logo } from "@/components/logo";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,9 +10,9 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="bg-navy text-navy-foreground hidden w-56 shrink-0 flex-col gap-1 p-5 md:flex">
+    <aside className="bg-navy text-navy-foreground border-border hidden w-56 shrink-0 flex-col gap-1 border-r p-5 md:flex">
       <Link href="/dashboard" className="mb-6 px-2 text-xl">
-        Spon<span className="text-primary font-bold">sas</span>
+        <Logo tagline />
       </Link>
       {NAV_LINKS.map((link) => {
         const active =

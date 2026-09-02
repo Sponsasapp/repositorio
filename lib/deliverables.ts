@@ -15,6 +15,19 @@ export function deliverableLabel(value: string): string {
   return OFFERED_MAP.get(value) ?? value;
 }
 
+/** Ramos do automotivo que um piloto aceita patrocinar. */
+export const SPONSOR_CATEGORIES = [
+  "Autopeças",
+  "Lubrificantes e óleo",
+  "Pneus",
+  "Bebidas energéticas",
+  "Vestuário e uniformes",
+  "Ferramentas e equipamentos",
+  "Rodas, freios e suspensão",
+  "Som, acessórios e estética",
+  "Combustível e aditivos",
+] as const;
+
 /** Divide um campo de texto "a, b, c" em array limpo. */
 export function parseCsv(input: FormDataEntryValue | null): string[] {
   return String(input ?? "")

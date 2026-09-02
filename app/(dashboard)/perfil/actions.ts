@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { parseCsv } from "@/lib/deliverables";
 import { parseNumberBR } from "@/lib/num";
 import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
 import { BR_UF } from "@/lib/br";
@@ -79,7 +78,14 @@ export async function salvarPerfilPiloto(
     results: text(formData.get("results")),
     desired_value_min: minV,
     desired_value_max: maxV,
-    sponsor_categories: parseCsv(formData.get("sponsor_categories")),
+    sponsor_categories: [
+      ...new Set(
+        String(formData.get("sponsor_categories") ?? "")
+          .split("|")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+    ],
     offered_deliverables: formData.getAll("offered_deliverables").map(String),
     availability_notes: text(formData.get("availability_notes")),
     updated_at: new Date().toISOString(),
