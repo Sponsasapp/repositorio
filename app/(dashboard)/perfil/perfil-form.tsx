@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { salvarPerfilPiloto, type PerfilState } from "./actions";
 import { OFFERED_DELIVERABLES } from "@/lib/deliverables";
@@ -207,41 +207,14 @@ export function PerfilPilotoForm({
 
       {/* ---- Redes sociais ---- */}
       <Section title="Redes sociais">
+        <p className="text-muted-foreground -mt-2 mb-1 text-xs">
+          O engajamento é calculado sozinho a partir de alcance ÷ seguidores.
+          Você pode ajustar se tiver o número real.
+        </p>
         <div className="flex flex-col gap-5">
-          {PLATFORMS.map((p) => {
-            const s = social(p.key);
-            return (
-              <div key={p.key} className="flex flex-col gap-2">
-                <p className="text-sm font-semibold">{p.label}</p>
-                <Input
-                  name={`social_${p.key}_url`}
-                  type="url"
-                  defaultValue={s?.url ?? ""}
-                  placeholder="URL do perfil"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <Input
-                    name={`social_${p.key}_followers`}
-                    inputMode="numeric"
-                    defaultValue={s?.followers ?? ""}
-                    placeholder="Seguidores"
-                  />
-                  <Input
-                    name={`social_${p.key}_avg_reach`}
-                    inputMode="numeric"
-                    defaultValue={s?.avg_reach ?? ""}
-                    placeholder="Alcance médio"
-                  />
-                  <Input
-                    name={`social_${p.key}_engagement_rate`}
-                    inputMode="numeric"
-                    defaultValue={s?.engagement_rate ?? ""}
-                    placeholder="Engaj. %"
-                  />
-                </div>
-              </div>
-            );
-          })}
+          {PLATFORMS.map((p) => (
+            <SocialRow key={p.key} platform={p} initial={social(p.key)} />
+          ))}
         </div>
       </Section>
 
@@ -263,6 +236,78 @@ export function PerfilPilotoForm({
         )}
       </div>
     </form>
+  );
+}
+
+const onlyDigits = (s: string) => Number(s.replace(/[^\d]/g, "")) || 0;
+
+function SocialRow({
+  platform,
+  initial,
+}: {
+  platform: { key: string; label: string };
+  initial?: SocialLink;
+}) {
+  const [followers, setFollowers] = useState(
+    initial?.followers?.toString() ?? "",
+  );
+  const [reach, setReach] = useState(initial?.avg_reach?.toString() ?? "");
+  const [engagement, setEngagement] = useState(
+    initial?.engagement_rate?.toString() ?? "",
+  );
+  // Vira true quando o usuário edita o engajamento à mão nesta sessão.
+  const [engTouched, setEngTouched] = useState(false);
+
+  function recalc(f: string, r: string) {
+    if (engTouched) return;
+    const fn = onlyDigits(f);
+    const rn = onlyDigits(r);
+    setEngagement(fn > 0 && rn > 0 ? String(Math.round((rn / fn) * 1000) / 10) : "");
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-semibold">{platform.label}</p>
+      <Input
+        name={`social_${platform.key}_url`}
+        type="url"
+        defaultValue={initial?.url ?? ""}
+        placeholder="URL do perfil"
+      />
+      <div className="grid grid-cols-3 gap-2">
+        <Input
+          name={`social_${platform.key}_followers`}
+          inputMode="numeric"
+          value={followers}
+          onChange={(e) => {
+            setFollowers(e.target.value);
+            recalc(e.target.value, reach);
+          }}
+          placeholder="Seguidores"
+        />
+        <Input
+          name={`social_${platform.key}_avg_reach`}
+          inputMode="numeric"
+          value={reach}
+          onChange={(e) => {
+            setReach(e.target.value);
+            recalc(followers, e.target.value);
+          }}
+          placeholder="Alcance médio"
+        />
+        <Input
+          name={`social_${platform.key}_engagement_rate`}
+          inputMode="numeric"
+          value={engagement}
+          onChange={(e) => {
+            setEngagement(e.target.value);
+            setEngTouched(true);
+          }}
+          placeholder="Engaj. %"
+          aria-label="Taxa de engajamento (%)"
+        />
+      </div>
+    </div>
   );
 }
 
