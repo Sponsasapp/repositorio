@@ -88,7 +88,8 @@ export async function signup(
     const r = await applyCoupon(data.user.id, coupon);
     console.error("[signup] coupon", coupon, "->", JSON.stringify(r));
     if (r.status === "applied") couponQS = `?pro=${r.months}`;
-    else if (r.status === "config") couponQS = "?cupom=config";
+    else if (r.status === "config")
+      couponQS = `?cupom=config&d=${encodeURIComponent(r.detail.slice(0, 200))}`;
     else couponQS = "?cupom=invalido";
   }
 
