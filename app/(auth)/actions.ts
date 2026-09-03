@@ -89,7 +89,7 @@ export async function signup(
     if (r.status === "applied") couponQS = `?pro=${r.months}`;
     else if (r.status === "config")
       couponQS = `?cupom=config&d=${encodeURIComponent(r.detail.slice(0, 200))}`;
-    else couponQS = "?cupom=invalido";
+    else couponQS = `?cupom=invalido&r=${encodeURIComponent(r.reason)}`;
   }
 
   // Confirmação de e-mail desligada → já vem sessão, entra direto.
@@ -102,7 +102,7 @@ export async function signup(
 
 type CouponResult =
   | { status: "applied"; months: number }
-  | { status: "invalid" }
+  | { status: "invalid"; reason: string }
   | { status: "config"; detail: string };
 
 async function applyCoupon(
@@ -119,11 +119,11 @@ async function applyCoupon(
 
   if (error) return { status: "config", detail: `rpc: ${error.message}` };
 
-  const r = String(data ?? "");
+  const r = String(data ?? "?");
   if (r.startsWith("applied:")) {
     return { status: "applied", months: Number(r.split(":")[1]) || 1 };
   }
-  return { status: "invalid" };
+  return { status: "invalid", reason: r };
 }
 
 export async function logout(): Promise<void> {

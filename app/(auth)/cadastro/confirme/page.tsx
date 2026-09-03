@@ -6,7 +6,12 @@ export const metadata: Metadata = { title: "Confirme seu e-mail — Sponsas" };
 export default async function ConfirmePage({
   searchParams,
 }: {
-  searchParams: Promise<{ pro?: string; cupom?: string; d?: string }>;
+  searchParams: Promise<{
+    pro?: string;
+    cupom?: string;
+    d?: string;
+    r?: string;
+  }>;
 }) {
   const sp = await searchParams;
 
@@ -23,6 +28,11 @@ export default async function ConfirmePage({
         <p className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border-l-2 px-3 py-2 text-sm">
           O cupom não foi aplicado (inválido, expirado ou já usado). Sua conta
           foi criada no plano Free.
+          {sp.r && (
+            <span className="mt-1 block font-mono text-[11px] opacity-70">
+              {sp.r}
+            </span>
+          )}
         </p>
       )}
       {sp.cupom === "config" && (
