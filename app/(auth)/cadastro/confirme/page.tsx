@@ -25,6 +25,12 @@ export default async function ConfirmePage({
           foi criada no plano Free.
         </p>
       )}
+      {sp.cupom === "config" && (
+        <p className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border-l-2 px-3 py-2 text-sm">
+          Não conseguimos processar o cupom agora (erro de configuração). Sua
+          conta foi criada no plano Free — fale com o suporte para ativar o PRO.
+        </p>
+      )}
       <h1 className="text-3xl">Confirme seu e-mail</h1>
       <p className="text-muted-foreground text-sm">
         Enviamos um link de confirmação para o seu e-mail. Clique nele para

@@ -80,7 +80,9 @@ export async function signup(
   let couponQS = "";
   if (coupon && data.user) {
     const r = await applyCoupon(data.user.id, coupon);
+    console.error("[signup] coupon", coupon, "->", JSON.stringify(r));
     if (r.status === "applied") couponQS = `?pro=${r.months}`;
+    else if (r.status === "config") couponQS = "?cupom=config";
     else couponQS = "?cupom=invalido";
   }
 
@@ -95,20 +97,25 @@ export async function signup(
 type CouponResult =
   | { status: "applied"; months: number }
   | { status: "invalid" }
-  | { status: "error" };
+  | { status: "config"; detail: string };
 
 async function applyCoupon(
   userId: string,
   code: string,
 ): Promise<CouponResult> {
   const admin = createAdminClient();
-  if (!admin) return { status: "error" };
+  if (!admin) {
+    return { status: "config", detail: "SUPABASE_SERVICE_ROLE_KEY ausente" };
+  }
 
-  const { data: coupon } = await admin
+  const { data: coupon, error: cErr } = await admin
     .from("coupons")
     .select("id, plan_months, max_uses, uses, active, expires_at")
     .eq("code", code)
     .maybeSingle();
+
+  // Erro na query = problema de config/permissão (chave errada, tabela, RLS).
+  if (cErr) return { status: "config", detail: `coupons: ${cErr.message}` };
 
   if (
     !coupon ||
@@ -123,7 +130,11 @@ async function applyCoupon(
   const { error: rErr } = await admin
     .from("coupon_redemptions")
     .insert({ coupon_id: coupon.id, profile_id: userId });
-  if (rErr) return { status: "invalid" };
+  if (rErr) {
+    // 23505 = já resgatou; qualquer outro = config.
+    if (rErr.code === "23505") return { status: "invalid" };
+    return { status: "config", detail: `redemption: ${rErr.message}` };
+  }
 
   const until = new Date();
   until.setMonth(until.getMonth() + coupon.plan_months);
@@ -139,7 +150,7 @@ async function applyCoupon(
     },
     { onConflict: "profile_id" },
   );
-  if (sErr) return { status: "error" };
+  if (sErr) return { status: "config", detail: `subscription: ${sErr.message}` };
 
   await admin
     .from("coupons")
