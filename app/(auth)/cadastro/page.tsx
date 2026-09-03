@@ -3,6 +3,12 @@ import { AuthForm } from "../_components/auth-form";
 
 export const metadata: Metadata = { title: "Criar conta — Sponsas" };
 
-export default function CadastroPage() {
-  return <AuthForm mode="signup" />;
+export default async function CadastroPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string }>;
+}) {
+  const { tipo } = await searchParams;
+  const defaultType = tipo === "empresa" ? "company" : "athlete";
+  return <AuthForm mode="signup" defaultType={defaultType} />;
 }

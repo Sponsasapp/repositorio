@@ -12,10 +12,12 @@ export function AuthForm({
   mode,
   next,
   notice,
+  defaultType = "athlete",
 }: {
   mode: "login" | "signup";
   next?: string;
   notice?: string;
+  defaultType?: "athlete" | "company";
 }) {
   const action = mode === "login" ? login : signup;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
@@ -43,8 +45,18 @@ export function AuthForm({
 
       {mode === "signup" && (
         <fieldset className="grid grid-cols-2 gap-2">
-          <TypeCard value="athlete" label="Sou piloto" hint="Busco patrocínio" />
-          <TypeCard value="company" label="Sou empresa" hint="Quero patrocinar" />
+          <TypeCard
+            value="athlete"
+            label="Sou piloto"
+            hint="Busco patrocínio"
+            checked={defaultType === "athlete"}
+          />
+          <TypeCard
+            value="company"
+            label="Sou empresa"
+            hint="Quero patrocinar"
+            checked={defaultType === "company"}
+          />
         </fieldset>
       )}
 
@@ -172,10 +184,12 @@ function TypeCard({
   value,
   label,
   hint,
+  checked,
 }: {
   value: "athlete" | "company";
   label: string;
   hint: string;
+  checked: boolean;
 }) {
   return (
     <label className="border-border has-[:checked]:border-primary has-[:checked]:bg-accent/40 flex cursor-pointer flex-col rounded-lg border p-3 transition-colors">
@@ -183,7 +197,7 @@ function TypeCard({
         type="radio"
         name="type"
         value={value}
-        defaultChecked={value === "athlete"}
+        defaultChecked={checked}
         className="sr-only"
       />
       <span className="text-sm font-semibold">{label}</span>

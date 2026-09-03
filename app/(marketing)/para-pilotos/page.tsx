@@ -43,7 +43,7 @@ export default function ParaPilotosPage() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg">
-            <Link href="/cadastro">Criar perfil de piloto</Link>
+            <Link href="/cadastro?tipo=piloto">Criar perfil de piloto</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/como-funciona">Como funciona</Link>

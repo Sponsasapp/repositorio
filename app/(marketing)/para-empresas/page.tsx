@@ -43,7 +43,7 @@ export default function ParaEmpresasPage() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg">
-            <Link href="/cadastro">Criar conta de empresa</Link>
+            <Link href="/cadastro?tipo=empresa">Criar conta de empresa</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/pilotos">Explorar pilotos</Link>
