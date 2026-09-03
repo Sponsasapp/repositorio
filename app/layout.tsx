@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Barlow_Condensed } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,9 +18,38 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Sponsas — Sponsorship made simple",
-  description:
-    "Pilotos organizam seu perfil comercial e suas entregas. Marcas encontram quem combina com elas e acompanham cada patrocínio num só lugar.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "patrocínio",
+    "patrocínio esportivo",
+    "arrancada",
+    "drag racing",
+    "automobilismo",
+    "pilotos",
+    "marcas",
+    "permuta",
+  ],
+  authors: [{ name: SITE_NAME }],
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "pt_BR",
+    url: SITE_URL,
+    title: "Sponsas — Sponsorship made simple",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sponsas — Sponsorship made simple",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

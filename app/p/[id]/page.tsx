@@ -12,6 +12,7 @@ import {
   initials,
 } from "@/lib/format";
 import { tierInfo } from "@/lib/rank";
+import { SITE_URL } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -117,9 +118,20 @@ export async function generateMetadata({
   const { id } = await params;
   const data = await getPiloto(id);
   if (!data) return { title: "Perfil não encontrado — Sponsas" };
+  const url = `${SITE_URL}/p/${id}`;
+  const description =
+    data.profile.bio ??
+    `Perfil de ${data.profile.name} na Sponsas — pronto para receber patrocínio no automobilismo.`;
   return {
     title: `${data.profile.name} — Sponsas`,
-    description: data.profile.bio ?? undefined,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "profile",
+      url,
+      title: `${data.profile.name} — Sponsas`,
+      description,
+    },
   };
 }
 

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, initials } from "@/lib/format";
 import { matchesCampaignRegion } from "@/lib/regions";
+import { SITE_URL } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { RegionFit } from "@/components/region-fit";
 import {
@@ -72,9 +73,20 @@ export async function generateMetadata({
   const { id } = await params;
   const data = await getEmpresa(id);
   if (!data) return { title: "Empresa não encontrada — Sponsas" };
+  const url = `${SITE_URL}/e/${id}`;
+  const description =
+    data.company?.description ??
+    `${data.profile.name} na Sponsas — marca buscando pilotos para patrocinar.`;
   return {
     title: `${data.profile.name} — Sponsas`,
-    description: data.company?.description ?? undefined,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "profile",
+      url,
+      title: `${data.profile.name} — Sponsas`,
+      description,
+    },
   };
 }
 
