@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { initials } from "@/lib/format";
 import { tierInfo } from "@/lib/rank";
 import {
   MODALITIES,
@@ -11,6 +10,7 @@ import {
   pickPrimaryModality,
 } from "@/lib/sports";
 import { AppShell } from "@/components/app-shell";
+import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
 import type { RankTier, AthleteRankSnapshot } from "@/lib/types/database.types";
 
@@ -213,22 +213,12 @@ export default async function RankPage({
                 <span className="w-8 shrink-0 text-center text-lg font-[family-name:var(--font-heading)]">
                   {MEDAL[i] ?? pos}
                 </span>
-                <Link
-                  href={href}
-                  className="bg-navy text-navy-foreground flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm"
-                >
-                  {a.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={a.photo_url}
-                      alt={a.name}
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    <span className="font-[family-name:var(--font-heading)]">
-                      {initials(a.name)}
-                    </span>
-                  )}
+                <Link href={href} className="shrink-0">
+                  <Avatar
+                    src={a.photo_url}
+                    name={a.name}
+                    className="size-10 text-sm"
+                  />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

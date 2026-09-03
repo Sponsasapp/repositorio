@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { formatBRL, initials } from "@/lib/format";
+import { formatBRL } from "@/lib/format";
+import { Avatar } from "@/components/avatar";
 import { matchesCampaignRegion } from "@/lib/regions";
 import { modalityLabel } from "@/lib/sports";
 import { SITE_URL } from "@/lib/site";
@@ -135,20 +136,13 @@ export default async function PerfilEmpresaPublicoPage({
             ← Sponsas
           </Link>
           <div className="mt-8 flex items-end gap-5">
-            <div className="bg-primary flex size-24 items-center justify-center rounded-xl text-4xl">
-              {profile.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.photo_url}
-                  alt={profile.name}
-                  className="size-full rounded-xl object-cover"
-                />
-              ) : (
-                <span className="font-[family-name:var(--font-heading)]">
-                  {initials(profile.name)}
-                </span>
-              )}
-            </div>
+            <Avatar
+              src={profile.photo_url}
+              name={profile.name}
+              tone="primary"
+              rounded="xl"
+              className="size-24 text-4xl"
+            />
             <div>
               <h1 className="text-5xl">{profile.name}</h1>
               {linha && <p className="mt-1 text-sm text-white/70">{linha}</p>}

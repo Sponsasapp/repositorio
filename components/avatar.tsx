@@ -13,11 +13,13 @@ export function Avatar({
   name,
   className,
   rounded = "full",
+  tone = "navy",
 }: {
   src: string | null | undefined;
   name: string;
   className?: string;
   rounded?: "full" | "lg" | "xl";
+  tone?: "navy" | "primary";
 }) {
   const [broken, setBroken] = useState(false);
   const show = src && !broken;
@@ -36,7 +38,10 @@ export function Avatar({
   return (
     <span
       className={cn(
-        "bg-navy text-navy-foreground flex items-center justify-center overflow-hidden",
+        "flex items-center justify-center overflow-hidden",
+        tone === "navy"
+          ? "bg-navy text-navy-foreground"
+          : "bg-primary text-primary-foreground",
         rounded === "full" && "rounded-full",
         rounded === "lg" && "rounded-lg",
         rounded === "xl" && "rounded-xl",

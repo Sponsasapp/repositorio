@@ -9,7 +9,6 @@ import {
   formatDateBR,
   formatNumber,
   formatRange,
-  initials,
 } from "@/lib/format";
 import { tierInfo } from "@/lib/rank";
 import { SITE_URL } from "@/lib/site";
@@ -19,6 +18,7 @@ import {
   pickPrimaryModality,
 } from "@/lib/sports";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/avatar";
 import type { AthleteModality } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 
@@ -184,20 +184,13 @@ export default async function PerfilPublicoPage({
               ← Sponsas
             </Link>
             <div className="mt-8 flex items-end gap-5">
-              <div className="bg-primary flex size-24 items-center justify-center rounded-xl text-4xl">
-                {data.profile.photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={data.profile.photo_url}
-                    alt={data.profile.name}
-                    className="size-full rounded-xl object-cover"
-                  />
-                ) : (
-                  <span className="font-[family-name:var(--font-heading)]">
-                    {initials(data.profile.name)}
-                  </span>
-                )}
-              </div>
+              <Avatar
+                src={data.profile.photo_url}
+                name={data.profile.name}
+                tone="primary"
+                rounded="xl"
+                className="size-24 text-4xl"
+              />
               <h1 className="text-5xl">{data.profile.name}</h1>
             </div>
           </div>
@@ -267,20 +260,13 @@ export default async function PerfilPublicoPage({
             ← Sponsas
           </Link>
           <div className="mt-8 flex items-end gap-5">
-            <div className="bg-primary flex size-24 items-center justify-center rounded-xl text-4xl">
-              {profile.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.photo_url}
-                  alt={profile.name}
-                  className="size-full rounded-xl object-cover"
-                />
-              ) : (
-                <span className="font-[family-name:var(--font-heading)]">
-                  {initials(profile.name)}
-                </span>
-              )}
-            </div>
+            <Avatar
+              src={profile.photo_url}
+              name={profile.name}
+              tone="primary"
+              rounded="xl"
+              className="size-24 text-4xl"
+            />
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-5xl">{profile.name}</h1>
