@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { pickPrimaryModality } from "@/lib/sports";
+import { pickPrimaryModality, modalityLabel } from "@/lib/sports";
+import { tierInfo } from "@/lib/rank";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
+import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import type { RankTier } from "@/lib/types/database.types";
+
+const MEDAL = ["🥇", "🥈", "🥉"];
+const MES = new Date().toLocaleDateString("pt-BR", { month: "long" });
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -14,7 +19,7 @@ export default async function HomePage() {
       "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
-    .limit(6);
+    .limit(60);
 
   type Joined = {
     id: string;
@@ -37,40 +42,45 @@ export default async function HomePage() {
     social_links: { followers: number | null; avg_interactions: number | null }[];
   };
 
-  const destaques: PilotCardData[] = ((data ?? []) as unknown as Joined[])
-    .map((p) => {
-      const mod = pickPrimaryModality(p.athlete_modalities);
-      const followers = p.social_links.reduce(
-        (s, l) => s + (l.followers ?? 0),
-        0,
-      );
-      const interactions = p.social_links.reduce(
-        (s, l) => s + (l.avg_interactions ?? 0),
-        0,
-      );
-      return {
-        id: p.id,
-        name: p.name,
-        photo_url: p.photo_url,
-        car_photo_url:
-          [...p.athlete_cars]
-            .filter((c) => c.modality === mod?.modality)
-            .sort((a, b) => a.position - b.position)
-            .find((c) => c.photo_url)?.photo_url ?? null,
-        city: p.city,
-        state: p.state,
-        modality: mod?.modality ?? null,
-        category: mod?.category ?? null,
-        tier: mod?.rank_tier ?? null,
-        isPro: p.plan === "pro",
-        followers,
-        engagement:
-          followers > 0 && interactions > 0
-            ? Math.min((interactions / followers) * 100, 100)
-            : null,
-      };
-    })
+  const athletes = (data ?? []) as unknown as Joined[];
+
+  const toCard = (p: Joined): PilotCardData & { score: number | null } => {
+    const mod = pickPrimaryModality(p.athlete_modalities);
+    const followers = p.social_links.reduce((s, l) => s + (l.followers ?? 0), 0);
+    const interactions = p.social_links.reduce(
+      (s, l) => s + (l.avg_interactions ?? 0),
+      0,
+    );
+    return {
+      id: p.id,
+      name: p.name,
+      photo_url: p.photo_url,
+      car_photo_url:
+        [...p.athlete_cars]
+          .filter((c) => c.modality === mod?.modality)
+          .sort((a, b) => a.position - b.position)
+          .find((c) => c.photo_url)?.photo_url ?? null,
+      city: p.city,
+      state: p.state,
+      modality: mod?.modality ?? null,
+      category: mod?.category ?? null,
+      tier: mod?.rank_tier ?? null,
+      isPro: p.plan === "pro",
+      followers,
+      engagement:
+        followers > 0 && interactions > 0
+          ? Math.min((interactions / followers) * 100, 100)
+          : null,
+      score: mod?.rank_score ?? null,
+    };
+  };
+
+  const cards = athletes.map(toCard);
+  const top3 = cards
+    .filter((c) => c.score != null)
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
     .slice(0, 3);
+  const destaques: PilotCardData[] = cards.slice(0, 3);
 
   return (
     <main>
@@ -123,6 +133,63 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Top 3 do mês — Rank Sponsas */}
+      {top3.length > 0 && (
+        <section className="border-border border-t">
+          <div className="mx-auto max-w-[1120px] px-6 py-14">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+                  Rank Sponsas
+                </p>
+                <h2 className="mt-1 text-3xl">
+                  Top 3 de <span className="capitalize">{MES}</span>
+                </h2>
+              </div>
+              <Link
+                href="/rank"
+                className="text-foreground shrink-0 text-sm underline underline-offset-2"
+              >
+                Ver ranking completo
+              </Link>
+            </div>
+
+            <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+              {top3.map((p, i) => {
+                const t = tierInfo(p.tier);
+                return (
+                  <li key={p.id}>
+                    <Link
+                      href={`/p/${p.id}`}
+                      className={`border-border bg-card hover:border-l-primary/60 flex items-center gap-3 rounded-lg border border-l-3 p-4 transition-colors ${
+                        i === 0 ? "border-l-primary" : "border-l-border"
+                      }`}
+                    >
+                      <span className="font-[family-name:var(--font-heading)] text-2xl">
+                        {MEDAL[i]}
+                      </span>
+                      <Avatar
+                        src={p.photo_url}
+                        name={p.name}
+                        className="size-11 shrink-0 text-sm"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{p.name}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {[modalityLabel(p.modality), t?.label]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </section>
+      )}
 
       {/* Value strip */}
       <section className="border-border border-y">
