@@ -112,7 +112,13 @@ async function applyCoupon(
 ): Promise<CouponResult> {
   const admin = createAdminClient();
   if (!admin) {
-    return { status: "config", detail: "SUPABASE_SERVICE_ROLE_KEY ausente" };
+    const hasUrl = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    const hasKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const keyLen = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").length;
+    return {
+      status: "config",
+      detail: `admin=null url:${hasUrl} key:${hasKey} keyLen:${keyLen}`,
+    };
   }
 
   const { data: coupon, error: cErr } = await admin
