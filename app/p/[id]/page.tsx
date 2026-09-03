@@ -72,7 +72,11 @@ async function getPiloto(id: string, modalityParam?: string) {
   ]);
 
   const modalities = (modalitiesData ?? []) as AthleteModality[];
-  if (modalities.length === 0) return null;
+
+  // Piloto recém-cadastrado, ainda sem nenhuma modalidade: página mínima.
+  if (modalities.length === 0) {
+    return { profile, empty: true as const };
+  }
 
   const modOrder = new Map(MODALITY_VALUES.map((v, i) => [v, i]));
   modalities.sort(
@@ -121,6 +125,7 @@ async function getPiloto(id: string, modalityParam?: string) {
 
   return {
     profile,
+    empty: false as const,
     athlete: safeAthlete,
     modalities: modalities.map((m) => m.modality),
     activeModality: mv,
@@ -169,6 +174,44 @@ export default async function PerfilPublicoPage({
   const { modalidade } = await searchParams;
   const data = await getPiloto(id, modalidade);
   if (!data) notFound();
+
+  if (data.empty) {
+    return (
+      <main className="flex-1">
+        <div className="bg-navy text-navy-foreground">
+          <div className="mx-auto max-w-5xl px-6 pt-14 pb-20">
+            <Link href="/" className="text-sm text-white/50 hover:text-white">
+              ← Sponsas
+            </Link>
+            <div className="mt-8 flex items-end gap-5">
+              <div className="bg-primary flex size-24 items-center justify-center rounded-xl text-4xl">
+                {data.profile.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={data.profile.photo_url}
+                    alt={data.profile.name}
+                    className="size-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <span className="font-[family-name:var(--font-heading)]">
+                    {initials(data.profile.name)}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-5xl">{data.profile.name}</h1>
+            </div>
+          </div>
+        </div>
+        <div className="mx-auto -mt-12 max-w-5xl px-6 pb-20">
+          <div className="border-border bg-card rounded-xl border p-6">
+            <p className="text-muted-foreground text-sm">
+              Este piloto ainda está montando o perfil. Volte em breve.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const {
     profile,

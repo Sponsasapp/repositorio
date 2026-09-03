@@ -97,7 +97,30 @@ alter table company_profiles
 
 -- ============================================================
 -- 5) snapshots do rank por modalidade
+--    (cria a tabela se a 0013 não tiver rodado — 0014 é auto-suficiente)
 -- ============================================================
+create table if not exists athlete_rank_snapshots (
+  id uuid primary key default uuid_generate_v4(),
+  athlete_id uuid not null references profiles(id) on delete cascade,
+  score int,
+  tier text,
+  captured_on date not null default (now() at time zone 'utc')::date,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_rank_snapshots_captured_on
+  on athlete_rank_snapshots (captured_on);
+alter table athlete_rank_snapshots enable row level security;
+do $$ begin
+  if not exists (
+    select 1 from pg_policies
+    where tablename = 'athlete_rank_snapshots'
+      and policyname = 'rank_snapshots_select_public'
+  ) then
+    create policy "rank_snapshots_select_public" on athlete_rank_snapshots
+      for select using (true);
+  end if;
+end $$;
+
 alter table athlete_rank_snapshots
   add column if not exists modality text;
 -- o registro passa a ser por (athlete_id, modality, captured_on)
