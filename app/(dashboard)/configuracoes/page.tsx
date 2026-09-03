@@ -25,7 +25,7 @@ export default async function ConfiguracoesPage() {
   const isDev = process.env.NODE_ENV !== "production";
 
   // Uso atual
-  const [{ count: opps }, { count: props }, { count: pkgs }] = await Promise.all([
+  const [{ count: opps }, { count: props }, { data: pkgs }] = await Promise.all([
     isCompany
       ? supabase
           .from("opportunities")
@@ -41,10 +41,17 @@ export default async function ConfiguracoesPage() {
     !isCompany
       ? supabase
           .from("athlete_packages")
-          .select("id", { count: "exact", head: true })
+          .select("modality")
           .eq("athlete_id", user.id)
-      : Promise.resolve({ count: 0 }),
+      : Promise.resolve({ data: [] }),
   ]);
+
+  // Limite da tabela de preços é por modalidade — mostra a mais cheia.
+  const pkgByModality = new Map<string, number>();
+  for (const row of (pkgs as { modality: string }[] | null) ?? []) {
+    pkgByModality.set(row.modality, (pkgByModality.get(row.modality) ?? 0) + 1);
+  }
+  const pkgMax = Math.max(0, ...pkgByModality.values());
 
   const usos: { label: string; atual: number; limite: number }[] = [
     ...(isCompany
@@ -64,8 +71,8 @@ export default async function ConfiguracoesPage() {
     ...(!isCompany
       ? [
           {
-            label: "Itens na tabela de preços",
-            atual: pkgs ?? 0,
+            label: "Itens na tabela de preços (por modalidade)",
+            atual: pkgMax,
             limite: PLAN_LIMITS.rateCardItems,
           },
         ]

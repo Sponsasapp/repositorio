@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
 import { tierInfo } from "@/lib/rank";
+import { pickPrimaryModality } from "@/lib/sports";
 import { formatCompact, initials } from "@/lib/format";
 import { toDataUri } from "@/lib/og";
 
@@ -17,11 +18,12 @@ type Row = {
   photo_url: string | null;
   city: string | null;
   state: string | null;
-  athlete_profiles: {
-    modality: string | null;
+  athlete_modalities: {
+    modality: string;
     category: string | null;
     rank_tier: string | null;
-  } | null;
+    rank_score: number | null;
+  }[];
   social_links: { followers: number | null }[];
 };
 
@@ -34,7 +36,7 @@ async function getPilot(id: string): Promise<Row | null> {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "name, photo_url, city, state, athlete_profiles(modality, category, rank_tier), social_links(followers)",
+        "name, photo_url, city, state, athlete_modalities(modality, category, rank_tier, rank_score), social_links(followers)",
       )
       .eq("id", id)
       .eq("type", "athlete")
@@ -54,7 +56,7 @@ export default async function Image({
   const pilot = await getPilot(id);
   const name = pilot?.name ?? "Piloto";
   const avatar = await toDataUri(pilot?.photo_url);
-  const ap = pilot?.athlete_profiles ?? null;
+  const ap = pickPrimaryModality(pilot?.athlete_modalities ?? []);
   const linha = [ap?.modality, ap?.category, pilot?.state]
     .filter(Boolean)
     .join("  ·  ");

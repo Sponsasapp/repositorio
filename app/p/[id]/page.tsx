@@ -13,6 +13,13 @@ import {
 } from "@/lib/format";
 import { tierInfo } from "@/lib/rank";
 import { SITE_URL } from "@/lib/site";
+import {
+  MODALITY_VALUES,
+  modalityLabel,
+  pickPrimaryModality,
+} from "@/lib/sports";
+import { cn } from "@/lib/utils";
+import type { AthleteModality } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -22,7 +29,7 @@ const PLATFORM_LABEL: Record<string, string> = {
   facebook: "Facebook",
 };
 
-async function getPiloto(id: string) {
+async function getPiloto(id: string, modalityParam?: string) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
@@ -33,18 +40,14 @@ async function getPiloto(id: string) {
   if (!profile || profile.type !== "athlete") return null;
 
   const [
-    { data: athlete },
+    { data: modalitiesData },
     { data: cars },
     { data: achievements },
     { data: socials },
     { data: packages },
     { data: auth },
   ] = await Promise.all([
-    supabase
-      .from("athlete_profiles")
-      .select("*")
-      .eq("profile_id", id)
-      .maybeSingle(),
+    supabase.from("athlete_modalities").select("*").eq("profile_id", id),
     supabase
       .from("athlete_cars")
       .select("*")
@@ -68,7 +71,26 @@ async function getPiloto(id: string) {
     supabase.auth.getUser(),
   ]);
 
-  const achievementsSorted = (achievements ?? []).slice().sort((a, b) => {
+  const modalities = (modalitiesData ?? []) as AthleteModality[];
+  if (modalities.length === 0) return null;
+
+  const modOrder = new Map(MODALITY_VALUES.map((v, i) => [v, i]));
+  modalities.sort(
+    (a, b) => (modOrder.get(a.modality) ?? 99) - (modOrder.get(b.modality) ?? 99),
+  );
+
+  const active =
+    (modalityParam &&
+      modalities.find((m) => m.modality === modalityParam)) ||
+    pickPrimaryModality(modalities) ||
+    modalities[0];
+  const mv = active.modality;
+
+  const modCars = (cars ?? []).filter((c) => c.modality === mv);
+  const modAch = (achievements ?? []).filter((a) => a.modality === mv);
+  const modPackages = (packages ?? []).filter((p) => p.modality === mv);
+
+  const achievementsSorted = modAch.slice().sort((a, b) => {
     const ya = Number(a.year) || 0;
     const yb = Number(b.year) || 0;
     if (ya !== yb) return yb - ya;
@@ -91,17 +113,18 @@ async function getPiloto(id: string) {
   const canSeeValues = viewerId === id || viewerType === "company";
 
   const safePackages = canSeeValues
-    ? (packages ?? [])
-    : (packages ?? []).map((p) => ({ ...p, price: null }));
-  const safeAthlete =
-    athlete && !canSeeValues
-      ? { ...athlete, desired_value_min: null, desired_value_max: null }
-      : athlete;
+    ? modPackages
+    : modPackages.map((p) => ({ ...p, price: null }));
+  const safeAthlete = canSeeValues
+    ? active
+    : { ...active, desired_value_min: null, desired_value_max: null };
 
   return {
     profile,
     athlete: safeAthlete,
-    cars: cars ?? [],
+    modalities: modalities.map((m) => m.modality),
+    activeModality: mv,
+    cars: modCars,
     achievements: achievementsSorted,
     socials: socials ?? [],
     packages: safePackages,
@@ -137,16 +160,21 @@ export async function generateMetadata({
 
 export default async function PerfilPublicoPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ modalidade?: string }>;
 }) {
   const { id } = await params;
-  const data = await getPiloto(id);
+  const { modalidade } = await searchParams;
+  const data = await getPiloto(id, modalidade);
   if (!data) notFound();
 
   const {
     profile,
     athlete,
+    modalities,
+    activeModality,
     cars,
     achievements,
     socials,
@@ -229,6 +257,24 @@ export default async function PerfilPublicoPage({
 
       {/* Corpo */}
       <div className="mx-auto -mt-12 max-w-5xl px-6 pb-20">
+        {modalities.length > 1 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {modalities.map((mv) => (
+              <Link
+                key={mv}
+                href={mv === modalities[0] ? `/p/${id}` : `/p/${id}?modalidade=${encodeURIComponent(mv)}`}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-sm transition-colors",
+                  mv === activeModality
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {modalityLabel(mv)}
+              </Link>
+            ))}
+          </div>
+        )}
         {carPhoto && (
           <div className="border-border bg-card mb-6 overflow-hidden rounded-xl border">
             {/* eslint-disable-next-line @next/next/no-img-element */}

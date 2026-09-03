@@ -28,3 +28,24 @@ export function modalityByValue(value: string | null | undefined): Modality | nu
   if (!value) return null;
   return MODALITIES.find((m) => m.value === value) ?? null;
 }
+
+export function modalityLabel(value: string | null | undefined): string {
+  return modalityByValue(value)?.label ?? value ?? "";
+}
+
+/**
+ * Escolhe a modalidade "principal" de um piloto: a de maior rank_score
+ * (empate desfeito pela ordem da taxonomia). Usada quando a lista não está
+ * filtrada por modalidade.
+ */
+export function pickPrimaryModality<
+  T extends { modality: string; rank_score: number | null },
+>(rows: T[]): T | null {
+  if (rows.length === 0) return null;
+  const order = new Map(MODALITY_VALUES.map((v, i) => [v, i]));
+  return [...rows].sort((a, b) => {
+    const s = (b.rank_score ?? -1) - (a.rank_score ?? -1);
+    if (s !== 0) return s;
+    return (order.get(a.modality) ?? 99) - (order.get(b.modality) ?? 99);
+  })[0];
+}

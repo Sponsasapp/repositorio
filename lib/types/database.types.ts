@@ -45,6 +45,12 @@ export type RankFactors = {
   entregas_aprovadas: number;
 };
 
+/**
+ * Legado — `athlete_profiles` (1 linha por conta). A partir da migration 0014 a
+ * parte esportiva do piloto vive em `athlete_modalities` (1 por modalidade). A
+ * tabela antiga segue no banco só como origem da migração; o app usa
+ * `AthleteModality`.
+ */
 export type AthleteProfile = {
   profile_id: string;
   modality: string | null;
@@ -71,9 +77,35 @@ export type AthleteProfile = {
   updated_at: string;
 };
 
+/** Parte esportiva do piloto, uma linha por (piloto, modalidade). */
+export type AthleteModality = {
+  id: string;
+  profile_id: string;
+  modality: string;
+  category: string | null;
+  results: string | null;
+  availability_notes: string | null;
+  offered_deliverables: string[];
+  sponsor_categories: string[];
+  desired_value_min: number | null;
+  desired_value_max: number | null;
+  list_name: string | null;
+  list_member: boolean;
+  list_position: number | null;
+  list_shark_tank: boolean;
+  list_shark_tank_date: string | null;
+  rank_score: number | null;
+  rank_tier: RankTier | null;
+  rank_factors: RankFactors | null;
+  rank_updated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AthleteCar = {
   id: string;
   athlete_id: string;
+  modality: string;
   name: string;
   team: string | null;
   championships: string | null;
@@ -85,6 +117,7 @@ export type AthleteCar = {
 export type AthleteAchievement = {
   id: string;
   athlete_id: string;
+  modality: string;
   car_id: string | null;
   title: string;
   year: string | null;
@@ -96,6 +129,7 @@ export type AthleteAchievement = {
 export type AthleteRankSnapshot = {
   id: string;
   athlete_id: string;
+  modality: string | null;
   score: number | null;
   tier: RankTier | null;
   captured_on: string;
@@ -113,6 +147,7 @@ export type CompanyProfile = {
   budget: number | null;
   campaign_duration_months: number | null;
   region_of_interest: string | null;
+  modalities: string[];
   updated_at: string;
 };
 
@@ -131,6 +166,7 @@ export type SocialLink = {
 export type AthletePackage = {
   id: string;
   athlete_id: string;
+  modality: string;
   title: string;
   description: string | null;
   price: number | null;
@@ -244,6 +280,10 @@ export type Database = {
         AthleteProfile,
         Exclude<keyof AthleteProfile, "profile_id">
       >;
+      athlete_modalities: TableDef<
+        AthleteModality,
+        Exclude<keyof AthleteModality, "profile_id" | "modality">
+      >;
       company_profiles: TableDef<
         CompanyProfile,
         Exclude<keyof CompanyProfile, "profile_id">
@@ -272,7 +312,7 @@ export type Database = {
       >;
       athlete_rank_snapshots: TableDef<
         AthleteRankSnapshot,
-        "id" | "score" | "tier" | "captured_on" | "created_at"
+        "id" | "modality" | "score" | "tier" | "captured_on" | "created_at"
       >;
       opportunities: TableDef<
         Opportunity,

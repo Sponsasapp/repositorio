@@ -6,7 +6,8 @@ import { formatBRL, formatDateBR, paymentSummary } from "@/lib/format";
 import { timeAgo } from "@/lib/relative-time";
 import { deliverableLabel } from "@/lib/deliverables";
 import { FACTOR_LABELS, tierInfo, suggestedMonthlyRange } from "@/lib/rank";
-import type { RankFactors } from "@/lib/types/database.types";
+import { pickPrimaryModality } from "@/lib/sports";
+import type { RankFactors, RankTier } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Painel — Sponsas" };
@@ -110,17 +111,16 @@ async function PainelPiloto({ userId }: { userId: string }) {
   const supabase = await createClient();
 
   const [
-    { data: athlete },
+    { data: modalitiesRaw },
     { data: socialsRaw },
     { data: spRaw },
     { data: dlvRaw },
     { data: propRaw },
   ] = await Promise.all([
     supabase
-      .from("athlete_profiles")
-      .select("rank_score, rank_tier, rank_factors")
-      .eq("profile_id", userId)
-      .maybeSingle(),
+      .from("athlete_modalities")
+      .select("modality, rank_score, rank_tier, rank_factors")
+      .eq("profile_id", userId),
     supabase
       .from("social_links")
       .select("followers, avg_interactions")
@@ -148,6 +148,16 @@ async function PainelPiloto({ userId }: { userId: string }) {
     followers: number | null;
     avg_interactions: number | null;
   }[];
+
+  // Rank do painel: a modalidade principal do piloto (maior score).
+  const athlete = pickPrimaryModality(
+    (modalitiesRaw ?? []) as {
+      modality: string;
+      rank_score: number | null;
+      rank_tier: RankTier | null;
+      rank_factors: RankFactors | null;
+    }[],
+  );
   const sponsorships = (spRaw ?? []) as {
     id: string;
     value: number | null;
@@ -361,7 +371,7 @@ async function PainelEmpresa({ userId }: { userId: string }) {
     supabase
       .from("sponsorships")
       .select(
-        "id, value, status, athlete:profiles!sponsorships_athlete_id_fkey(id, name, athlete_profiles(rank_tier))",
+        "id, value, status, athlete:profiles!sponsorships_athlete_id_fkey(id, name, athlete_modalities(rank_tier, rank_score))",
       )
       .eq("company_id", userId),
     supabase
@@ -392,7 +402,10 @@ async function PainelEmpresa({ userId }: { userId: string }) {
     athlete: {
       id: string;
       name: string | null;
-      athlete_profiles: { rank_tier: string | null } | null;
+      athlete_modalities: {
+        rank_tier: string | null;
+        rank_score: number | null;
+      }[];
     } | null;
   }[];
   const opportunities = (oppRaw ?? []) as {
@@ -455,9 +468,19 @@ async function PainelEmpresa({ userId }: { userId: string }) {
                 const ath = s.athlete as {
                   id: string;
                   name: string | null;
-                  athlete_profiles: { rank_tier: string | null } | null;
+                  athlete_modalities: {
+                    rank_tier: string | null;
+                    rank_score: number | null;
+                  }[];
                 } | null;
-                const t = tierInfo(ath?.athlete_profiles?.rank_tier);
+                const best = pickPrimaryModality(
+                  (ath?.athlete_modalities ?? []).map((m) => ({
+                    modality: "",
+                    rank_score: m.rank_score,
+                    rank_tier: m.rank_tier,
+                  })),
+                );
+                const t = tierInfo(best?.rank_tier);
                 return (
                   <li
                     key={s.id}

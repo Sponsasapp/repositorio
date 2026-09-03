@@ -19,7 +19,7 @@ type Joined = {
   city: string | null;
   state: string | null;
   plan: "free" | "pro";
-  company_profiles: { segment: string | null } | null;
+  company_profiles: { segment: string | null; modalities: string[] } | null;
   opportunities: { status: string }[];
 };
 
@@ -34,7 +34,7 @@ export default async function EmpresasPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, company_profiles!inner(segment), opportunities(status)",
+      "id, name, photo_url, city, state, plan, company_profiles!inner(segment, modalities), opportunities(status)",
     )
     .eq("type", "company")
     .order("name");
@@ -55,6 +55,10 @@ export default async function EmpresasPage({
     .filter((c) => {
       if (q && !c.name.toLowerCase().includes(q)) return false;
       if (sp.segmento && c.company_profiles?.segment !== sp.segmento) return false;
+      // Sem modalidades marcadas = aparece em todas.
+      const mods = c.company_profiles?.modalities ?? [];
+      if (sp.modalidade && mods.length > 0 && !mods.includes(sp.modalidade))
+        return false;
       return true;
     })
     .sort((a, b) => (b.plan === "pro" ? 1 : 0) - (a.plan === "pro" ? 1 : 0))
@@ -69,7 +73,7 @@ export default async function EmpresasPage({
       isPro: c.plan === "pro",
     }));
 
-  const hasFilters = Boolean(sp.q || sp.segmento);
+  const hasFilters = Boolean(sp.q || sp.segmento || sp.modalidade);
 
   return (
     <AppShell>
