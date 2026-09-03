@@ -144,85 +144,73 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="bg-navy text-navy-foreground rounded-xl p-7">
-            <span className="bg-primary/15 text-primary inline-block rounded-md px-2.5 py-1 text-xs font-semibold">
-              Exemplo de patrocínio ativo
-            </span>
-            <h3 className="mt-4 text-2xl">Óleo Rubra × Larissa Farah</h3>
-            <p className="text-sm text-white/60">Arrancada · Categoria Pro · 6 meses</p>
-            <dl className="mt-5 text-sm">
-              {[
-                ["Valor mensal", "R$ 2.000"],
-                ["Permuta", "1 jogo de pneus/etapa"],
-                ["Entregas este mês", "3 de 5"],
-                ["Rank Sponsas do piloto", "Elite"],
-              ].map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex justify-between border-t border-white/10 py-3"
-                >
-                  <dt className="text-white/60">{k}</dt>
-                  <dd>{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </section>
-
-      {/* Top 3 do mês — Rank Sponsas */}
-      {top3.length > 0 && (
-        <section className="border-border border-t">
-          <div className="mx-auto max-w-[1120px] px-6 py-14">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-primary text-xs font-semibold tracking-wide uppercase">
-                  Rank Sponsas
-                </p>
-                <h2 className="mt-1 text-3xl">
-                  Top 3 de <span className="capitalize">{MES}</span>
-                </h2>
-              </div>
+          {top3.length > 0 ? (
+            <div className="bg-navy text-navy-foreground rounded-xl p-7">
+              <span className="bg-primary/15 text-primary inline-block rounded-md px-2.5 py-1 text-xs font-semibold">
+                Rank Sponsas · Top 3 de {MES}
+              </span>
+              <ol className="mt-5 flex flex-col divide-y divide-white/10">
+                {top3.map((p, i) => {
+                  const t = tierInfo(p.tier);
+                  return (
+                    <li key={p.id}>
+                      <Link
+                        href={`/p/${p.id}`}
+                        className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                      >
+                        <span className="font-[family-name:var(--font-heading)] text-xl">
+                          {MEDAL[i]}
+                        </span>
+                        <Avatar
+                          src={p.photo_url}
+                          name={p.name}
+                          className="size-9 shrink-0 text-xs"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold">
+                            {p.name}
+                          </p>
+                          <p className="text-xs text-white/50">
+                            {[modalityLabel(p.modality), t?.label]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ol>
               <Link
                 href="/rank"
-                className="text-foreground shrink-0 text-sm underline underline-offset-2"
+                className="mt-4 inline-block text-sm text-white/70 underline underline-offset-2 hover:text-white"
               >
                 Ver ranking completo
               </Link>
             </div>
+          ) : (
+            <ExemploPatrocinio />
+          )}
+        </div>
+      </section>
 
-            <ol className="mt-8 grid gap-4 sm:grid-cols-3">
-              {top3.map((p, i) => {
-                const t = tierInfo(p.tier);
-                return (
-                  <li key={p.id}>
-                    <Link
-                      href={`/p/${p.id}`}
-                      className={`border-border bg-card hover:border-l-primary/60 flex items-center gap-3 rounded-lg border border-l-3 p-4 transition-colors ${
-                        i === 0 ? "border-l-primary" : "border-l-border"
-                      }`}
-                    >
-                      <span className="font-[family-name:var(--font-heading)] text-2xl">
-                        {MEDAL[i]}
-                      </span>
-                      <Avatar
-                        src={p.photo_url}
-                        name={p.name}
-                        className="size-11 shrink-0 text-sm"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold">{p.name}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {[modalityLabel(p.modality), t?.label]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </p>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
+      {/* Exemplo de patrocínio ativo (quando o Top 3 já ocupa o hero) */}
+      {top3.length > 0 && (
+        <section className="border-border border-t">
+          <div className="mx-auto max-w-[1120px] px-6 py-14">
+            <div className="grid items-center gap-10 md:grid-cols-[1fr_0.9fr]">
+              <div>
+                <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+                  Como um acordo fica na Sponsas
+                </p>
+                <h2 className="mt-1 text-3xl">Do print de DM a um contrato</h2>
+                <p className="text-muted-foreground mt-3 max-w-md">
+                  Valor, permuta, duração e entregas — tudo registrado e
+                  acompanhado num só lugar.
+                </p>
+              </div>
+              <ExemploPatrocinio />
+            </div>
           </div>
         </section>
       )}
@@ -405,5 +393,35 @@ export default async function HomePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function ExemploPatrocinio() {
+  return (
+    <div className="bg-navy text-navy-foreground rounded-xl p-7">
+      <span className="bg-primary/15 text-primary inline-block rounded-md px-2.5 py-1 text-xs font-semibold">
+        Exemplo de patrocínio ativo
+      </span>
+      <h3 className="mt-4 text-2xl">Óleo Rubra × Larissa Farah</h3>
+      <p className="text-sm text-white/60">
+        Arrancada · Categoria Pro · 6 meses
+      </p>
+      <dl className="mt-5 text-sm">
+        {[
+          ["Valor mensal", "R$ 2.000"],
+          ["Permuta", "1 jogo de pneus/etapa"],
+          ["Entregas este mês", "3 de 5"],
+          ["Rank Sponsas do piloto", "Elite"],
+        ].map(([k, v]) => (
+          <div
+            key={k}
+            className="flex justify-between border-t border-white/10 py-3"
+          >
+            <dt className="text-white/60">{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
