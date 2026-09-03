@@ -3,13 +3,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CompanyCard, type CompanyCardData } from "@/components/company-card";
 import { AppShell } from "@/components/app-shell";
+import { modalityByValue } from "@/lib/sports";
 
 export const metadata: Metadata = {
   title: "Empresas — Sponsas",
   description: "Marcas do automobilismo buscando pilotos para patrocinar.",
 };
 
-type SP = { q?: string; segmento?: string };
+type SP = { q?: string; segmento?: string; modalidade?: string };
 
 type Joined = {
   id: string;
@@ -75,14 +76,26 @@ export default async function EmpresasPage({
       <div className="mx-auto max-w-5xl">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl">Empresas</h1>
+            <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Automobilismo
+            </p>
+            <h1 className="text-4xl">
+              Empresas
+              {modalityByValue(sp.modalidade)
+                ? ` · ${modalityByValue(sp.modalidade)!.label}`
+                : ""}
+            </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               {companies.length} {companies.length === 1 ? "marca" : "marcas"}
               {hasFilters ? " com esses filtros" : " no total"}.
             </p>
           </div>
           <Link
-            href="/pilotos"
+            href={
+              sp.modalidade
+                ? `/pilotos?modalidade=${encodeURIComponent(sp.modalidade)}`
+                : "/pilotos"
+            }
             className="text-foreground shrink-0 text-sm underline underline-offset-2"
           >
             Ver pilotos

@@ -3,8 +3,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BR_UF } from "@/lib/br";
 import { RANK_TIERS, RANK_TIER_ORDER } from "@/lib/rank";
+import { MODALITIES, MODALITY_VALUES, modalityByValue } from "@/lib/sports";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { AppShell } from "@/components/app-shell";
+import { cn } from "@/lib/utils";
 import type { RankTier } from "@/lib/types/database.types";
 
 export const metadata: Metadata = {
@@ -63,8 +65,8 @@ export default async function PilotosPage({
 
   const all = (data ?? []) as unknown as Joined[];
 
-  const modalidades = distinct(all.map((p) => p.athlete_profiles?.modality));
   const categorias = distinct(all.map((p) => p.athlete_profiles?.category));
+  const modalidadeAtiva = modalityByValue(sp.modalidade);
 
   const q = (sp.q ?? "").trim().toLowerCase();
   const orcMax = sp.orcamento ? Number(sp.orcamento) : null;
@@ -131,18 +133,45 @@ export default async function PilotosPage({
       <div className="mx-auto max-w-5xl">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl">Pilotos</h1>
+            <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Automobilismo
+            </p>
+            <h1 className="text-4xl">
+              Pilotos
+              {modalidadeAtiva ? ` · ${modalidadeAtiva.label}` : ""}
+            </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               {pilots.length} {pilots.length === 1 ? "piloto" : "pilotos"}
               {hasFilters ? " com esses filtros" : " no total"}.
             </p>
           </div>
           <Link
-            href="/empresas"
+            href={
+              sp.modalidade
+                ? `/empresas?modalidade=${encodeURIComponent(sp.modalidade)}`
+                : "/empresas"
+            }
             className="text-foreground shrink-0 text-sm underline underline-offset-2"
           >
             Ver empresas
           </Link>
+        </div>
+
+        {/* Modalidades */}
+        <div className="mt-5 flex flex-wrap gap-2">
+          <ModalityChip
+            href="/pilotos"
+            label="Todas"
+            active={!sp.modalidade}
+          />
+          {MODALITIES.map((m) => (
+            <ModalityChip
+              key={m.slug}
+              href={`/pilotos?modalidade=${encodeURIComponent(m.value)}`}
+              label={m.label}
+              active={sp.modalidade === m.value}
+            />
+          ))}
         </div>
 
         {/* Filtros — form GET, sem JS */}
@@ -154,7 +183,7 @@ export default async function PilotosPage({
             placeholder="Buscar por nome"
             className="border-input bg-card h-9 rounded-lg border px-3 text-sm lg:col-span-2"
           />
-          <FilterSelect name="modalidade" value={sp.modalidade} placeholder="Modalidade" options={modalidades} />
+          <FilterSelect name="modalidade" value={sp.modalidade} placeholder="Modalidade" options={[...MODALITY_VALUES]} />
           <FilterSelect name="categoria" value={sp.categoria} placeholder="Categoria" options={categorias} />
           <FilterSelect name="uf" value={sp.uf} placeholder="Estado" options={[...BR_UF]} />
           <FilterSelect
@@ -212,6 +241,30 @@ function carPhoto(
   return (
     [...cars].sort((a, b) => a.position - b.position).find((c) => c.photo_url)
       ?.photo_url ?? null
+  );
+}
+
+function ModalityChip({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "rounded-full border px-3 py-1 text-sm transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </Link>
   );
 }
 

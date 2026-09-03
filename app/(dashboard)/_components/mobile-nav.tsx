@@ -7,7 +7,36 @@ import { usePathname } from "next/navigation";
 import { MenuIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/(auth)/actions";
-import { NAV_LINKS } from "./nav-links";
+import { NAV_TOP, NAV_BOTTOM } from "./nav-links";
+import { SportNav } from "@/components/sport-nav";
+
+function NavRow({
+  href,
+  label,
+  pathname,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  pathname: string;
+  onClick: () => void;
+}) {
+  const active = pathname === href || pathname.startsWith(href + "/");
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        "rounded-md px-3 py-2.5 text-sm",
+        active
+          ? "bg-white/10 font-semibold text-white"
+          : "text-white/70 hover:text-white",
+      )}
+    >
+      {label}
+    </Link>
+  );
+}
 
 export function MobileNav({ email }: { email?: string }) {
   const [open, setOpen] = useState(false);
@@ -60,25 +89,29 @@ export function MobileNav({ email }: { email?: string }) {
               </button>
             </div>
 
-            {NAV_LINKS.map((link) => {
-              const active =
-                pathname === link.href || pathname.startsWith(link.href + "/");
-              return (
-                <Link
+            <div className="flex flex-col gap-1 overflow-y-auto">
+              {NAV_TOP.map((link) => (
+                <NavRow
                   key={link.href}
                   href={link.href}
+                  label={link.label}
+                  pathname={pathname}
                   onClick={close}
-                  className={cn(
-                    "rounded-md px-3 py-2.5 text-sm",
-                    active
-                      ? "bg-white/10 font-semibold text-white"
-                      : "text-white/70 hover:text-white",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+                />
+              ))}
+              <div className="my-2 border-t border-white/10" />
+              <SportNav onNavigate={close} />
+              <div className="my-2 border-t border-white/10" />
+              {NAV_BOTTOM.map((link) => (
+                <NavRow
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  pathname={pathname}
+                  onClick={close}
+                />
+              ))}
+            </div>
 
             <div className="mt-auto border-t border-white/10 pt-4">
               {email && (

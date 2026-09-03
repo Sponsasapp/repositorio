@@ -9,6 +9,7 @@ import {
 } from "./actions";
 import { Section, Field, UfSelect } from "./_ui";
 import { OFFERED_DELIVERABLES, SPONSOR_CATEGORIES } from "@/lib/deliverables";
+import { MODALITIES } from "@/lib/sports";
 import type {
   Profile,
   AthleteProfile,
@@ -100,11 +101,18 @@ export function PerfilPilotoForm({
       <Section title="Dados esportivos">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Modalidade" htmlFor="modality">
-            <Input
+            <select
               id="modality"
               name="modality"
               defaultValue={athlete?.modality ?? "Arrancada"}
-            />
+              className="border-input h-9 w-full rounded-lg border bg-transparent px-2 text-sm"
+            >
+              {MODALITIES.map((m) => (
+                <option key={m.slug} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Categoria" htmlFor="category">
             <Input
