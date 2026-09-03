@@ -382,7 +382,12 @@ export type Database = {
       >;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      redeem_coupon: {
+        Args: { p_user: string; p_code: string };
+        Returns: string;
+      };
+    };
     Enums: {
       profile_type: ProfileType;
       opportunity_status: OpportunityStatus;

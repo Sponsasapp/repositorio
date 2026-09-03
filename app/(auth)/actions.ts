@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/site";
 import type { ProfileType } from "@/lib/types/database.types";
 
@@ -110,67 +109,21 @@ async function applyCoupon(
   userId: string,
   code: string,
 ): Promise<CouponResult> {
-  const admin = createAdminClient();
-  if (!admin) {
-    const hasUrl = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
-    const hasKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const keyLen = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").length;
-    return {
-      status: "config",
-      detail: `admin=null url:${hasUrl} key:${hasKey} keyLen:${keyLen}`,
-    };
+  // Toda a lógica (validação + resgate + PRO) roda na função redeem_coupon
+  // (SECURITY DEFINER no Postgres) — não precisa da service role.
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("redeem_coupon", {
+    p_user: userId,
+    p_code: code,
+  });
+
+  if (error) return { status: "config", detail: `rpc: ${error.message}` };
+
+  const r = String(data ?? "");
+  if (r.startsWith("applied:")) {
+    return { status: "applied", months: Number(r.split(":")[1]) || 1 };
   }
-
-  const { data: coupon, error: cErr } = await admin
-    .from("coupons")
-    .select("id, plan_months, max_uses, uses, active, expires_at")
-    .eq("code", code)
-    .maybeSingle();
-
-  // Erro na query = problema de config/permissão (chave errada, tabela, RLS).
-  if (cErr) return { status: "config", detail: `coupons: ${cErr.message}` };
-
-  if (
-    !coupon ||
-    !coupon.active ||
-    (coupon.expires_at && new Date(coupon.expires_at) < new Date()) ||
-    (coupon.max_uses != null && coupon.uses >= coupon.max_uses)
-  ) {
-    return { status: "invalid" };
-  }
-
-  // PK (coupon_id, profile_id) evita resgate duplicado.
-  const { error: rErr } = await admin
-    .from("coupon_redemptions")
-    .insert({ coupon_id: coupon.id, profile_id: userId });
-  if (rErr) {
-    // 23505 = já resgatou; qualquer outro = config.
-    if (rErr.code === "23505") return { status: "invalid" };
-    return { status: "config", detail: `redemption: ${rErr.message}` };
-  }
-
-  const until = new Date();
-  until.setMonth(until.getMonth() + coupon.plan_months);
-
-  // upsert: a linha normalmente já existe (trigger handle_new_user), mas se
-  // faltar por algum motivo, cria.
-  const { error: sErr } = await admin.from("subscriptions").upsert(
-    {
-      profile_id: userId,
-      plan: "pro",
-      status: "active",
-      renewed_until: until.toISOString(),
-    },
-    { onConflict: "profile_id" },
-  );
-  if (sErr) return { status: "config", detail: `subscription: ${sErr.message}` };
-
-  await admin
-    .from("coupons")
-    .update({ uses: coupon.uses + 1 })
-    .eq("id", coupon.id);
-
-  return { status: "applied", months: coupon.plan_months };
+  return { status: "invalid" };
 }
 
 export async function logout(): Promise<void> {
