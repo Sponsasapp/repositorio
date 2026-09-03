@@ -48,13 +48,17 @@ export function SportNav({ onNavigate }: { onNavigate?: () => void }) {
                 onNavigate={onNavigate}
               />
             ) : (
-              <span
+              <Link
                 key={sport.slug}
-                className="flex items-center justify-between rounded-md py-1.5 pr-3 pl-8 text-sm text-white/35"
+                href={`/esportes/${sport.slug}`}
+                onClick={onNavigate}
+                className="flex items-center gap-1.5 rounded-md py-1.5 pr-3 pl-8 text-sm text-white/40 hover:text-white/70"
               >
-                {sport.label}
-                <span className="text-[10px] uppercase">em breve</span>
-              </span>
+                <span className="truncate">{sport.label}</span>
+                <span className="ml-auto shrink-0 text-[9px] uppercase">
+                  em breve
+                </span>
+              </Link>
             ),
           )}
         </div>

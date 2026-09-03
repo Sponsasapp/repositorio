@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/site";
 import type { ProfileType } from "@/lib/types/database.types";
 
@@ -47,6 +48,9 @@ export async function signup(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const type = String(formData.get("type") ?? "") as ProfileType;
+  const coupon = String(formData.get("coupon") ?? "")
+    .trim()
+    .toUpperCase();
 
   if (!name || !email || !password)
     return { error: "Preencha nome, e-mail e senha." };
@@ -72,12 +76,74 @@ export async function signup(
     return { error: traduzErro(error.message) };
   }
 
+  // Cupom (opcional): aplica o PRO best-effort — nunca bloqueia o cadastro.
+  let couponQS = "";
+  if (coupon && data.user) {
+    const r = await applyCoupon(data.user.id, coupon);
+    if (r.status === "applied") couponQS = `?pro=${r.months}`;
+    else couponQS = "?cupom=invalido";
+  }
+
   // Confirmação de e-mail desligada → já vem sessão, entra direto.
   if (data.session) {
     revalidatePath("/", "layout");
-    redirect("/dashboard");
+    redirect(`/dashboard${couponQS}`);
   }
-  redirect("/cadastro/confirme");
+  redirect(`/cadastro/confirme${couponQS}`);
+}
+
+type CouponResult =
+  | { status: "applied"; months: number }
+  | { status: "invalid" }
+  | { status: "error" };
+
+async function applyCoupon(
+  userId: string,
+  code: string,
+): Promise<CouponResult> {
+  const admin = createAdminClient();
+  if (!admin) return { status: "error" };
+
+  const { data: coupon } = await admin
+    .from("coupons")
+    .select("id, plan_months, max_uses, uses, active, expires_at")
+    .eq("code", code)
+    .maybeSingle();
+
+  if (
+    !coupon ||
+    !coupon.active ||
+    (coupon.expires_at && new Date(coupon.expires_at) < new Date()) ||
+    (coupon.max_uses != null && coupon.uses >= coupon.max_uses)
+  ) {
+    return { status: "invalid" };
+  }
+
+  // PK (coupon_id, profile_id) evita resgate duplicado.
+  const { error: rErr } = await admin
+    .from("coupon_redemptions")
+    .insert({ coupon_id: coupon.id, profile_id: userId });
+  if (rErr) return { status: "invalid" };
+
+  const until = new Date();
+  until.setMonth(until.getMonth() + coupon.plan_months);
+
+  const { error: sErr } = await admin
+    .from("subscriptions")
+    .update({
+      plan: "pro",
+      status: "active",
+      renewed_until: until.toISOString(),
+    })
+    .eq("profile_id", userId);
+  if (sErr) return { status: "error" };
+
+  await admin
+    .from("coupons")
+    .update({ uses: coupon.uses + 1 })
+    .eq("id", coupon.id);
+
+  return { status: "applied", months: coupon.plan_months };
 }
 
 export async function logout(): Promise<void> {

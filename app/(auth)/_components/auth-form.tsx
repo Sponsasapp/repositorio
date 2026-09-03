@@ -88,6 +88,21 @@ export function AuthForm({
       </div>
 
       {mode === "signup" && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="coupon">Cupom (opcional)</Label>
+          <Input
+            id="coupon"
+            name="coupon"
+            autoCapitalize="characters"
+            placeholder="Código promocional"
+          />
+          <p className="text-muted-foreground text-xs">
+            Tem um código? Ele libera o plano PRO por um período.
+          </p>
+        </div>
+      )}
+
+      {mode === "signup" && (
         <label className="text-muted-foreground flex items-start gap-2 text-xs">
           <input
             type="checkbox"
