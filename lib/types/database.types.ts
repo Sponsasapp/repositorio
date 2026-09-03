@@ -126,6 +126,17 @@ export type AthleteAchievement = {
   created_at: string;
 };
 
+export type AthletePost = {
+  id: string;
+  athlete_id: string;
+  platform: string;
+  url: string;
+  likes: number;
+  posted_on: string | null;
+  image_url: string | null;
+  created_at: string;
+};
+
 export type AthleteRankSnapshot = {
   id: string;
   athlete_id: string;
@@ -313,6 +324,10 @@ export type Database = {
       athlete_rank_snapshots: TableDef<
         AthleteRankSnapshot,
         "id" | "modality" | "score" | "tier" | "captured_on" | "created_at"
+      >;
+      athlete_posts: TableDef<
+        AthletePost,
+        "id" | "likes" | "posted_on" | "image_url" | "created_at"
       >;
       opportunities: TableDef<
         Opportunity,

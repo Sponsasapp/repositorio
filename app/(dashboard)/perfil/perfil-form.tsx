@@ -19,6 +19,7 @@ import type {
   AthleteAchievement,
   SocialLink,
   AthletePackage,
+  AthletePost,
 } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export function PerfilPilotoForm({
   achievements,
   socials,
   packages,
+  posts,
   rateCardLimit,
 }: {
   profile: Profile;
@@ -53,6 +55,7 @@ export function PerfilPilotoForm({
   achievements: AthleteAchievement[];
   socials: SocialLink[];
   packages: AthletePackage[];
+  posts: AthletePost[];
   rateCardLimit: number | null;
 }) {
   const [state, formAction, pending] = useActionState<PerfilState, FormData>(
@@ -260,6 +263,15 @@ export function PerfilPilotoForm({
             <SocialRow key={p.key} platform={p} initial={social(p.key)} />
           ))}
         </div>
+      </Section>
+
+      {/* ---- Posts em destaque ---- */}
+      <Section title="Posts em destaque">
+        <p className="text-muted-foreground -mt-2 mb-1 text-xs">
+          Seus melhores posts. Por enquanto os números são manuais. O de mais
+          curtidas nos últimos 30 dias pode aparecer na home da Sponsas.
+        </p>
+        <PostList initial={posts} />
       </Section>
 
       {state?.error && (
@@ -790,6 +802,135 @@ function MiniField({
       <span className="text-muted-foreground text-[11px]">{label}</span>
       {children}
     </label>
+  );
+}
+
+const POST_PLATFORMS = ["instagram", "tiktok", "youtube"] as const;
+const POST_PLATFORM_LABEL: Record<string, string> = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+};
+
+type PostDraft = {
+  key: string;
+  platform: string;
+  url: string;
+  likes: string;
+  posted_on: string;
+  image_url: string;
+};
+
+const newPost = (): PostDraft => ({
+  key: crypto.randomUUID(),
+  platform: "instagram",
+  url: "",
+  likes: "",
+  posted_on: "",
+  image_url: "",
+});
+
+function PostList({ initial }: { initial: AthletePost[] }) {
+  const [rows, setRows] = useState<PostDraft[]>(
+    initial.length > 0
+      ? initial.map((p) => ({
+          key: p.id,
+          platform: p.platform,
+          url: p.url,
+          likes: String(p.likes),
+          posted_on: p.posted_on ?? "",
+          image_url: p.image_url ?? "",
+        }))
+      : [newPost()],
+  );
+
+  const update = (i: number, patch: Partial<PostDraft>) =>
+    setRows((r) => r.map((row, j) => (j === i ? { ...row, ...patch } : row)));
+  const remove = (i: number) =>
+    setRows((r) => (r.length > 1 ? r.filter((_, j) => j !== i) : [newPost()]));
+  const add = () => setRows((r) => [...r, newPost()]);
+
+  const payload = JSON.stringify(
+    rows
+      .filter((r) => r.url.trim().length > 0)
+      .map((r) => ({
+        platform: r.platform,
+        url: r.url.trim(),
+        likes: r.likes,
+        posted_on: r.posted_on,
+        image_url: r.image_url,
+      })),
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <input type="hidden" name="posts" value={payload} />
+      {rows.map((row, i) => (
+        <div
+          key={row.key}
+          className="border-border flex flex-col gap-2 rounded-md border p-3"
+        >
+          <div className="grid grid-cols-[120px_1fr] gap-2">
+            <select
+              value={row.platform}
+              onChange={(e) => update(i, { platform: e.target.value })}
+              className="border-input h-9 w-full rounded-lg border bg-transparent px-2 text-sm"
+              aria-label="Plataforma"
+            >
+              {POST_PLATFORMS.map((p) => (
+                <option key={p} value={p}>
+                  {POST_PLATFORM_LABEL[p]}
+                </option>
+              ))}
+            </select>
+            <Input
+              value={row.url}
+              onChange={(e) => update(i, { url: e.target.value })}
+              type="url"
+              placeholder="URL do post"
+              aria-label="URL do post"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <MiniField label="Curtidas">
+              <Input
+                value={row.likes}
+                onChange={(e) => update(i, { likes: e.target.value })}
+                inputMode="numeric"
+                placeholder="12000"
+              />
+            </MiniField>
+            <MiniField label="Data do post">
+              <Input
+                value={row.posted_on}
+                onChange={(e) => update(i, { posted_on: e.target.value })}
+                type="date"
+              />
+            </MiniField>
+          </div>
+          <ImageUpload
+            initial={row.image_url || null}
+            shape="square"
+            hint="Print / thumbnail do post (opcional)."
+            onChange={(u) => update(i, { image_url: u })}
+          />
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="text-muted-foreground hover:text-destructive self-start text-xs"
+          >
+            Remover
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="border-border text-muted-foreground hover:text-foreground self-start rounded-md border border-dashed px-3 py-1.5 text-sm"
+      >
+        + Adicionar post
+      </button>
+    </div>
   );
 }
 

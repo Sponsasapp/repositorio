@@ -64,6 +64,7 @@ export default async function PerfilPage({
     { data: achievements },
     { data: socials },
     { data: packages },
+    { data: posts },
   ] = await Promise.all([
     supabase
       .from("athlete_modalities")
@@ -85,6 +86,11 @@ export default async function PerfilPage({
       .select("*")
       .eq("athlete_id", user.id)
       .order("position"),
+    supabase
+      .from("athlete_posts")
+      .select("*")
+      .eq("athlete_id", user.id)
+      .order("likes", { ascending: false }),
   ]);
 
   const modalities = (modalitiesData ?? []) as AthleteModality[];
@@ -134,6 +140,7 @@ export default async function PerfilPage({
         )}
         socials={socials ?? []}
         packages={(packages ?? []).filter((p) => p.modality === activeValue)}
+        posts={posts ?? []}
         rateCardLimit={profile.plan === "pro" ? null : PLAN_LIMITS.rateCardItems}
       />
     </div>

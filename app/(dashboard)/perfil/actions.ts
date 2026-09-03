@@ -248,12 +248,47 @@ export async function salvarPerfilPiloto(
     if (e4) return { error: "Não foi possível salvar a tabela de preços." };
   }
 
+  // 5. athlete_posts — posts em destaque (compartilhado, substitui tudo)
+  const postRows = parsePosts(formData.get("posts"), user.id);
+  await supabase.from("athlete_posts").delete().eq("athlete_id", user.id);
+  if (postRows.length > 0) {
+    const { error: e5 } = await supabase.from("athlete_posts").insert(postRows);
+    if (e5) return { error: "Não foi possível salvar os posts." };
+  }
+
   revalidatePath("/perfil");
   revalidatePath("/dashboard");
   revalidatePath("/pilotos");
   revalidatePath("/rank");
+  revalidatePath("/");
   revalidatePath(`/p/${user.id}`);
   return { ok: true };
+}
+
+function parsePosts(raw: FormDataEntryValue | null, athleteId: string) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  const ok = ["instagram", "tiktok", "youtube"];
+  return parsed
+    .map((p) => {
+      const item = p as Record<string, unknown>;
+      const platform = String(item.platform ?? "").trim();
+      const likesNum = parseNumberBR(item.likes);
+      return {
+        athlete_id: athleteId,
+        platform: ok.includes(platform) ? platform : "instagram",
+        url: String(item.url ?? "").trim(),
+        likes: likesNum != null && likesNum > 0 ? Math.round(likesNum) : 0,
+        posted_on: String(item.posted_on ?? "").trim() || null,
+        image_url: String(item.image_url ?? "").trim() || null,
+      };
+    })
+    .filter((p) => p.url.length > 0);
 }
 
 function parsePackages(

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { pickPrimaryModality, modalityLabel } from "@/lib/sports";
 import { tierInfo } from "@/lib/rank";
+import { formatCompact } from "@/lib/format";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,17 @@ import type { RankTier } from "@/lib/types/database.types";
 
 const MEDAL = ["🥇", "🥈", "🥉"];
 const MES = new Date().toLocaleDateString("pt-BR", { month: "long" });
+const POST_PLATFORM: Record<string, string> = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+};
+
+function isoDaysAgo(n: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -81,6 +93,30 @@ export default async function HomePage() {
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
     .slice(0, 3);
   const destaques: PilotCardData[] = cards.slice(0, 3);
+
+  // Post mais curtido dos últimos 30 dias (por posted_on, ou created_at se vazio)
+  const { data: postData } = await supabase
+    .from("athlete_posts")
+    .select(
+      "id, platform, url, likes, image_url, posted_on, created_at, athlete:profiles!athlete_posts_athlete_id_fkey(id, name, photo_url)",
+    )
+    .order("likes", { ascending: false })
+    .limit(30);
+
+  type PostRow = {
+    id: string;
+    platform: string;
+    url: string;
+    likes: number;
+    image_url: string | null;
+    posted_on: string | null;
+    created_at: string;
+    athlete: { id: string; name: string; photo_url: string | null } | null;
+  };
+  const cutoff = isoDaysAgo(30);
+  const postDoMes = ((postData ?? []) as unknown as PostRow[])
+    .filter((p) => (p.posted_on ?? p.created_at.slice(0, 10)) >= cutoff)
+    .sort((a, b) => b.likes - a.likes)[0];
 
   return (
     <main>
@@ -187,6 +223,55 @@ export default async function HomePage() {
                 );
               })}
             </ol>
+          </div>
+        </section>
+      )}
+
+      {/* Post do mês */}
+      {postDoMes && postDoMes.athlete && (
+        <section className="border-border border-t">
+          <div className="mx-auto max-w-[1120px] px-6 py-14">
+            <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+              Post do mês
+            </p>
+            <h2 className="mt-1 text-3xl">O conteúdo mais curtido</h2>
+            <a
+              href={postDoMes.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border-border border-l-primary bg-card hover:border-l-primary/60 mt-6 flex flex-col gap-4 rounded-xl border border-l-3 p-5 transition-colors sm:flex-row sm:items-center"
+            >
+              {postDoMes.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={postDoMes.image_url}
+                  alt=""
+                  className="aspect-square w-full rounded-lg object-cover sm:size-40"
+                />
+              )}
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    src={postDoMes.athlete.photo_url}
+                    name={postDoMes.athlete.name}
+                    className="size-10 text-sm"
+                  />
+                  <div>
+                    <p className="font-semibold">{postDoMes.athlete.name}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {POST_PLATFORM[postDoMes.platform] ?? postDoMes.platform}
+                    </p>
+                  </div>
+                </div>
+                <p className="font-[family-name:var(--font-heading)] text-3xl">
+                  {formatCompact(postDoMes.likes)}{" "}
+                  <span className="text-muted-foreground text-lg">curtidas</span>
+                </p>
+                <span className="text-foreground text-sm underline underline-offset-2">
+                  Ver post
+                </span>
+              </div>
+            </a>
           </div>
         </section>
       )}
