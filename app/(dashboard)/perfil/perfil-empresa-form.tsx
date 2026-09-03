@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { salvarPerfilEmpresa, type PerfilState } from "./actions";
 import { Section, Field, UfSelect } from "./_ui";
+import { MODALITIES } from "@/lib/sports";
 import type { Profile, CompanyProfile } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +97,31 @@ export function PerfilEmpresaForm({
       </Section>
 
       <Section title="Campanha de patrocínio">
+        <Field
+          label="Modalidades que você patrocina"
+          hint="Aparece nas abas de cada modalidade em Empresas."
+        >
+          <div className="flex flex-wrap gap-2">
+            {MODALITIES.map((m) => {
+              const checked = company?.modalities?.includes(m.value);
+              return (
+                <label
+                  key={m.slug}
+                  className="border-border has-[:checked]:border-primary has-[:checked]:bg-accent/40 flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    name="modalities"
+                    value={m.value}
+                    defaultChecked={checked}
+                    className="accent-primary"
+                  />
+                  {m.label}
+                </label>
+              );
+            })}
+          </div>
+        </Field>
         <Field
           label="Objetivo da campanha"
           htmlFor="campaign_goal"

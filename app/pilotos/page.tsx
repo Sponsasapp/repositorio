@@ -3,7 +3,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BR_UF } from "@/lib/br";
 import { RANK_TIERS, RANK_TIER_ORDER } from "@/lib/rank";
-import { MODALITIES, MODALITY_VALUES, modalityByValue } from "@/lib/sports";
+import {
+  MODALITIES,
+  MODALITY_VALUES,
+  modalityByValue,
+  pickPrimaryModality,
+} from "@/lib/sports";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { AppShell } from "@/components/app-shell";
 import { cn } from "@/lib/utils";
@@ -40,11 +45,18 @@ export default async function PilotosPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, desired_value_min, rank_tier, rank_score), athlete_cars(photo_url, position), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, desired_value_min, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .order("name");
 
+  type ModRow = {
+    modality: string;
+    category: string | null;
+    desired_value_min: number | null;
+    rank_tier: RankTier | null;
+    rank_score: number | null;
+  };
   type Joined = {
     id: string;
     name: string;
@@ -52,51 +64,56 @@ export default async function PilotosPage({
     city: string | null;
     state: string | null;
     plan: "free" | "pro";
-    athlete_profiles: {
-      modality: string | null;
-      category: string | null;
-      desired_value_min: number | null;
-      rank_tier: RankTier | null;
-      rank_score: number | null;
-    } | null;
-    athlete_cars: { photo_url: string | null; position: number }[];
+    athlete_modalities: ModRow[];
+    athlete_cars: {
+      photo_url: string | null;
+      position: number;
+      modality: string;
+    }[];
     social_links: { followers: number | null; avg_interactions: number | null }[];
   };
 
   const all = (data ?? []) as unknown as Joined[];
 
-  const categorias = distinct(all.map((p) => p.athlete_profiles?.category));
+  const categorias = distinct(
+    all.flatMap((p) => p.athlete_modalities.map((m) => m.category)),
+  );
   const modalidadeAtiva = modalityByValue(sp.modalidade);
 
   const q = (sp.q ?? "").trim().toLowerCase();
   const orcMax = sp.orcamento ? Number(sp.orcamento) : null;
 
   const pilots: PilotCardData[] = all
-    .filter((p) => {
-      const ap = p.athlete_profiles;
-      if (q && !p.name.toLowerCase().includes(q)) return false;
-      if (sp.modalidade && ap?.modality !== sp.modalidade) return false;
-      if (sp.categoria && ap?.category !== sp.categoria) return false;
-      if (sp.uf && p.state !== sp.uf) return false;
-      if (sp.rank && ap?.rank_tier !== sp.rank) return false;
-      if (
-        orcMax != null &&
-        ap?.desired_value_min != null &&
-        ap.desired_value_min > orcMax
-      )
-        return false;
-      return true;
-    })
-    .sort((a, b) => {
-      // PRO primeiro, depois por rank
-      const pro = (b.plan === "pro" ? 1 : 0) - (a.plan === "pro" ? 1 : 0);
-      if (pro !== 0) return pro;
-      return (
-        (b.athlete_profiles?.rank_score ?? -1) -
-        (a.athlete_profiles?.rank_score ?? -1)
-      );
-    })
     .map((p) => {
+      // Modalidade usada no card: a filtrada, senão a principal (maior rank).
+      const mod = sp.modalidade
+        ? (p.athlete_modalities.find((m) => m.modality === sp.modalidade) ?? null)
+        : pickPrimaryModality(p.athlete_modalities);
+      return { p, mod };
+    })
+    .filter(
+      (x): x is { p: Joined; mod: ModRow } => {
+        const { p, mod } = x;
+        if (!mod) return false;
+        if (q && !p.name.toLowerCase().includes(q)) return false;
+        if (sp.categoria && mod.category !== sp.categoria) return false;
+        if (sp.uf && p.state !== sp.uf) return false;
+        if (sp.rank && mod.rank_tier !== sp.rank) return false;
+        if (
+          orcMax != null &&
+          mod.desired_value_min != null &&
+          mod.desired_value_min > orcMax
+        )
+          return false;
+        return true;
+      },
+    )
+    .sort((a, b) => {
+      const pro = (b.p.plan === "pro" ? 1 : 0) - (a.p.plan === "pro" ? 1 : 0);
+      if (pro !== 0) return pro;
+      return (b.mod.rank_score ?? -1) - (a.mod.rank_score ?? -1);
+    })
+    .map(({ p, mod }) => {
       const followers = p.social_links.reduce(
         (s, l) => s + (l.followers ?? 0),
         0,
@@ -109,12 +126,14 @@ export default async function PilotosPage({
         id: p.id,
         name: p.name,
         photo_url: p.photo_url,
-        car_photo_url: carPhoto(p.athlete_cars),
+        car_photo_url: carPhoto(
+          p.athlete_cars.filter((c) => c.modality === mod.modality),
+        ),
         city: p.city,
         state: p.state,
-        modality: p.athlete_profiles?.modality ?? null,
-        category: p.athlete_profiles?.category ?? null,
-        tier: p.athlete_profiles?.rank_tier ?? null,
+        modality: mod.modality,
+        category: mod.category,
+        tier: mod.rank_tier,
         isPro: p.plan === "pro",
         followers,
         engagement:

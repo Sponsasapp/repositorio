@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, initials } from "@/lib/format";
 import { matchesCampaignRegion } from "@/lib/regions";
+import { modalityLabel } from "@/lib/sports";
 import { SITE_URL } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { RegionFit } from "@/components/region-fit";
@@ -165,6 +166,21 @@ export default async function PerfilEmpresaPublicoPage({
                 <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
                   {company.description}
                 </p>
+              </Panel>
+            )}
+
+            {company?.modalities && company.modalities.length > 0 && (
+              <Panel title="Patrocina">
+                <div className="flex flex-wrap gap-2">
+                  {company.modalities.map((mv) => (
+                    <span
+                      key={mv}
+                      className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium"
+                    >
+                      {modalityLabel(mv)}
+                    </span>
+                  ))}
+                </div>
               </Panel>
             )}
 

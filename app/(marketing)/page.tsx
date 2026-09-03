@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { pickPrimaryModality } from "@/lib/sports";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { Button } from "@/components/ui/button";
 import type { RankTier } from "@/lib/types/database.types";
@@ -10,7 +11,7 @@ export default async function HomePage() {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, athlete_profiles!inner(modality, category, rank_tier), athlete_cars(photo_url, position), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_interactions)",
     )
     .eq("type", "athlete")
     .limit(6);
@@ -22,17 +23,23 @@ export default async function HomePage() {
     city: string | null;
     state: string | null;
     plan: "free" | "pro";
-    athlete_profiles: {
-      modality: string | null;
+    athlete_modalities: {
+      modality: string;
       category: string | null;
       rank_tier: RankTier | null;
-    } | null;
-    athlete_cars: { photo_url: string | null; position: number }[];
+      rank_score: number | null;
+    }[];
+    athlete_cars: {
+      photo_url: string | null;
+      position: number;
+      modality: string;
+    }[];
     social_links: { followers: number | null; avg_interactions: number | null }[];
   };
 
   const destaques: PilotCardData[] = ((data ?? []) as unknown as Joined[])
     .map((p) => {
+      const mod = pickPrimaryModality(p.athlete_modalities);
       const followers = p.social_links.reduce(
         (s, l) => s + (l.followers ?? 0),
         0,
@@ -47,13 +54,14 @@ export default async function HomePage() {
         photo_url: p.photo_url,
         car_photo_url:
           [...p.athlete_cars]
+            .filter((c) => c.modality === mod?.modality)
             .sort((a, b) => a.position - b.position)
             .find((c) => c.photo_url)?.photo_url ?? null,
         city: p.city,
         state: p.state,
-        modality: p.athlete_profiles?.modality ?? null,
-        category: p.athlete_profiles?.category ?? null,
-        tier: p.athlete_profiles?.rank_tier ?? null,
+        modality: mod?.modality ?? null,
+        category: mod?.category ?? null,
+        tier: mod?.rank_tier ?? null,
         isPro: p.plan === "pro",
         followers,
         engagement:

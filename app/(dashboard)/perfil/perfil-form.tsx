@@ -7,12 +7,14 @@ import {
   buscarDadosYoutube,
   type PerfilState,
 } from "./actions";
+import Link from "next/link";
 import { Section, Field, UfSelect } from "./_ui";
 import { OFFERED_DELIVERABLES, SPONSOR_CATEGORIES } from "@/lib/deliverables";
-import { MODALITIES } from "@/lib/sports";
+import { modalityLabel, type Modality } from "@/lib/sports";
+import { cn } from "@/lib/utils";
 import type {
   Profile,
-  AthleteProfile,
+  AthleteModality,
   AthleteCar,
   AthleteAchievement,
   SocialLink,
@@ -32,7 +34,10 @@ const PLATFORMS = [
 
 export function PerfilPilotoForm({
   profile,
-  athlete,
+  modalities,
+  activeModality,
+  active,
+  missingModalities,
   cars,
   achievements,
   socials,
@@ -40,7 +45,10 @@ export function PerfilPilotoForm({
   rateCardLimit,
 }: {
   profile: Profile;
-  athlete: AthleteProfile | null;
+  modalities: string[];
+  activeModality: string;
+  active: AthleteModality | null;
+  missingModalities: Modality[];
   cars: AthleteCar[];
   achievements: AthleteAchievement[];
   socials: SocialLink[];
@@ -64,8 +72,60 @@ export function PerfilPilotoForm({
   }));
   const outrasIniciais = achievements.filter((a) => !a.car_id);
 
+  // Abas de modalidade: as que o piloto já tem + a ativa (mesmo se nova).
+  const tabValues = modalities.includes(activeModality)
+    ? modalities
+    : [...modalities, activeModality];
+  const isNew = !active;
+
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-6">
+      <input type="hidden" name="modality" value={activeModality} />
+
+      {/* ---- Modalidades ---- */}
+      <div className="border-primary bg-card rounded-lg border border-l-3 p-5">
+        <h2 className="mb-3 text-xl">Modalidade</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          {tabValues.map((mv) => (
+            <Link
+              key={mv}
+              href={`/perfil?m=${encodeURIComponent(mv)}`}
+              className={cn(
+                "rounded-full border px-3 py-1 text-sm transition-colors",
+                mv === activeModality
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {modalityLabel(mv)}
+            </Link>
+          ))}
+          {missingModalities.length > 0 && (
+            <details className="relative">
+              <summary className="border-border text-muted-foreground hover:text-foreground cursor-pointer list-none rounded-full border border-dashed px-3 py-1 text-sm">
+                + Adicionar modalidade
+              </summary>
+              <div className="border-border bg-card absolute z-10 mt-1 flex flex-col rounded-md border p-1">
+                {missingModalities.map((m) => (
+                  <Link
+                    key={m.slug}
+                    href={`/perfil?m=${encodeURIComponent(m.value)}`}
+                    className="hover:bg-accent rounded px-3 py-1.5 text-sm"
+                  >
+                    {m.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+        <p className="text-muted-foreground mt-3 text-xs">
+          {isNew
+            ? `Você ainda não tem perfil de ${modalityLabel(activeModality)}. Preencha os campos abaixo e salve para criar.`
+            : `Editando ${modalityLabel(activeModality)}. Dados básicos e redes são compartilhados entre as modalidades.`}
+        </p>
+      </div>
+
       {/* ---- Dados básicos ---- */}
       <Section title="Dados básicos">
         <Field label="Nome" htmlFor="name">
@@ -98,38 +158,22 @@ export function PerfilPilotoForm({
       </Section>
 
       {/* ---- Dados esportivos ---- */}
-      <Section title="Dados esportivos">
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Modalidade" htmlFor="modality">
-            <select
-              id="modality"
-              name="modality"
-              defaultValue={athlete?.modality ?? "Arrancada"}
-              className="border-input h-9 w-full rounded-lg border bg-transparent px-2 text-sm"
-            >
-              {MODALITIES.map((m) => (
-                <option key={m.slug} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Categoria" htmlFor="category">
-            <Input
-              id="category"
-              name="category"
-              defaultValue={athlete?.category ?? ""}
-              placeholder="Street, Pro..."
-            />
-          </Field>
-        </div>
+      <Section title={`Dados esportivos · ${modalityLabel(activeModality)}`}>
+        <Field label="Categoria" htmlFor="category">
+          <Input
+            id="category"
+            name="category"
+            defaultValue={active?.category ?? ""}
+            placeholder="Street, Pro..."
+          />
+        </Field>
         <Field
           label="Entregas que oferece"
           hint="Marque o que você consegue entregar."
         >
           <div className="flex flex-wrap gap-2">
             {OFFERED_DELIVERABLES.map((d) => {
-              const checked = athlete?.offered_deliverables?.includes(d.value);
+              const checked = active?.offered_deliverables?.includes(d.value);
               return (
                 <label
                   key={d.value}
@@ -149,7 +193,7 @@ export function PerfilPilotoForm({
           </div>
         </Field>
         <Field label="Aceita patrocínio de">
-          <SponsorCategories initial={athlete?.sponsor_categories ?? []} />
+          <SponsorCategories initial={active?.sponsor_categories ?? []} />
         </Field>
         <Field
           label="Disponibilidade / observações"
@@ -158,7 +202,7 @@ export function PerfilPilotoForm({
           <Textarea
             id="availability_notes"
             name="availability_notes"
-            defaultValue={athlete?.availability_notes ?? ""}
+            defaultValue={active?.availability_notes ?? ""}
             rows={2}
           />
         </Field>
@@ -190,7 +234,7 @@ export function PerfilPilotoForm({
           Ou você já está numa lista de arrancada (com uma posição), ou está no
           Shark Tank disputando uma vaga — nunca os dois ao mesmo tempo.
         </p>
-        <ListaField athlete={athlete} />
+        <ListaField active={active} />
       </Section>
 
       {/* ---- Tabela de preços ---- */}
@@ -669,11 +713,11 @@ function OutrasConquistas({ initial }: { initial: AthleteAchievement[] }) {
 
 type ListStatus = "none" | "member" | "shark";
 
-function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
+function ListaField({ active }: { active: AthleteModality | null }) {
   const [status, setStatus] = useState<ListStatus>(
-    athlete?.list_shark_tank
+    active?.list_shark_tank
       ? "shark"
-      : athlete?.list_member
+      : active?.list_member
         ? "member"
         : "none",
   );
@@ -704,7 +748,7 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
         <MiniField label="Qual lista">
           <Input
             name="list_name"
-            defaultValue={athlete?.list_name ?? ""}
+            defaultValue={active?.list_name ?? ""}
             placeholder="Ex: Lista 011, Lista 015"
           />
         </MiniField>
@@ -714,7 +758,7 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
           <Input
             name="list_position"
             defaultValue={
-              athlete?.list_position != null ? String(athlete.list_position) : ""
+              active?.list_position != null ? String(active.list_position) : ""
             }
             inputMode="numeric"
             placeholder="Ex: 3"
@@ -726,7 +770,7 @@ function ListaField({ athlete }: { athlete: AthleteProfile | null }) {
           <Input
             name="list_shark_tank_date"
             type="date"
-            defaultValue={athlete?.list_shark_tank_date ?? ""}
+            defaultValue={active?.list_shark_tank_date ?? ""}
           />
         </MiniField>
       )}

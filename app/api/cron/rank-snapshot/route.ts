@@ -24,8 +24,8 @@ export async function GET(request: Request) {
   }
 
   const { data: rows, error } = await admin
-    .from("athlete_profiles")
-    .select("profile_id, rank_score, rank_tier")
+    .from("athlete_modalities")
+    .select("profile_id, modality, rank_score, rank_tier")
     .not("rank_score", "is", null);
 
   if (error) {
@@ -35,15 +35,22 @@ export async function GET(request: Request) {
   const capturedOn = new Date().toISOString().slice(0, 10);
   const snapshots = (rows ?? []).map((r) => ({
     athlete_id: r.profile_id,
+    modality: r.modality,
     score: r.rank_score,
     tier: r.rank_tier,
     captured_on: capturedOn,
   }));
 
   if (snapshots.length > 0) {
+    // upsert manual: apaga o dia e reinsere (o índice único é sobre uma
+    // expressão coalesce(modality,''), que o supabase-js não aceita em onConflict)
+    await admin
+      .from("athlete_rank_snapshots")
+      .delete()
+      .eq("captured_on", capturedOn);
     const { error: upErr } = await admin
       .from("athlete_rank_snapshots")
-      .upsert(snapshots, { onConflict: "athlete_id,captured_on" });
+      .insert(snapshots);
     if (upErr) {
       return NextResponse.json({ error: upErr.message }, { status: 500 });
     }
