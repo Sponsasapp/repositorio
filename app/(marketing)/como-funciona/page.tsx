@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+const DESCRIPTION =
+  "Do perfil comercial ao patrocínio fechado, com entregas acompanhadas.";
 export const metadata: Metadata = {
   title: "Como funciona — Sponsas",
-  description:
-    "Do perfil comercial ao patrocínio fechado, com entregas acompanhadas.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/como-funciona" },
+  openGraph: { title: "Como funciona — Sponsas", description: DESCRIPTION },
 };
 
 const PASSOS_PILOTO = [

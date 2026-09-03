@@ -3,9 +3,12 @@ import Link from "next/link";
 import { PLAN_LIMITS } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
 
+const DESCRIPTION = "Free para começar. PRO quando precisar de mais.";
 export const metadata: Metadata = {
   title: "Planos — Sponsas",
-  description: "Free para começar. PRO quando precisar de mais.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/planos" },
+  openGraph: { title: "Planos — Sponsas", description: DESCRIPTION },
 };
 
 const LINHAS: [string, string, string][] = [

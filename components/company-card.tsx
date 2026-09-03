@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { initials } from "@/lib/format";
+import { Avatar } from "@/components/avatar";
 
 export type CompanyCardData = {
   id: string;
@@ -21,20 +21,12 @@ export function CompanyCard({ company }: { company: CompanyCardData }) {
       href={`/e/${company.id}`}
       className="border-border border-l-primary bg-card hover:border-l-primary/60 flex flex-col rounded-lg border border-l-3 p-5 transition-colors"
     >
-      <div className="bg-navy text-navy-foreground mb-3.5 flex size-11 items-center justify-center overflow-hidden rounded-lg text-base">
-        {company.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={company.logo_url}
-            alt={company.name}
-            className="size-full object-cover"
-          />
-        ) : (
-          <span className="font-[family-name:var(--font-heading)]">
-            {initials(company.name)}
-          </span>
-        )}
-      </div>
+      <Avatar
+        src={company.logo_url}
+        name={company.name}
+        rounded="lg"
+        className="mb-3.5 size-11 text-base"
+      />
       <div className="flex items-center gap-2">
         <h3 className="font-semibold">{company.name}</h3>
         {company.isPro && (

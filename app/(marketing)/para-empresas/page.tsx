@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+const DESCRIPTION =
+  "Encontre pilotos por rank, engajamento e região. Feche patrocínios em dinheiro ou permuta e acompanhe cada entrega.";
 export const metadata: Metadata = {
   title: "Para empresas — Sponsas",
-  description:
-    "Encontre pilotos por rank, engajamento e região. Feche patrocínios em dinheiro ou permuta e acompanhe cada entrega.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/para-empresas" },
+  openGraph: { title: "Para empresas — Sponsas", description: DESCRIPTION },
 };
 
 const BENEFICIOS = [

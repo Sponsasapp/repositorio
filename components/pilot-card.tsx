@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { formatCompact, initials } from "@/lib/format";
+import { formatCompact } from "@/lib/format";
 import { tierInfo } from "@/lib/rank";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/avatar";
 import type { RankTier } from "@/lib/types/database.types";
 
 export type PilotCardData = {
@@ -43,20 +44,11 @@ export function PilotCard({ pilot }: { pilot: PilotCardData }) {
           pilot.car_photo_url && "pt-4",
         )}
       >
-      <div className="bg-navy text-navy-foreground mb-3.5 flex size-11 items-center justify-center overflow-hidden rounded-full text-base">
-        {pilot.photo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={pilot.photo_url}
-            alt={pilot.name}
-            className="size-full object-cover"
-          />
-        ) : (
-          <span className="font-[family-name:var(--font-heading)]">
-            {initials(pilot.name)}
-          </span>
-        )}
-      </div>
+      <Avatar
+        src={pilot.photo_url}
+        name={pilot.name}
+        className="mb-3.5 size-11 text-base"
+      />
       <div className="flex items-center gap-2">
         <h3 className="font-semibold">{pilot.name}</h3>
         {pilot.isPro && (

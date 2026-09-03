@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deliverableLabel } from "@/lib/deliverables";
-import { formatBRL, initials } from "@/lib/format";
+import { formatBRL } from "@/lib/format";
+import { Avatar } from "@/components/avatar";
 import { matchesCampaignRegion } from "@/lib/regions";
 import { timeAgo } from "@/lib/relative-time";
 import {
@@ -288,18 +289,11 @@ export default async function OportunidadePage({
                     className="border-border bg-card flex flex-col gap-3 rounded-lg border p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="bg-navy text-navy-foreground flex size-9 items-center justify-center overflow-hidden rounded-full text-xs">
-                        {athlete?.photo_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={athlete.photo_url}
-                            alt={athlete.name}
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          initials(athlete?.name ?? "?")
-                        )}
-                      </div>
+                      <Avatar
+                        src={athlete?.photo_url}
+                        name={athlete?.name ?? "?"}
+                        className="size-9 text-xs"
+                      />
                       <div className="min-w-0 flex-1">
                         <Link
                           href={`/p/${athlete?.id}`}
