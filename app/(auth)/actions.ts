@@ -76,6 +76,12 @@ export async function signup(
     return { error: traduzErro(error.message) };
   }
 
+  // E-mail já cadastrado: o Supabase devolve um "usuário fantasma" sem
+  // identities (anti-enumeração), sem erro. Trata como conta existente.
+  if (data.user && (data.user.identities?.length ?? 0) === 0) {
+    return { error: "Esse e-mail já tem uma conta. Tente entrar." };
+  }
+
   // Cupom (opcional): aplica o PRO best-effort — nunca bloqueia o cadastro.
   let couponQS = "";
   if (coupon && data.user) {
