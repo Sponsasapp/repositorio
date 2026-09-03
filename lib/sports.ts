@@ -1,23 +1,43 @@
 /**
  * Taxonomia de esportes → modalidades.
  *
- * `value` é a string gravada em `athlete_profiles.modality` e usada no filtro
- * `?modalidade=` de /pilotos. Comece pequeno: só automobilismo por enquanto.
+ * `value` (da modalidade) é a string gravada em `athlete_modalities.modality`
+ * e usada no filtro `?modalidade=`. Só Automobilismo tem modalidades por
+ * enquanto (`available: true`); os outros esportes aparecem no menu como
+ * "em breve" até ganharem suas seções.
  */
 
 export type Modality = { slug: string; label: string; value: string };
-export type Sport = { slug: string; label: string; modalities: Modality[] };
+export type Sport = {
+  slug: string;
+  label: string;
+  available: boolean;
+  modalities: Modality[];
+};
 
 export const SPORTS: Sport[] = [
   {
     slug: "automobilismo",
     label: "Automobilismo",
+    available: true,
     modalities: [
       { slug: "arrancada", label: "Arrancada", value: "Arrancada" },
       { slug: "kart", label: "Kart", value: "Kart" },
       { slug: "circuito", label: "Circuito", value: "Circuito" },
       { slug: "drift", label: "Drift", value: "Drift" },
     ],
+  },
+  { slug: "futebol", label: "Futebol", available: false, modalities: [] },
+  { slug: "surf", label: "Surf", available: false, modalities: [] },
+  { slug: "basquete", label: "Basquete", available: false, modalities: [] },
+  { slug: "skate", label: "Skate", available: false, modalities: [] },
+  { slug: "e-sports", label: "E-Sports", available: false, modalities: [] },
+  { slug: "bike", label: "Bike", available: false, modalities: [] },
+  {
+    slug: "fisiculturismo",
+    label: "Fisiculturismo",
+    available: false,
+    modalities: [],
   },
 ];
 

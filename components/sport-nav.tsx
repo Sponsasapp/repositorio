@@ -5,45 +5,20 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SPORTS } from "@/lib/sports";
+import { SPORTS, type Sport } from "@/lib/sports";
 
 /**
- * Navegação por esporte → modalidade para a barra lateral (fundo navy).
- * A modalidade que casa com `?modalidade=` (em /pilotos ou /empresas) abre
- * sozinha e mostra os atalhos Pilotos / Empresas.
+ * Menu "Esportes" da barra lateral (fundo navy).
+ * Só Automobilismo abre em modalidades; a modalidade ativa (via ?modalidade=)
+ * revela os atalhos Pilotos / Empresas. Os outros esportes aparecem como
+ * "em breve" até ganharem suas seções.
  */
 export function SportNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeModality = searchParams.get("modalidade");
   const onListing = pathname === "/pilotos" || pathname === "/empresas";
+  const activeModality = onListing ? searchParams.get("modalidade") : null;
 
-  return (
-    <div className="flex flex-col gap-1">
-      {SPORTS.map((sport) => (
-        <SportGroup
-          key={sport.slug}
-          sport={sport}
-          activeModality={onListing ? activeModality : null}
-          pathname={pathname}
-          onNavigate={onNavigate}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SportGroup({
-  sport,
-  activeModality,
-  pathname,
-  onNavigate,
-}: {
-  sport: (typeof SPORTS)[number];
-  activeModality: string | null;
-  pathname: string;
-  onNavigate?: () => void;
-}) {
   const [open, setOpen] = useState(true);
 
   return (
@@ -58,6 +33,61 @@ function SportGroup({
         ) : (
           <ChevronRightIcon className="size-3.5" />
         )}
+        Esportes
+      </button>
+
+      {open && (
+        <div className="flex flex-col gap-0.5">
+          {SPORTS.map((sport) =>
+            sport.available ? (
+              <SportGroup
+                key={sport.slug}
+                sport={sport}
+                activeModality={activeModality}
+                pathname={pathname}
+                onNavigate={onNavigate}
+              />
+            ) : (
+              <span
+                key={sport.slug}
+                className="flex items-center justify-between rounded-md py-1.5 pr-3 pl-8 text-sm text-white/35"
+              >
+                {sport.label}
+                <span className="text-[10px] uppercase">em breve</span>
+              </span>
+            ),
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SportGroup({
+  sport,
+  activeModality,
+  pathname,
+  onNavigate,
+}: {
+  sport: Sport;
+  activeModality: string | null;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-1 rounded-md py-1.5 pr-3 pl-6 text-sm font-medium text-white/70 hover:text-white"
+      >
+        {open ? (
+          <ChevronDownIcon className="size-3" />
+        ) : (
+          <ChevronRightIcon className="size-3" />
+        )}
         {sport.label}
       </button>
 
@@ -71,7 +101,7 @@ function SportGroup({
                   href={`/pilotos?modalidade=${encodeURIComponent(m.value)}`}
                   onClick={onNavigate}
                   className={cn(
-                    "block rounded-md py-1.5 pr-3 pl-8 text-sm transition-colors",
+                    "block rounded-md py-1.5 pr-3 pl-11 text-sm transition-colors",
                     isActive
                       ? "font-medium text-white"
                       : "text-white/55 hover:text-white",
@@ -120,7 +150,7 @@ function SubLink({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "block rounded-md py-1.5 pr-3 pl-[52px] text-[13px] transition-colors",
+        "block rounded-md py-1.5 pr-3 pl-[60px] text-[13px] transition-colors",
         active
           ? "bg-white/10 font-medium text-white"
           : "text-white/50 hover:text-white",
