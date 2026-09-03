@@ -93,6 +93,15 @@ export type AthleteAchievement = {
   created_at: string;
 };
 
+export type AthleteRankSnapshot = {
+  id: string;
+  athlete_id: string;
+  score: number | null;
+  tier: RankTier | null;
+  captured_on: string;
+  created_at: string;
+};
+
 export type CompanyProfile = {
   profile_id: string;
   segment: string | null;
@@ -260,6 +269,10 @@ export type Database = {
       athlete_achievements: TableDef<
         AthleteAchievement,
         "id" | "car_id" | "year" | "detail" | "position" | "created_at"
+      >;
+      athlete_rank_snapshots: TableDef<
+        AthleteRankSnapshot,
+        "id" | "score" | "tier" | "captured_on" | "created_at"
       >;
       opportunities: TableDef<
         Opportunity,

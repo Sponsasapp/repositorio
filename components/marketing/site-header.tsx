@@ -14,6 +14,7 @@ const NAV = [
   { href: "/planos", label: "Planos" },
   { href: "/pilotos", label: "Ver pilotos" },
   { href: "/empresas", label: "Ver empresas" },
+  { href: "/rank", label: "Rank" },
 ];
 
 export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
