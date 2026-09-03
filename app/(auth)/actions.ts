@@ -128,14 +128,17 @@ async function applyCoupon(
   const until = new Date();
   until.setMonth(until.getMonth() + coupon.plan_months);
 
-  const { error: sErr } = await admin
-    .from("subscriptions")
-    .update({
+  // upsert: a linha normalmente já existe (trigger handle_new_user), mas se
+  // faltar por algum motivo, cria.
+  const { error: sErr } = await admin.from("subscriptions").upsert(
+    {
+      profile_id: userId,
       plan: "pro",
       status: "active",
       renewed_until: until.toISOString(),
-    })
-    .eq("profile_id", userId);
+    },
+    { onConflict: "profile_id" },
+  );
   if (sErr) return { status: "error" };
 
   await admin
