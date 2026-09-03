@@ -387,6 +387,14 @@ export type Database = {
         Args: { p_user: string; p_code: string };
         Returns: string;
       };
+      notify_email: {
+        Args: { p_target: string };
+        Returns: string | null;
+      };
+      capture_rank_snapshots: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
     };
     Enums: {
       profile_type: ProfileType;

@@ -1,5 +1,5 @@
 import { SITE_URL } from "@/lib/site";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 const FROM = "Sponsas <nao-responda@sponsas.com.br>";
 
@@ -47,7 +47,8 @@ function template(
 
 /**
  * Notifica um usuário por e-mail. Best-effort: qualquer falha é só logada,
- * nunca lança. Resolve o e-mail via service role (auth.users).
+ * nunca lança. Resolve o e-mail via RPC `notify_email` (SECURITY DEFINER, com
+ * guarda de relação) — não precisa de service role.
  */
 export async function notifyUser(
   userId: string,
@@ -59,11 +60,10 @@ export async function notifyUser(
   },
 ) {
   try {
-    const admin = createAdminClient();
-    if (!admin) return;
-
-    const { data, error } = await admin.auth.admin.getUserById(userId);
-    const email = data?.user?.email;
+    const supabase = await createClient();
+    const { data: email, error } = await supabase.rpc("notify_email", {
+      p_target: userId,
+    });
     if (error || !email) return;
 
     const cta = n.cta

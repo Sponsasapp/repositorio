@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 // Roda no servidor, sob demanda (Vercel Cron).
 export const dynamic = "force-dynamic";
@@ -15,46 +15,14 @@ export async function GET(request: Request) {
     }
   }
 
-  const admin = createAdminClient();
-  if (!admin) {
-    return NextResponse.json(
-      { error: "SUPABASE_SERVICE_ROLE_KEY não configurada" },
-      { status: 500 },
-    );
-  }
-
-  const { data: rows, error } = await admin
-    .from("athlete_modalities")
-    .select("profile_id, modality, rank_score, rank_tier")
-    .not("rank_score", "is", null);
+  // A captura roda numa função SECURITY DEFINER no Postgres — não precisa de
+  // service role.
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("capture_rank_snapshots");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const capturedOn = new Date().toISOString().slice(0, 10);
-  const snapshots = (rows ?? []).map((r) => ({
-    athlete_id: r.profile_id,
-    modality: r.modality,
-    score: r.rank_score,
-    tier: r.rank_tier,
-    captured_on: capturedOn,
-  }));
-
-  if (snapshots.length > 0) {
-    // upsert manual: apaga o dia e reinsere (o índice único é sobre uma
-    // expressão coalesce(modality,''), que o supabase-js não aceita em onConflict)
-    await admin
-      .from("athlete_rank_snapshots")
-      .delete()
-      .eq("captured_on", capturedOn);
-    const { error: upErr } = await admin
-      .from("athlete_rank_snapshots")
-      .insert(snapshots);
-    if (upErr) {
-      return NextResponse.json({ error: upErr.message }, { status: 500 });
-    }
-  }
-
-  return NextResponse.json({ ok: true, captured_on: capturedOn, count: snapshots.length });
+  return NextResponse.json({ ok: true, count: data ?? 0 });
 }
