@@ -62,8 +62,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <Link
               href="/perfil"
-              aria-label={`Editar perfil de ${displayName}`}
-              title="Editar perfil"
+              aria-label={`Meu perfil — ${displayName}`}
+              title="Meu perfil"
             >
               <Avatar
                 src={profile?.photo_url}
