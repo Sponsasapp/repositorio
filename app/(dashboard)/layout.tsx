@@ -8,6 +8,7 @@ import { Sidebar } from "./_components/sidebar";
 import { MobileNav } from "./_components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
+import { Avatar } from "@/components/avatar";
 
 export default async function DashboardLayout({
   children,
@@ -22,10 +23,11 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("type")
+    .select("type, name, photo_url")
     .eq("id", user.id)
     .single();
   const profileType = profile?.type ?? "athlete";
+  const displayName = profile?.name || user.email || "Perfil";
 
   return (
     <div className="flex min-h-screen flex-1">
@@ -36,7 +38,7 @@ export default async function DashboardLayout({
           <span className="text-lg md:hidden">
             <Logo />
           </span>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-1">
             <Link
               href="/"
               aria-label="Ir para a home"
@@ -45,10 +47,21 @@ export default async function DashboardLayout({
             >
               <HomeIcon className="size-5" />
             </Link>
-            <span className="text-muted-foreground hidden text-sm md:block">
-              {user.email}
-            </span>
             <NotificationBell userId={user.id} />
+          </div>
+          <div className="bg-border mx-2 h-6 w-px" />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/perfil"
+              aria-label={`Editar perfil de ${displayName}`}
+              title="Editar perfil"
+            >
+              <Avatar
+                src={profile?.photo_url}
+                name={displayName}
+                className="size-8 text-xs"
+              />
+            </Link>
             <form action={logout}>
               <Button type="submit" variant="ghost" size="sm">
                 Sair
