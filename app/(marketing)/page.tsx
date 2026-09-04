@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TrophyIcon, ArrowRightIcon } from "lucide-react";
+import { TrophyIcon, ArrowRightIcon, CheckIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { pickPrimaryModality, modalityLabel } from "@/lib/sports";
 import { tierInfo } from "@/lib/rank";
@@ -125,7 +125,12 @@ export default async function HomePage() {
       <section className="mx-auto max-w-[1120px] px-6 pt-16 pb-20">
         <div className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <h1 className="text-5xl md:text-6xl">
+            <Eyebrow>
+              {athletes.length > 0
+                ? `${athletes.length} pilotos com perfil ativo`
+                : "Sponsorship made simple"}
+            </Eyebrow>
+            <h1 className="mt-4 text-5xl md:text-6xl">
               Patrocínio sem
               <br />
               mensagem no escuro.
@@ -135,7 +140,41 @@ export default async function HomePage() {
               encontram quem combina com elas e acompanham cada patrocínio num
               só lugar.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+
+            <ul className="mt-7 flex flex-col gap-3">
+              {[
+                [
+                  "Perfil comercial de verdade",
+                  "resultados, redes, entregas e uma tabela de preços — não um print de DM.",
+                ],
+                [
+                  "Rank Sponsas",
+                  "quem entrega no prazo e cresce sobe de rank — isso guia o valor do patrocínio.",
+                ],
+                [
+                  "Entregas acompanhadas",
+                  "cada acordo vira um checklist com comprovação e aprovação da marca.",
+                ],
+              ].map(([t, d]) => (
+                <li key={t} className="flex items-start gap-2.5 text-sm">
+                  <span className="bg-primary/15 text-primary mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full">
+                    <CheckIcon className="size-3" strokeWidth={3} />
+                  </span>
+                  <span className="text-muted-foreground">
+                    <span className="text-foreground font-semibold">{t}:</span>{" "}
+                    {d}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="border-primary/25 bg-primary/5 mt-7 max-w-md rounded-lg border px-4 py-3">
+              <p className="text-foreground text-xs font-semibold tracking-wide uppercase">
+                Monte o perfil e já apareça pras empresas certas
+              </p>
+            </div>
+
+            <div className="mt-7 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/cadastro?tipo=piloto">Criar perfil de piloto</Link>
               </Button>
@@ -159,10 +198,8 @@ export default async function HomePage() {
           <div className="mx-auto max-w-[1120px] px-6 py-14">
             <div className="grid items-center gap-10 md:grid-cols-[1fr_0.9fr]">
               <div>
-                <p className="text-primary text-xs font-semibold tracking-wide uppercase">
-                  Como um acordo fica na Sponsas
-                </p>
-                <h2 className="mt-1 text-3xl">Do print de DM a um contrato</h2>
+                <Eyebrow>Como um acordo fica na Sponsas</Eyebrow>
+                <h2 className="mt-2 text-3xl">Do print de DM a um contrato</h2>
                 <p className="text-muted-foreground mt-3 max-w-md">
                   Valor, permuta, duração e entregas — tudo registrado e
                   acompanhado num só lugar.
@@ -178,10 +215,8 @@ export default async function HomePage() {
       {postDoMes && postDoMes.athlete && (
         <section className="border-border border-t">
           <div className="mx-auto max-w-[1120px] px-6 py-14">
-            <p className="text-primary text-xs font-semibold tracking-wide uppercase">
-              Post do mês
-            </p>
-            <h2 className="mt-1 text-3xl">O conteúdo mais curtido</h2>
+            <Eyebrow>Post do mês</Eyebrow>
+            <h2 className="mt-2 text-3xl">O conteúdo mais curtido</h2>
             <a
               href={postDoMes.url}
               target="_blank"
@@ -223,76 +258,55 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Value strip */}
-      <section className="border-border border-y">
-        <div className="mx-auto grid max-w-[1120px] gap-8 px-6 py-10 sm:grid-cols-3">
-          {[
-            [
-              "Perfil comercial de verdade",
-              "Resultados, redes, entregas e uma tabela de preços — não um print de DM.",
-            ],
-            [
-              "Rank Sponsas",
-              "Quem entrega no prazo e cresce sobe de rank. Isso guia o valor do patrocínio.",
-            ],
-            [
-              "Entregas acompanhadas",
-              "Cada acordo vira um checklist com comprovação e aprovação da marca.",
-            ],
-          ].map(([t, d]) => (
-            <div key={t}>
-              <p className="font-semibold">{t}</p>
-              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-                {d}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Como funciona */}
-      <section className="mx-auto max-w-[1120px] px-6 py-20">
-        <h2 className="max-w-xl text-4xl">Como funciona</h2>
-        <p className="text-muted-foreground mt-3 max-w-xl">
-          Três passos para sair da conversa informal e chegar a um patrocínio
-          com entregas combinadas e acompanhadas.
-        </p>
-        <div className="mt-12 grid gap-7 md:grid-cols-3">
-          {[
-            [
-              "01",
-              "Monte seu perfil",
-              "Resultados, categoria, redes sociais e o tipo de entrega que você oferece a um patrocinador.",
-            ],
-            [
-              "02",
-              "Encontre ou seja encontrado",
-              "Candidate-se a oportunidades de marcas ou receba propostas diretas — em dinheiro, permuta ou os dois.",
-            ],
-            [
-              "03",
-              "Acompanhe as entregas",
-              "Cada patrocínio fechado vira uma lista de entregas, com comprovação e aprovação num só lugar.",
-            ],
-          ].map(([n, t, d]) => (
-            <div key={n} className="border-foreground border-t-2 pt-4">
-              <span className="text-primary font-[family-name:var(--font-heading)] text-sm font-bold">
-                {n}
-              </span>
-              <h3 className="mt-2 text-xl font-semibold">{t}</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                {d}
-              </p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-8">
-          <Link
-            href="/como-funciona"
-            className="text-foreground text-sm underline underline-offset-2"
-          >
-            Ver em detalhe
-          </Link>
+      <section className="border-border border-t">
+        <div className="mx-auto max-w-[1120px] px-6 py-20">
+          <Eyebrow>Simples assim</Eyebrow>
+          <h2 className="mt-3 max-w-xl text-4xl">Como funciona</h2>
+          <p className="text-muted-foreground mt-3 max-w-xl">
+            Três passos para sair da conversa informal e chegar a um
+            patrocínio com entregas combinadas e acompanhadas.
+          </p>
+          <div className="mt-12 grid gap-7 md:grid-cols-3">
+            {[
+              [
+                "1",
+                "Monte seu perfil",
+                "Resultados, categoria, redes sociais e o tipo de entrega que você oferece a um patrocinador.",
+              ],
+              [
+                "2",
+                "Encontre ou seja encontrado",
+                "Candidate-se a oportunidades de marcas ou receba propostas diretas — em dinheiro, permuta ou os dois.",
+              ],
+              [
+                "3",
+                "Acompanhe as entregas",
+                "Cada patrocínio fechado vira uma lista de entregas, com comprovação e aprovação num só lugar.",
+              ],
+            ].map(([n, t, d]) => (
+              <div
+                key={n}
+                className="border-border bg-card rounded-xl border p-6"
+              >
+                <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-full font-[family-name:var(--font-heading)] text-base font-bold">
+                  {n}
+                </span>
+                <h3 className="mt-4 text-xl font-semibold">{t}</h3>
+                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                  {d}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <Link
+              href="/como-funciona"
+              className="text-foreground text-sm underline underline-offset-2"
+            >
+              Ver em detalhe
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -467,6 +481,16 @@ function RankPodiumCard({
         <ArrowRightIcon className="size-3.5" />
       </Link>
     </div>
+  );
+}
+
+/** Pill de eyebrow — ponto + texto tracked em caixa alta, inspirado no CineLook. */
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="border-primary/30 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-wide uppercase">
+      <span className="bg-primary size-1.5 rounded-full" />
+      {children}
+    </span>
   );
 }
 
