@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SlidersHorizontalIcon, ChevronDownIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BR_UF } from "@/lib/br";
 import { RANK_TIERS, RANK_TIER_ORDER } from "@/lib/rank";
-import {
-  MODALITIES,
-  MODALITY_VALUES,
-  modalityByValue,
-  pickPrimaryModality,
-} from "@/lib/sports";
+import { MODALITIES, modalityByValue, pickPrimaryModality } from "@/lib/sports";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { AppShell } from "@/components/app-shell";
 import { cn } from "@/lib/utils";
@@ -196,16 +192,12 @@ export default async function PilotosPage({
       };
     });
 
-  const hasFilters = Boolean(
-    sp.q ||
-      sp.modalidade ||
-      sp.categoria ||
-      sp.uf ||
-      sp.orcamento ||
-      sp.seguidores ||
-      sp.rank ||
-      sp.ordenar,
+  // "Avançados" = tudo que fica dentro do <details> (a modalidade já tem os
+  // chips e a busca fica sempre visível fora dele).
+  const advancedActive = Boolean(
+    sp.categoria || sp.uf || sp.orcamento || sp.seguidores || sp.rank || sp.ordenar,
   );
+  const hasFilters = Boolean(sp.q || sp.modalidade || advancedActive);
 
   return (
     <AppShell>
@@ -253,61 +245,89 @@ export default async function PilotosPage({
           ))}
         </div>
 
-        {/* Filtros — form GET, sem JS */}
-        <form className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-          <input
-            type="search"
-            name="q"
-            defaultValue={sp.q ?? ""}
-            placeholder="Buscar por nome"
-            className="border-input bg-card h-9 rounded-lg border px-3 text-sm lg:col-span-2"
-          />
-          <FilterSelect name="modalidade" value={sp.modalidade} placeholder="Modalidade" options={[...MODALITY_VALUES]} />
-          <FilterSelect name="categoria" value={sp.categoria} placeholder="Categoria" options={categorias} />
-          <FilterSelect name="uf" value={sp.uf} placeholder="Estado" options={[...BR_UF]} />
-          <FilterSelect
-            name="orcamento"
-            value={sp.orcamento}
-            placeholder="Orçamento"
-            options={ORCAMENTO}
-          />
-          <FilterSelect
-            name="rank"
-            value={sp.rank}
-            placeholder="Rank Sponsas"
-            options={RANK_TIER_ORDER.map((t) => ({
-              value: t,
-              label: RANK_TIERS[t].label,
-            }))}
-          />
-          <FilterSelect
-            name="seguidores"
-            value={sp.seguidores}
-            placeholder="Seguidores"
-            options={SEGUIDORES}
-          />
-          <FilterSelect
-            name="ordenar"
-            value={sp.ordenar}
-            placeholder="Ordenar por"
-            options={ORDENAR}
-          />
-          <div className="flex gap-2 sm:col-span-2 lg:col-span-6">
+        {/* Filtros — form GET, sem JS. Busca sempre visível; o resto fica
+            recolhido num <details> nativo (sem JS) pra não pesar a tela. */}
+        <form className="mt-6">
+          <div className="flex gap-2">
+            <input
+              type="search"
+              name="q"
+              defaultValue={sp.q ?? ""}
+              placeholder="Buscar por nome"
+              className="border-input bg-card h-9 flex-1 rounded-lg border px-3 text-sm"
+            />
             <button
               type="submit"
-              className="bg-primary text-primary-foreground h-9 rounded-lg px-4 text-sm font-medium"
+              className="bg-primary text-primary-foreground h-9 shrink-0 rounded-lg px-4 text-sm font-medium"
             >
               Filtrar
             </button>
-            {hasFilters && (
-              <Link
-                href="/pilotos"
-                className="text-muted-foreground hover:text-foreground flex h-9 items-center px-2 text-sm"
-              >
-                Limpar
-              </Link>
-            )}
           </div>
+
+          <details open={advancedActive} className="group mt-3">
+            <summary className="text-muted-foreground hover:text-foreground flex w-fit list-none items-center gap-1.5 text-sm select-none [&::-webkit-details-marker]:hidden">
+              <SlidersHorizontalIcon className="size-3.5" />
+              Mais filtros
+              {advancedActive && (
+                <span className="bg-primary/15 text-primary rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+                  ativos
+                </span>
+              )}
+              <ChevronDownIcon className="size-3.5 transition-transform group-open:rotate-180" />
+            </summary>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+              <FilterSelect name="categoria" value={sp.categoria} placeholder="Categoria" options={categorias} />
+              <FilterSelect name="uf" value={sp.uf} placeholder="Estado" options={[...BR_UF]} />
+              <FilterSelect
+                name="orcamento"
+                value={sp.orcamento}
+                placeholder="Orçamento"
+                options={ORCAMENTO}
+              />
+              <FilterSelect
+                name="rank"
+                value={sp.rank}
+                placeholder="Rank Sponsas"
+                options={RANK_TIER_ORDER.map((t) => ({
+                  value: t,
+                  label: RANK_TIERS[t].label,
+                }))}
+              />
+              <FilterSelect
+                name="seguidores"
+                value={sp.seguidores}
+                placeholder="Seguidores"
+                options={SEGUIDORES}
+              />
+              <FilterSelect
+                name="ordenar"
+                value={sp.ordenar}
+                placeholder="Ordenar por"
+                options={ORDENAR}
+              />
+              {/* Modalidade já é escolhida pelos chips acima; mantém o valor no form. */}
+              {sp.modalidade && (
+                <input type="hidden" name="modalidade" value={sp.modalidade} />
+              )}
+              <div className="flex gap-2 sm:col-span-2 lg:col-span-6">
+                <button
+                  type="submit"
+                  className="bg-primary text-primary-foreground h-9 rounded-lg px-4 text-sm font-medium"
+                >
+                  Aplicar filtros
+                </button>
+                {hasFilters && (
+                  <Link
+                    href="/pilotos"
+                    className="text-muted-foreground hover:text-foreground flex h-9 items-center px-2 text-sm"
+                  >
+                    Limpar
+                  </Link>
+                )}
+              </div>
+            </div>
+          </details>
         </form>
 
         {pilots.length === 0 ? (

@@ -4,9 +4,27 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BellIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { timeAgo } from "@/lib/relative-time";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/lib/types/database.types";
+
+/** "Hoje, 14:32" / "Ontem, 14:32" / "04/09, 14:32" — pra saber na hora qual é a mais recente. */
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const time = d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  if (d.toDateString() === now.toDateString()) return `Hoje, ${time}`;
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return `Ontem, ${time}`;
+  const date = d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+  return `${date}, ${time}`;
+}
 
 /**
  * Sininho de notificações do header. Busca as últimas notificações do
@@ -114,12 +132,26 @@ function NotificationRow({
   onNavigate: () => void;
 }) {
   const body = (
-    <div className={cn("px-4 py-3 text-sm", !n.read_at && "bg-accent/50")}>
-      <p className="font-medium">{n.title}</p>
-      <p className="text-muted-foreground mt-0.5 text-xs">{n.body}</p>
-      <p className="text-muted-foreground mt-1 text-[11px]">
-        {timeAgo(n.created_at)}
-      </p>
+    <div
+      className={cn(
+        "flex gap-2.5 px-4 py-3 text-sm",
+        !n.read_at && "bg-accent/50",
+      )}
+    >
+      <span
+        className={cn(
+          "mt-1.5 size-2 shrink-0 rounded-full",
+          n.read_at ? "bg-transparent" : "bg-primary",
+        )}
+        aria-hidden
+      />
+      <div className="min-w-0 flex-1">
+        <p className="font-medium">{n.title}</p>
+        <p className="text-muted-foreground mt-0.5 text-xs">{n.body}</p>
+        <p className="text-muted-foreground mt-1 text-[11px]">
+          {formatDateTime(n.created_at)}
+        </p>
+      </div>
     </div>
   );
 

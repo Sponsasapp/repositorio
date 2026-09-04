@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrophyIcon, ArrowRightIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { pickPrimaryModality, modalityLabel } from "@/lib/sports";
 import { tierInfo } from "@/lib/rank";
@@ -6,9 +7,9 @@ import { formatCompact } from "@/lib/format";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { RankTier } from "@/lib/types/database.types";
 
-const MEDAL = ["🥇", "🥈", "🥉"];
 const MES = new Date().toLocaleDateString("pt-BR", { month: "long" });
 const POST_PLATFORM: Record<string, string> = {
   instagram: "Instagram",
@@ -145,49 +146,7 @@ export default async function HomePage() {
           </div>
 
           {top3.length > 0 ? (
-            <div className="bg-navy text-navy-foreground rounded-xl p-7">
-              <span className="bg-primary/15 text-primary inline-block rounded-md px-2.5 py-1 text-xs font-semibold">
-                Rank Sponsas · Top 3 de {MES}
-              </span>
-              <ol className="mt-5 flex flex-col divide-y divide-white/10">
-                {top3.map((p, i) => {
-                  const t = tierInfo(p.tier);
-                  return (
-                    <li key={p.id}>
-                      <Link
-                        href={`/p/${p.id}`}
-                        className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                      >
-                        <span className="font-[family-name:var(--font-heading)] text-xl">
-                          {MEDAL[i]}
-                        </span>
-                        <Avatar
-                          src={p.photo_url}
-                          name={p.name}
-                          className="size-9 shrink-0 text-xs"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold">
-                            {p.name}
-                          </p>
-                          <p className="text-xs text-white/50">
-                            {[modalityLabel(p.modality), t?.label]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ol>
-              <Link
-                href="/rank"
-                className="mt-4 inline-block text-sm text-white/70 underline underline-offset-2 hover:text-white"
-              >
-                Ver ranking completo
-              </Link>
-            </div>
+            <RankPodiumCard top3={top3} mes={MES} />
           ) : (
             <ExemploPatrocinio />
           )}
@@ -393,6 +352,121 @@ export default async function HomePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+const PODIUM_STYLE: Record<
+  number,
+  {
+    avatar: string;
+    ring: string;
+    pedestal: string;
+    pedestalBg: string;
+    medal: string;
+  }
+> = {
+  1: {
+    avatar: "size-16 text-sm",
+    ring: "ring-amber-300",
+    pedestal: "h-16",
+    pedestalBg: "from-amber-300/90 to-amber-300/10",
+    medal: "🥇",
+  },
+  2: {
+    avatar: "size-12 text-xs",
+    ring: "ring-slate-300",
+    pedestal: "h-10",
+    pedestalBg: "from-slate-300/80 to-slate-300/10",
+    medal: "🥈",
+  },
+  3: {
+    avatar: "size-12 text-xs",
+    ring: "ring-orange-400",
+    pedestal: "h-7",
+    pedestalBg: "from-orange-400/80 to-orange-400/10",
+    medal: "🥉",
+  },
+};
+
+function RankPodiumCard({
+  top3,
+  mes,
+}: {
+  top3: (PilotCardData & { score: number | null })[];
+  mes: string;
+}) {
+  const ranked = top3.map((p, i) => ({ ...p, place: i + 1 }));
+  const order = [2, 1, 3]
+    .map((place) => ranked.find((r) => r.place === place))
+    .filter((r): r is (typeof ranked)[number] => Boolean(r));
+
+  return (
+    <div className="bg-navy text-navy-foreground relative overflow-hidden rounded-2xl p-7 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
+      <div className="bg-primary/25 pointer-events-none absolute -top-20 -right-14 size-52 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-amber-300/10 blur-3xl" />
+
+      <div className="relative flex items-center justify-between">
+        <span className="bg-primary/15 text-primary inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold">
+          <TrophyIcon className="size-3.5" />
+          Rank Sponsas
+        </span>
+        <span className="text-[11px] text-white/40">Top 3 de {mes}</span>
+      </div>
+
+      <div className="relative mt-7 flex items-end justify-center gap-2">
+        {order.map((r) => {
+          const style = PODIUM_STYLE[r.place];
+          return (
+            <Link
+              key={r.id}
+              href={`/p/${r.id}`}
+              className="group flex flex-1 flex-col items-center gap-2"
+            >
+              <span className="text-base leading-none">{style.medal}</span>
+              <Avatar
+                src={r.photo_url}
+                name={r.name}
+                tone="primary"
+                className={cn(
+                  "ring-offset-navy shrink-0 ring-2 ring-offset-2 transition-transform group-hover:-translate-y-1",
+                  style.avatar,
+                  style.ring,
+                )}
+              />
+              <div className="min-w-0 text-center">
+                <p className="max-w-[88px] truncate text-xs font-semibold">
+                  {r.name}
+                </p>
+                <p className="text-[10px] text-white/45">
+                  {[modalityLabel(r.modality), tierInfo(r.tier)?.label]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "w-full rounded-t-md bg-gradient-to-b",
+                  style.pedestal,
+                  style.pedestalBg,
+                )}
+              />
+            </Link>
+          );
+        })}
+      </div>
+
+      <p className="relative mt-1 text-center text-[11px] text-white/40">
+        Atualizado pelas entregas, engajamento e atividade de cada piloto.
+      </p>
+
+      <Link
+        href="/rank"
+        className="relative mt-4 flex items-center justify-center gap-1.5 rounded-lg border border-white/10 py-2.5 text-sm font-medium text-white/80 transition-colors hover:border-white/25 hover:text-white"
+      >
+        Ver ranking completo
+        <ArrowRightIcon className="size-3.5" />
+      </Link>
+    </div>
   );
 }
 
