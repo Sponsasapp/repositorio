@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/avatar";
 import type { AthleteModality } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
+import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
 
 const PLATFORM_LABEL: Record<string, string> = {
   instagram: "Instagram",
@@ -499,6 +500,19 @@ export default async function PerfilPublicoPage({
                   </Link>
                 )}
               </Button>
+              {!isOwner && viewerId && (
+                <form action={iniciarConversa} className="mt-2">
+                  <input type="hidden" name="para" value={profile.id} />
+                  <Button
+                    type="submit"
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Mandar mensagem
+                  </Button>
+                </form>
+              )}
             </div>
 
             <Panel title="Lista">

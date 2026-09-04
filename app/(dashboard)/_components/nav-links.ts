@@ -18,6 +18,7 @@ export function navTop(type: ProfileType): NavLink[] {
 /** Itens abaixo do bloco de esportes. */
 export const NAV_BOTTOM: NavLink[] = [
   { href: "/rank", label: "Rank Sponsas" },
+  { href: "/mensagens", label: "Mensagens" },
   { href: "/oportunidades", label: "Oportunidades" },
   { href: "/propostas", label: "Propostas" },
   { href: "/patrocinios", label: "Patrocínios" },

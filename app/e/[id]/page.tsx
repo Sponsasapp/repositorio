@@ -13,6 +13,7 @@ import {
   OpportunityCard,
   type OpportunityCardData,
 } from "@/components/opportunity-card";
+import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
 
 async function getEmpresa(id: string) {
   const supabase = await createClient();
@@ -255,6 +256,19 @@ export default async function PerfilEmpresaPublicoPage({
                   </Link>
                 )}
               </Button>
+              {!isOwner && viewerId && (
+                <form action={iniciarConversa} className="mt-2">
+                  <input type="hidden" name="para" value={profile.id} />
+                  <Button
+                    type="submit"
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Mandar mensagem
+                  </Button>
+                </form>
+              )}
             </div>
 
             {(company?.website || company?.instagram) && (

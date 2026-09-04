@@ -273,7 +273,8 @@ export type NotificationType =
   | "deliverable_rejected"
   | "rank_up"
   | "rank_down"
-  | "plan_expiring";
+  | "plan_expiring"
+  | "message_received";
 
 export type Notification = {
   id: string;
@@ -285,6 +286,23 @@ export type Notification = {
   cta_path: string | null;
   read_at: string | null;
   created_at: string;
+};
+
+export type Conversation = {
+  id: string;
+  profile_a: string;
+  profile_b: string;
+  last_message_at: string;
+  created_at: string;
+};
+
+export type Message = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
 };
 
 type Insert<T, Optional extends keyof T = never> = Omit<T, Optional> &
@@ -407,6 +425,11 @@ export type Database = {
         Notification,
         "id" | "cta_label" | "cta_path" | "read_at" | "created_at"
       >;
+      conversations: TableDef<
+        Conversation,
+        "id" | "last_message_at" | "created_at"
+      >;
+      messages: TableDef<Message, "id" | "created_at" | "read_at">;
     };
     Views: Record<string, never>;
     Functions: {
@@ -432,6 +455,14 @@ export type Database = {
       notify_expiring_plans: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      get_or_create_conversation: {
+        Args: { p_other: string };
+        Returns: string | null;
+      };
+      mark_messages_read: {
+        Args: { p_conversation: string };
+        Returns: undefined;
       };
     };
     Enums: {
