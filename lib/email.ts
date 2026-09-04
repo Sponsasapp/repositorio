@@ -1,5 +1,6 @@
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import type { NotificationType } from "@/lib/types/database.types";
 
 const FROM = "Sponsas <nao-responda@sponsas.com.br>";
 
@@ -46,13 +47,16 @@ function template(
 }
 
 /**
- * Notifica um usuário por e-mail. Best-effort: qualquer falha é só logada,
- * nunca lança. Resolve o e-mail via RPC `notify_email` (SECURITY DEFINER, com
- * guarda de relação) — não precisa de service role.
+ * Notifica um usuário: grava a notificação in-app (lida pelo sininho) e,
+ * best-effort, manda um e-mail em cima. A gravação in-app é a fonte da
+ * verdade — se o e-mail falhar por qualquer motivo, o aviso continua visível
+ * no produto. Tudo via RPC `notify` (SECURITY DEFINER, com guarda de
+ * relação) — não precisa de service role.
  */
 export async function notifyUser(
   userId: string,
   n: {
+    type: NotificationType;
     subject: string;
     title: string;
     body: string;
@@ -61,10 +65,19 @@ export async function notifyUser(
 ) {
   try {
     const supabase = await createClient();
-    const { data: email, error } = await supabase.rpc("notify_email", {
+    const { data: email, error } = await supabase.rpc("notify", {
       p_target: userId,
+      p_type: n.type,
+      p_title: n.title,
+      p_body: n.body,
+      p_cta_label: n.cta?.label ?? null,
+      p_cta_path: n.cta?.path ?? null,
     });
-    if (error || !email) return;
+    if (error) {
+      console.error("[notifyUser] rpc", error.message);
+      return;
+    }
+    if (!email) return;
 
     const cta = n.cta
       ? { label: n.cta.label, href: `${SITE_URL}${n.cta.path}` }

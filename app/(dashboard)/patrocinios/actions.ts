@@ -135,6 +135,7 @@ export async function avaliarEntrega(formData: FormData): Promise<void> {
   const label = dlv ? deliverableLabel(dlv.type) : "Uma entrega";
   after(() =>
     notifyUser(sp.athlete_id, {
+      type: decision === "approved" ? "deliverable_approved" : "deliverable_rejected",
       subject:
         decision === "approved"
           ? "Entrega aprovada"

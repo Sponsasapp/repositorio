@@ -25,13 +25,31 @@ const ORCAMENTO = [
   { value: "10000", label: "Até R$ 10.000/mês" },
 ];
 
+const SEGUIDORES = [
+  { value: "1000", label: "1 mil+ seguidores" },
+  { value: "10000", label: "10 mil+ seguidores" },
+  { value: "50000", label: "50 mil+ seguidores" },
+  { value: "100000", label: "100 mil+ seguidores" },
+];
+
+const ORDENAR = [
+  { value: "rank_desc", label: "Rank Sponsas: maior primeiro" },
+  { value: "rank_asc", label: "Rank Sponsas: menor primeiro" },
+  { value: "seguidores_desc", label: "Seguidores: mais primeiro" },
+  { value: "seguidores_asc", label: "Seguidores: menos primeiro" },
+  { value: "alcance_desc", label: "Alcance: maior primeiro" },
+  { value: "alcance_asc", label: "Alcance: menor primeiro" },
+];
+
 type SP = {
   q?: string;
   modalidade?: string;
   categoria?: string;
   uf?: string;
   orcamento?: string;
+  seguidores?: string;
   rank?: string;
+  ordenar?: string;
 };
 
 export default async function PilotosPage({
@@ -45,7 +63,7 @@ export default async function PilotosPage({
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, desired_value_min, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_interactions)",
+      "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, desired_value_min, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_reach, avg_interactions)",
     )
     .eq("type", "athlete")
     .order("name");
@@ -70,7 +88,11 @@ export default async function PilotosPage({
       position: number;
       modality: string;
     }[];
-    social_links: { followers: number | null; avg_interactions: number | null }[];
+    social_links: {
+      followers: number | null;
+      avg_reach: number | null;
+      avg_interactions: number | null;
+    }[];
   };
 
   const all = (data ?? []) as unknown as Joined[];
@@ -82,6 +104,10 @@ export default async function PilotosPage({
 
   const q = (sp.q ?? "").trim().toLowerCase();
   const orcMax = sp.orcamento ? Number(sp.orcamento) : null;
+  const seguidoresMin = sp.seguidores ? Number(sp.seguidores) : null;
+  const ordenar = ORDENAR.some((o) => o.value === sp.ordenar)
+    ? sp.ordenar
+    : null;
 
   const pilots: PilotCardData[] = all
     .map((p) => {
@@ -89,16 +115,35 @@ export default async function PilotosPage({
       const mod = sp.modalidade
         ? (p.athlete_modalities.find((m) => m.modality === sp.modalidade) ?? null)
         : pickPrimaryModality(p.athlete_modalities);
-      return { p, mod };
+      const followers = p.social_links.reduce(
+        (s, l) => s + (l.followers ?? 0),
+        0,
+      );
+      const reach = p.social_links.reduce(
+        (s, l) => s + (l.avg_reach ?? 0),
+        0,
+      );
+      const interactions = p.social_links.reduce(
+        (s, l) => s + (l.avg_interactions ?? 0),
+        0,
+      );
+      return { p, mod, followers, reach, interactions };
     })
     .filter(
-      (x): x is { p: Joined; mod: ModRow } => {
-        const { p, mod } = x;
+      (x): x is {
+        p: Joined;
+        mod: ModRow;
+        followers: number;
+        reach: number;
+        interactions: number;
+      } => {
+        const { p, mod, followers } = x;
         if (!mod) return false;
         if (q && !p.name.toLowerCase().includes(q)) return false;
         if (sp.categoria && mod.category !== sp.categoria) return false;
         if (sp.uf && p.state !== sp.uf) return false;
         if (sp.rank && mod.rank_tier !== sp.rank) return false;
+        if (seguidoresMin != null && followers < seguidoresMin) return false;
         if (
           orcMax != null &&
           mod.desired_value_min != null &&
@@ -109,19 +154,27 @@ export default async function PilotosPage({
       },
     )
     .sort((a, b) => {
-      const pro = (b.p.plan === "pro" ? 1 : 0) - (a.p.plan === "pro" ? 1 : 0);
-      if (pro !== 0) return pro;
-      return (b.mod.rank_score ?? -1) - (a.mod.rank_score ?? -1);
+      switch (ordenar) {
+        case "rank_desc":
+          return (b.mod.rank_score ?? -1) - (a.mod.rank_score ?? -1);
+        case "rank_asc":
+          return (a.mod.rank_score ?? -1) - (b.mod.rank_score ?? -1);
+        case "seguidores_desc":
+          return b.followers - a.followers;
+        case "seguidores_asc":
+          return a.followers - b.followers;
+        case "alcance_desc":
+          return b.reach - a.reach;
+        case "alcance_asc":
+          return a.reach - b.reach;
+        default: {
+          const pro = (b.p.plan === "pro" ? 1 : 0) - (a.p.plan === "pro" ? 1 : 0);
+          if (pro !== 0) return pro;
+          return (b.mod.rank_score ?? -1) - (a.mod.rank_score ?? -1);
+        }
+      }
     })
-    .map(({ p, mod }) => {
-      const followers = p.social_links.reduce(
-        (s, l) => s + (l.followers ?? 0),
-        0,
-      );
-      const interactions = p.social_links.reduce(
-        (s, l) => s + (l.avg_interactions ?? 0),
-        0,
-      );
+    .map(({ p, mod, followers, interactions }) => {
       return {
         id: p.id,
         name: p.name,
@@ -144,7 +197,14 @@ export default async function PilotosPage({
     });
 
   const hasFilters = Boolean(
-    sp.q || sp.modalidade || sp.categoria || sp.uf || sp.orcamento || sp.rank,
+    sp.q ||
+      sp.modalidade ||
+      sp.categoria ||
+      sp.uf ||
+      sp.orcamento ||
+      sp.seguidores ||
+      sp.rank ||
+      sp.ordenar,
   );
 
   return (
@@ -219,6 +279,18 @@ export default async function PilotosPage({
               value: t,
               label: RANK_TIERS[t].label,
             }))}
+          />
+          <FilterSelect
+            name="seguidores"
+            value={sp.seguidores}
+            placeholder="Seguidores"
+            options={SEGUIDORES}
+          />
+          <FilterSelect
+            name="ordenar"
+            value={sp.ordenar}
+            placeholder="Ordenar por"
+            options={ORDENAR}
           />
           <div className="flex gap-2 sm:col-span-2 lg:col-span-6">
             <button

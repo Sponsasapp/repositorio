@@ -264,6 +264,29 @@ export type Subscription = {
   renewed_until: string | null;
 };
 
+export type NotificationType =
+  | "proposal_received"
+  | "proposal_accepted"
+  | "application_received"
+  | "application_accepted"
+  | "deliverable_approved"
+  | "deliverable_rejected"
+  | "rank_up"
+  | "rank_down"
+  | "plan_expiring";
+
+export type Notification = {
+  id: string;
+  profile_id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  cta_label: string | null;
+  cta_path: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
 type Insert<T, Optional extends keyof T = never> = Omit<T, Optional> &
   Partial<Pick<T, Optional>>;
 
@@ -380,6 +403,10 @@ export type Database = {
         Subscription,
         "plan" | "status" | "started_at" | "renewed_until"
       >;
+      notifications: TableDef<
+        Notification,
+        "id" | "cta_label" | "cta_path" | "read_at" | "created_at"
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -387,11 +414,22 @@ export type Database = {
         Args: { p_user: string; p_code: string };
         Returns: string;
       };
-      notify_email: {
-        Args: { p_target: string };
+      notify: {
+        Args: {
+          p_target: string;
+          p_type: string;
+          p_title: string;
+          p_body: string;
+          p_cta_label: string | null;
+          p_cta_path: string | null;
+        };
         Returns: string | null;
       };
       capture_rank_snapshots: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      notify_expiring_plans: {
         Args: Record<string, never>;
         Returns: number;
       };

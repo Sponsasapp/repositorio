@@ -15,14 +15,26 @@ export async function GET(request: Request) {
     }
   }
 
-  // A captura roda numa função SECURITY DEFINER no Postgres — não precisa de
+  // As duas rodam em funções SECURITY DEFINER no Postgres — não precisa de
   // service role.
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("capture_rank_snapshots");
-
+  const { data: snapshots, error } = await supabase.rpc(
+    "capture_rank_snapshots",
+  );
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, count: data ?? 0 });
+  const { data: expiring, error: expiringError } = await supabase.rpc(
+    "notify_expiring_plans",
+  );
+  if (expiringError) {
+    console.error("[cron] notify_expiring_plans", expiringError.message);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    snapshots: snapshots ?? 0,
+    expiring_notified: expiring ?? 0,
+  });
 }

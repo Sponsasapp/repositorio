@@ -109,6 +109,7 @@ export async function enviarProposta(
     .single();
   after(() =>
     notifyUser(to, {
+      type: "proposal_received",
       subject: "Você recebeu uma proposta",
       title: `Proposta de ${sender?.name ?? "uma empresa"}`,
       body: "Uma nova proposta de patrocínio chegou para você. Abra para ver os termos e responder.",
@@ -178,6 +179,7 @@ export async function responderProposta(formData: FormData): Promise<void> {
 
   after(() =>
     notifyUser(proposal.from_profile_id, {
+      type: "proposal_accepted",
       subject: "Sua proposta foi aceita",
       title: "Proposta aceita — patrocínio criado",
       body: "A outra parte aceitou sua proposta. O patrocínio já está ativo, com os termos combinados.",

@@ -4,8 +4,9 @@ import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { NAV_TOP, NAV_BOTTOM, type NavLink as NavLinkType } from "./nav-links";
+import { navTop, NAV_BOTTOM, type NavLink as NavLinkType } from "./nav-links";
 import { SportNav } from "@/components/sport-nav";
+import type { ProfileType } from "@/lib/types/database.types";
 
 function NavItem({ link, pathname }: { link: NavLinkType; pathname: string }) {
   const active =
@@ -30,7 +31,7 @@ function NavItem({ link, pathname }: { link: NavLinkType; pathname: string }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ profileType }: { profileType: ProfileType }) {
   const pathname = usePathname();
 
   return (
@@ -38,7 +39,7 @@ export function Sidebar() {
       <Link href="/dashboard" className="mb-6 px-2 text-xl">
         <Logo tagline />
       </Link>
-      {NAV_TOP.map((link) => (
+      {navTop(profileType).map((link) => (
         <NavItem key={link.href} link={link} pathname={pathname} />
       ))}
       <div className="my-2 border-t border-white/10" />

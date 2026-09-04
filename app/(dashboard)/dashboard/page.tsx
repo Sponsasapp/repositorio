@@ -431,6 +431,12 @@ async function PainelEmpresa({ userId }: { userId: string }) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
+      <div className="flex justify-end">
+        <Button asChild size="sm">
+          <Link href="/pilotos">Encontrar pilotos</Link>
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Investimento mensal" value={formatBRL(investimento)} />
         <Kpi label="Pilotos patrocinados" value={ativos.length} />

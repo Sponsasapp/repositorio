@@ -7,8 +7,9 @@ import { usePathname } from "next/navigation";
 import { MenuIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/(auth)/actions";
-import { NAV_TOP, NAV_BOTTOM } from "./nav-links";
+import { navTop, NAV_BOTTOM } from "./nav-links";
 import { SportNav } from "@/components/sport-nav";
+import type { ProfileType } from "@/lib/types/database.types";
 
 function NavRow({
   href,
@@ -38,7 +39,13 @@ function NavRow({
   );
 }
 
-export function MobileNav({ email }: { email?: string }) {
+export function MobileNav({
+  email,
+  profileType,
+}: {
+  email?: string;
+  profileType: ProfileType;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const close = () => setOpen(false);
@@ -90,7 +97,7 @@ export function MobileNav({ email }: { email?: string }) {
             </div>
 
             <div className="flex flex-col gap-1 overflow-y-auto">
-              {NAV_TOP.map((link) => (
+              {navTop(profileType).map((link) => (
                 <NavRow
                   key={link.href}
                   href={link.href}

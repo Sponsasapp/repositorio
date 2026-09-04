@@ -120,6 +120,7 @@ export async function candidatarse(
   if (opp) {
     after(() =>
       notifyUser(opp.company_id, {
+        type: "application_received",
         subject: "Nova candidatura na sua oportunidade",
         title: `${me?.name ?? "Um piloto"} se candidatou`,
         body: `Você recebeu uma nova candidatura para "${opp.title}".`,
@@ -162,6 +163,7 @@ export async function responderCandidatura(formData: FormData): Promise<void> {
       const athleteId = app.athlete_id;
       after(() =>
         notifyUser(athleteId, {
+          type: "application_accepted",
           subject: "Sua candidatura foi aceita",
           title: "Candidatura aceita",
           body: `A empresa aceitou sua candidatura${
