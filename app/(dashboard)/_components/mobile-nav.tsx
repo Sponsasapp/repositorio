@@ -1,5 +1,5 @@
 "use client";
-import { Logo } from "@/components/logo";
+import { LogoLink } from "@/components/logo-link";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -83,9 +83,7 @@ export function MobileNav({
           />
           <div className="bg-navy text-navy-foreground absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col gap-1 p-5">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-xl">
-                <Logo tagline />
-              </span>
+              <LogoLink tagline className="text-xl" onNavigate={close} />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

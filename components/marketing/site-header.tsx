@@ -1,5 +1,5 @@
 "use client";
-import { Logo } from "@/components/logo";
+import { LogoLink } from "@/components/logo-link";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -38,9 +38,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <header className="border-border relative border-b">
       <div className="mx-auto flex max-w-[1120px] items-center justify-between px-6 py-5">
-        <Link href="/" className="text-xl">
-          <Logo />
-        </Link>
+        <LogoLink className="text-xl" />
 
         <nav className="hidden gap-8 text-sm font-medium md:flex">
           {NAV.slice(0, 4).map((n) => (
@@ -105,9 +103,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           />
           <div className="bg-background absolute inset-y-0 right-0 flex w-72 max-w-[85%] flex-col p-5">
             <div className="mb-6 flex items-start justify-between">
-              <span className="text-xl">
-                <Logo tagline />
-              </span>
+              <LogoLink tagline className="text-xl" onNavigate={close} />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

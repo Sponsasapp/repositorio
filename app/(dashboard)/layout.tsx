@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { HomeIcon } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { LogoLink } from "@/components/logo-link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/(auth)/actions";
@@ -35,9 +35,7 @@ export default async function DashboardLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="border-border flex items-center gap-3 border-b px-4 py-3 md:px-6">
           <MobileNav email={user.email} profileType={profileType} />
-          <span className="text-lg md:hidden">
-            <Logo />
-          </span>
+          <LogoLink className="text-lg md:hidden" />
           <div className="ml-auto flex items-center gap-1">
             <Link
               href="/"
