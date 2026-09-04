@@ -5,7 +5,8 @@ export type NavLink = { href: string; label: string; soon?: boolean };
 /** Itens acima do bloco de esportes (ver components/sport-nav.tsx). */
 export function navTop(type: ProfileType): NavLink[] {
   const items: NavLink[] = [
-    { href: "/dashboard", label: "Painel" },
+    { href: "/", label: "Home" },
+    { href: "/dashboard", label: "Dashboard" },
     { href: "/perfil", label: "Meu perfil" },
   ];
   if (type === "company") {

@@ -10,7 +10,7 @@ import { pickPrimaryModality } from "@/lib/sports";
 import type { RankFactors, RankTier } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Painel — Sponsas" };
+export const metadata: Metadata = { title: "Dashboard — Sponsas" };
 
 export default async function DashboardPage() {
   const supabase = await createClient();

@@ -69,7 +69,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           </Button>
           {isLoggedIn ? (
             <Button asChild size="lg">
-              <Link href="/dashboard">Painel</Link>
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
           ) : (
             <>
@@ -135,7 +135,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               {isLoggedIn ? (
                 <Button asChild size="lg">
                   <Link href="/dashboard" onClick={close}>
-                    Painel
+                    Dashboard
                   </Link>
                 </Button>
               ) : (

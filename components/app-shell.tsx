@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { HomeIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/app/(dashboard)/_components/sidebar";
@@ -44,6 +46,14 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             <Logo />
           </span>
           <div className="ml-auto flex items-center gap-3">
+            <Link
+              href="/"
+              aria-label="Ir para a home"
+              title="Home"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 items-center justify-center rounded-md"
+            >
+              <HomeIcon className="size-5" />
+            </Link>
             <span className="text-muted-foreground hidden text-sm md:block">
               {user.email}
             </span>
