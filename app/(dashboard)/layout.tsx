@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeIcon } from "lucide-react";
+import { HomeIcon, MessageCircleIcon } from "lucide-react";
 import { LogoLink } from "@/components/logo-link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -44,6 +44,14 @@ export default async function DashboardLayout({
               className="text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 items-center justify-center rounded-md"
             >
               <HomeIcon className="size-5" />
+            </Link>
+            <Link
+              href="/mensagens"
+              aria-label="Mensagens"
+              title="Mensagens"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 items-center justify-center rounded-md"
+            >
+              <MessageCircleIcon className="size-5" />
             </Link>
             <NotificationBell userId={user.id} />
           </div>
