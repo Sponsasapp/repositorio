@@ -19,6 +19,9 @@ export function navTop(type: ProfileType): NavLink[] {
 export const NAV_BOTTOM: NavLink[] = [
   { href: "/rank", label: "Rank Sponsas" },
   { href: "/mensagens", label: "Mensagens" },
+  { href: "/pistas", label: "Pistas" },
+  { href: "/eventos", label: "Eventos" },
+  { href: "/midias", label: "Mídias" },
   { href: "/oportunidades", label: "Oportunidades" },
   { href: "/propostas", label: "Propostas" },
   { href: "/patrocinios", label: "Patrocínios" },

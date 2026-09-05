@@ -12,8 +12,11 @@ const NAV = [
   { href: "/para-empresas", label: "Para empresas" },
   { href: "/para-pilotos", label: "Para pilotos" },
   { href: "/planos", label: "Planos" },
-  { href: "/pilotos", label: "Ver pilotos" },
-  { href: "/empresas", label: "Ver empresas" },
+  { href: "/pilotos", label: "Pilotos" },
+  { href: "/empresas", label: "Empresas" },
+  { href: "/pistas", label: "Pistas" },
+  { href: "/eventos", label: "Eventos" },
+  { href: "/midias", label: "Mídias" },
   { href: "/rank", label: "Rank" },
 ];
 

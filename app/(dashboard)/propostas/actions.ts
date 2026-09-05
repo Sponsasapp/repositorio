@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
 import { PLAN_LIMITS, limitMessage, startOfMonthISO } from "@/lib/plan";
 import { notifyUser } from "@/lib/email";
+import { canPropose } from "@/lib/participant-types";
 import type { ProposalPaymentType } from "@/lib/types/database.types";
 
 export type PropostaState = { ok?: true; error?: string } | undefined;
@@ -43,9 +44,9 @@ export async function enviarProposta(
   const me = profiles?.find((p) => p.id === user.id);
   const other = profiles?.find((p) => p.id === to);
   if (!me || !other) return { error: "Perfil não encontrado." };
-  if (me.type === other.type) {
+  if (!canPropose(me.type, other.type)) {
     return {
-      error: "Propostas são entre uma empresa e um piloto.",
+      error: "Propostas são entre uma empresa e um patrocinado.",
     };
   }
 
