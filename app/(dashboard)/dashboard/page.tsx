@@ -57,14 +57,89 @@ export default async function DashboardPage() {
       <p className="text-muted-foreground mt-1 text-sm">
         {profile?.type === "company"
           ? "Resumo das suas campanhas e patrocínios."
-          : "Resumo dos seus patrocínios, entregas e do seu Rank Sponsas."}
+          : profile?.type === "athlete"
+            ? "Resumo dos seus patrocínios, entregas e do seu Rank Sponsas."
+            : "Resumo dos seus patrocínios e entregas."}
       </p>
 
       {profile?.type === "company" ? (
         <PainelEmpresa userId={user.id} />
-      ) : (
+      ) : profile?.type === "athlete" ? (
         <PainelPiloto userId={user.id} />
+      ) : (
+        <PainelSponsee
+          userId={user.id}
+          type={profile?.type ?? "track"}
+        />
       )}
+    </div>
+  );
+}
+
+/* ---------------- PISTA / EVENTO / MÍDIA ---------------- */
+async function PainelSponsee({
+  userId,
+  type,
+}: {
+  userId: string;
+  type: string;
+}) {
+  const supabase = await createClient();
+  const [{ data: spRaw }, { data: profRow }] = await Promise.all([
+    supabase
+      .from("sponsorships")
+      .select("id, value, status, athlete_accepted_at, company_accepted_at")
+      .eq("athlete_id", userId),
+    supabase
+      .from(
+        type === "track"
+          ? "track_profiles"
+          : type === "event"
+            ? "event_profiles"
+            : "media_profiles",
+      )
+      .select("profile_id")
+      .eq("profile_id", userId)
+      .maybeSingle(),
+  ]);
+  const sps = (spRaw ?? []) as {
+    id: string;
+    value: number | null;
+    status: string;
+    athlete_accepted_at: string | null;
+    company_accepted_at: string | null;
+  }[];
+  const ativos = sps.filter(
+    (s) => s.status === "active" && s.athlete_accepted_at && s.company_accepted_at,
+  );
+  const receita = ativos.reduce((sum, s) => sum + (s.value ?? 0), 0);
+
+  return (
+    <div className="mt-8 flex flex-col gap-6">
+      {!profRow && (
+        <Link
+          href="/perfil"
+          className="border-primary/30 bg-primary/5 hover:bg-primary/10 flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition-colors"
+        >
+          <span className="font-medium">
+            Complete seu perfil pras marcas te encontrarem
+          </span>
+          <span className="text-primary shrink-0">Preencher →</span>
+        </Link>
+      )}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <Kpi label="Receita mensal" value={formatBRL(receita)} />
+        <Kpi label="Patrocínios ativos" value={ativos.length} />
+        <Kpi label="Entregas" value={0} href="/entregas" />
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <Button asChild>
+          <Link href="/empresas">Encontrar patrocinadores</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/perfil">Editar perfil</Link>
+        </Button>
+      </div>
     </div>
   );
 }
