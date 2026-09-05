@@ -9,7 +9,7 @@
  * postgrest-js exige que sejam atribuíveis a Record<string, unknown>.
  */
 
-export type ProfileType = "athlete" | "company";
+export type ProfileType = "athlete" | "company" | "track" | "event" | "media";
 export type OpportunityStatus = "open" | "closed";
 export type ApplicationStatus = "pending" | "accepted" | "rejected";
 export type ProposalStatus = "pending" | "accepted" | "rejected" | "withdrawn";
@@ -177,6 +177,41 @@ export type CompanyProfile = {
   campaign_duration_months: number | null;
   region_of_interest: string | null;
   modalities: string[];
+  updated_at: string;
+};
+
+export type TrackProfile = {
+  profile_id: string;
+  layouts: string[];
+  length_m: number | null;
+  capacity: number | null;
+  sponsor_spaces: string | null;
+  website: string | null;
+  instagram: string | null;
+  description: string | null;
+  updated_at: string;
+};
+
+export type EventProfile = {
+  profile_id: string;
+  event_kind: string | null;
+  next_date: string | null;
+  track_name: string | null;
+  expected_public: number | null;
+  sponsor_packages: string | null;
+  website: string | null;
+  instagram: string | null;
+  description: string | null;
+  updated_at: string;
+};
+
+export type MediaProfile = {
+  profile_id: string;
+  roles: string[];
+  portfolio_url: string | null;
+  website: string | null;
+  instagram: string | null;
+  description: string | null;
   updated_at: string;
 };
 
@@ -417,6 +452,18 @@ export type Database = {
       company_profiles: TableDef<
         CompanyProfile,
         Exclude<keyof CompanyProfile, "profile_id">
+      >;
+      track_profiles: TableDef<
+        TrackProfile,
+        Exclude<keyof TrackProfile, "profile_id">
+      >;
+      event_profiles: TableDef<
+        EventProfile,
+        Exclude<keyof EventProfile, "profile_id">
+      >;
+      media_profiles: TableDef<
+        MediaProfile,
+        Exclude<keyof MediaProfile, "profile_id">
       >;
       social_links: TableDef<
         SocialLink,
