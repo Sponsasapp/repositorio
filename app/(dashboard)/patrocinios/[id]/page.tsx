@@ -97,6 +97,27 @@ export default async function PatrocinioPage({
           </span>
         </div>
 
+        {s.status !== "cancelled" &&
+        s.status !== "ended" &&
+        !(s.athlete_accepted_at && s.company_accepted_at) ? (
+          <Link
+            href={`/patrocinios/${id}/contrato`}
+            className="border-primary/30 bg-primary/5 hover:bg-primary/10 mt-4 flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition-colors"
+          >
+            <span className="font-medium">
+              Contrato aguardando o aceite das duas partes
+            </span>
+            <span className="text-primary shrink-0">Ver contrato →</span>
+          </Link>
+        ) : (
+          <Link
+            href={`/patrocinios/${id}/contrato`}
+            className="text-foreground mt-3 inline-block text-sm underline underline-offset-2"
+          >
+            Ver contrato
+          </Link>
+        )}
+
         <div className="border-border bg-card mt-6 flex flex-col gap-4 rounded-xl border p-6 text-sm">
           <Linha label="Dinheiro">
             {s.value != null ? `${formatBRL(s.value)} / mês` : "—"}

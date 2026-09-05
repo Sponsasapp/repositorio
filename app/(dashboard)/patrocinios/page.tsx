@@ -53,6 +53,9 @@ export default async function PatrociniosPage() {
             {rows.map((s) => {
               const st = SPONSORSHIP_STATUS[s.status];
               const other = iAmCompany ? s.athlete?.name : s.company?.name;
+              const contratoPendente =
+                s.status === "active" &&
+                !(s.athlete_accepted_at && s.company_accepted_at);
               return (
                 <Link
                   key={s.id}
@@ -70,9 +73,13 @@ export default async function PatrociniosPage() {
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${st?.cls}`}
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${
+                      contratoPendente
+                        ? "bg-primary/10 text-primary"
+                        : st?.cls
+                    }`}
                   >
-                    {st?.label}
+                    {contratoPendente ? "Aguardando contrato" : st?.label}
                   </span>
                 </Link>
               );

@@ -21,6 +21,57 @@ async function ctx() {
   return { supabase, user };
 }
 
+export async function aceitarContrato(formData: FormData): Promise<void> {
+  const { supabase, user } = await ctx();
+  if (!user) return;
+
+  const id = String(formData.get("sponsorship_id") ?? "");
+  const accept = String(formData.get("accept") ?? "1") === "1";
+  if (!id) return;
+
+  const { data: result } = await supabase.rpc("set_contract_acceptance", {
+    p_sponsorship: id,
+    p_accept: accept,
+  });
+  if (result !== "ok" && result !== "cancelled") return;
+
+  if (accept) {
+    const { data: sp } = await supabase
+      .from("sponsorships")
+      .select("athlete_id, company_id, athlete_accepted_at, company_accepted_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (sp) {
+      const otherId = sp.athlete_id === user.id ? sp.company_id : sp.athlete_id;
+      const bothIn = !!sp.athlete_accepted_at && !!sp.company_accepted_at;
+      const { data: me } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+      after(() =>
+        notifyUser(otherId, {
+          type: bothIn ? "contract_active" : "contract_accepted",
+          subject: bothIn
+            ? "Contrato de acordo pelas duas partes"
+            : "Aceite do contrato pendente",
+          title: bothIn
+            ? "Contrato ativo"
+            : `${me?.name ?? "A outra parte"} aceitou o contrato`,
+          body: bothIn
+            ? "As duas partes deram o de acordo. O patrocínio está ativo com os termos registrados."
+            : "Falta o seu aceite para o contrato valer. Abra e confirme os termos.",
+          cta: { label: "Ver contrato", path: `/patrocinios/${id}/contrato` },
+        }),
+      );
+    }
+  }
+
+  revalidatePath(`/patrocinios/${id}`);
+  revalidatePath(`/patrocinios/${id}/contrato`);
+  revalidatePath("/patrocinios");
+}
+
 export async function encerrarPatrocinio(formData: FormData): Promise<void> {
   const { supabase, user } = await ctx();
   if (!user) return;

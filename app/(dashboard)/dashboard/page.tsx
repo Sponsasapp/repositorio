@@ -127,7 +127,7 @@ async function PainelPiloto({ userId }: { userId: string }) {
       .eq("profile_id", userId),
     supabase
       .from("sponsorships")
-      .select("id, value, status")
+      .select("id, value, status, athlete_accepted_at, company_accepted_at")
       .eq("athlete_id", userId),
     supabase
       .from("deliverables")
@@ -162,6 +162,8 @@ async function PainelPiloto({ userId }: { userId: string }) {
     id: string;
     value: number | null;
     status: string;
+    athlete_accepted_at: string | null;
+    company_accepted_at: string | null;
   }[];
   const deliverables = (dlvRaw ?? []) as {
     id: string;
@@ -179,7 +181,12 @@ async function PainelPiloto({ userId }: { userId: string }) {
     from: { name: string | null } | null;
   }[];
 
-  const ativos = sponsorships.filter((s) => s.status === "active");
+  const ativos = sponsorships.filter(
+    (s) =>
+      s.status === "active" &&
+      s.athlete_accepted_at &&
+      s.company_accepted_at,
+  );
   const receita = ativos.reduce((sum, s) => sum + (s.value ?? 0), 0);
   const followers = (socials ?? []).reduce((s, l) => s + (l.followers ?? 0), 0);
   const interactions = (socials ?? []).reduce(
@@ -371,7 +378,7 @@ async function PainelEmpresa({ userId }: { userId: string }) {
     supabase
       .from("sponsorships")
       .select(
-        "id, value, status, athlete:profiles!sponsorships_athlete_id_fkey(id, name, athlete_modalities(rank_tier, rank_score))",
+        "id, value, status, athlete_accepted_at, company_accepted_at, athlete:profiles!sponsorships_athlete_id_fkey(id, name, athlete_modalities(rank_tier, rank_score))",
       )
       .eq("company_id", userId),
     supabase
@@ -399,6 +406,8 @@ async function PainelEmpresa({ userId }: { userId: string }) {
     id: string;
     value: number | null;
     status: string;
+    athlete_accepted_at: string | null;
+    company_accepted_at: string | null;
     athlete: {
       id: string;
       name: string | null;
@@ -425,7 +434,12 @@ async function PainelEmpresa({ userId }: { userId: string }) {
     sponsorship: { id: string };
   }[];
 
-  const ativos = sponsorships.filter((s) => s.status === "active");
+  const ativos = sponsorships.filter(
+    (s) =>
+      s.status === "active" &&
+      s.athlete_accepted_at &&
+      s.company_accepted_at,
+  );
   const investimento = ativos.reduce((sum, s) => sum + (s.value ?? 0), 0);
   const vagasAbertas = opportunities.filter((o) => o.status === "open").length;
 

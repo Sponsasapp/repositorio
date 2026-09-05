@@ -235,6 +235,8 @@ export type Sponsorship = {
   payment_type: ProposalPaymentType;
   trade_description: string | null;
   trade_value: number | null;
+  athlete_accepted_at: string | null;
+  company_accepted_at: string | null;
   created_at: string;
 };
 
@@ -274,7 +276,9 @@ export type NotificationType =
   | "rank_up"
   | "rank_down"
   | "plan_expiring"
-  | "message_received";
+  | "message_received"
+  | "contract_accepted"
+  | "contract_active";
 
 export type Notification = {
   id: string;
@@ -410,6 +414,8 @@ export type Database = {
         | "payment_type"
         | "trade_description"
         | "trade_value"
+        | "athlete_accepted_at"
+        | "company_accepted_at"
         | "created_at"
       >;
       deliverables: TableDef<
@@ -479,6 +485,10 @@ export type Database = {
       review_deliverable: {
         Args: { p_deliverable: string; p_decision: string };
         Returns: boolean;
+      };
+      set_contract_acceptance: {
+        Args: { p_sponsorship: string; p_accept: boolean };
+        Returns: string;
       };
     };
     Enums: {

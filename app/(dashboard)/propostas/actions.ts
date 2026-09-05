@@ -162,11 +162,11 @@ export async function responderProposta(formData: FormData): Promise<void> {
     notifyUser(proposal.from_profile_id, {
       type: "proposal_accepted",
       subject: "Sua proposta foi aceita",
-      title: "Proposta aceita — patrocínio criado",
-      body: "A outra parte aceitou sua proposta. O patrocínio já está ativo, com os termos combinados.",
+      title: "Proposta aceita — confirme o contrato",
+      body: "A outra parte aceitou sua proposta. Falta as duas partes darem o de acordo no contrato pra valer.",
       cta: {
-        label: "Ver patrocínio",
-        path: `/patrocinios/${sponsorshipId}`,
+        label: "Ver contrato",
+        path: `/patrocinios/${sponsorshipId}/contrato`,
       },
     }),
   );
