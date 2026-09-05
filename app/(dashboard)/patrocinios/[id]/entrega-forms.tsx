@@ -10,6 +10,7 @@ import { OFFERED_DELIVERABLES } from "@/lib/deliverables";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/image-upload";
 
 export function AddDeliverableForm({
   sponsorshipId,
@@ -106,28 +107,46 @@ export function ProofForm({
     enviarComprovacao,
     undefined,
   );
+  const [kind, setKind] = useState("link");
+  const [url, setUrl] = useState("");
 
   return (
     <form action={formAction} className="mt-2 flex flex-col gap-2">
       <input type="hidden" name="deliverable_id" value={deliverableId} />
       <input type="hidden" name="sponsorship_id" value={sponsorshipId} />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <select
           name="kind"
-          defaultValue="link"
+          value={kind}
+          onChange={(e) => {
+            setKind(e.target.value);
+            setUrl("");
+          }}
           className="border-input h-8 rounded-lg border bg-transparent px-2 text-xs"
         >
           <option value="link">Link</option>
           <option value="screenshot">Print</option>
           <option value="video">Vídeo</option>
         </select>
-        <Input
-          name="url"
-          type="url"
-          placeholder="https://instagram.com/p/…"
-          className="h-8 min-w-56 flex-1 text-xs"
-        />
-        <Button type="submit" size="xs" disabled={pending}>
+        {kind === "screenshot" ? (
+          <ImageUpload
+            name="url"
+            initial={null}
+            folder="proofs"
+            hint="JPG, PNG ou WebP até 3 MB"
+            onChange={setUrl}
+          />
+        ) : (
+          <Input
+            name="url"
+            type="url"
+            placeholder="https://instagram.com/p/…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="h-8 min-w-56 flex-1 text-xs"
+          />
+        )}
+        <Button type="submit" size="xs" disabled={pending || !url}>
           {pending ? "Enviando…" : "Enviar comprovação"}
         </Button>
       </div>

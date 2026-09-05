@@ -15,12 +15,15 @@ export function ImageUpload({
   shape = "square",
   hint,
   onChange,
+  folder = "avatars",
 }: {
   name?: string;
   initial: string | null;
   shape?: "square" | "circle";
   hint?: string;
   onChange?: (url: string) => void;
+  /** Prefixo da pasta no bucket `uploads` (precisa ter policy própria — ver avatars/proofs). */
+  folder?: string;
 }) {
   const [url, setUrlState] = useState(initial ?? "");
   const [busy, setBusy] = useState(false);
@@ -54,7 +57,7 @@ export function ImageUpload({
         return;
       }
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `avatars/${user.id}/${crypto.randomUUID()}.${ext}`;
+      const path = `${folder}/${user.id}/${crypto.randomUUID()}.${ext}`;
 
       const { error: upErr } = await supabase.storage
         .from("uploads")
