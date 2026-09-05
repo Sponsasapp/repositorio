@@ -191,22 +191,34 @@ export default async function PatrocinioPage({
                   </div>
 
                   {d.deliverable_proofs.length > 0 && (
-                    <ul className="flex flex-col gap-1 text-sm">
+                    <ul className="flex flex-wrap gap-2 text-sm">
                       {d.deliverable_proofs.map((pr) => (
                         <li key={pr.id}>
-                          <a
-                            href={pr.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary underline underline-offset-2"
-                          >
-                            {pr.kind === "video"
-                              ? "Vídeo"
-                              : pr.kind === "screenshot"
-                                ? "Print"
-                                : "Link"}{" "}
-                            de comprovação
-                          </a>
+                          {pr.kind === "screenshot" ? (
+                            <a
+                              href={pr.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="border-border block overflow-hidden rounded-lg border"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={pr.url}
+                                alt="Comprovação"
+                                className="size-24 object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <a
+                              href={pr.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary underline underline-offset-2"
+                            >
+                              {pr.kind === "video" ? "Vídeo" : "Link"} de
+                              comprovação
+                            </a>
+                          )}
                         </li>
                       ))}
                     </ul>

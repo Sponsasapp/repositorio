@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeIcon, MessageCircleIcon } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 import { LogoLink } from "@/components/logo-link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -8,6 +8,7 @@ import { Sidebar } from "./_components/sidebar";
 import { MobileNav } from "./_components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
+import { MessageIcon } from "@/components/message-icon";
 import { Avatar } from "@/components/avatar";
 
 export default async function DashboardLayout({
@@ -45,14 +46,7 @@ export default async function DashboardLayout({
             >
               <HomeIcon className="size-5" />
             </Link>
-            <Link
-              href="/mensagens"
-              aria-label="Mensagens"
-              title="Mensagens"
-              className="text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 items-center justify-center rounded-md"
-            >
-              <MessageCircleIcon className="size-5" />
-            </Link>
+            <MessageIcon userId={user.id} />
             <NotificationBell userId={user.id} />
           </div>
           <div className="bg-border mx-2 h-6 w-px" />

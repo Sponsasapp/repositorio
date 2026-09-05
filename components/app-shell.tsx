@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeIcon, MessageCircleIcon } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 import { LogoLink } from "@/components/logo-link";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/app/(dashboard)/_components/sidebar";
@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/marketing/site-header";
 import { logout } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
+import { MessageIcon } from "@/components/message-icon";
 import { Avatar } from "@/components/avatar";
 
 /**
@@ -54,14 +55,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             >
               <HomeIcon className="size-5" />
             </Link>
-            <Link
-              href="/mensagens"
-              aria-label="Mensagens"
-              title="Mensagens"
-              className="text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 items-center justify-center rounded-md"
-            >
-              <MessageCircleIcon className="size-5" />
-            </Link>
+            <MessageIcon userId={user.id} />
             <NotificationBell userId={user.id} />
           </div>
           <div className="bg-border mx-2 h-6 w-px" />
