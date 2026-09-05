@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { login, signup, type AuthState } from "../actions";
 import { BR_UF } from "@/lib/br";
+import { PARTICIPANT, PROFILE_TYPES } from "@/lib/participant-types";
+import type { ProfileType } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,14 +20,14 @@ export function AuthForm({
   mode: "login" | "signup";
   next?: string;
   notice?: string;
-  defaultType?: "athlete" | "company";
+  defaultType?: ProfileType;
 }) {
   const action = mode === "login" ? login : signup;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
     action,
     undefined,
   );
-  const [type, setType] = useState<"athlete" | "company">(defaultType);
+  const [type, setType] = useState<ProfileType>(defaultType);
   const isSignup = mode === "signup";
 
   return (
@@ -48,20 +50,16 @@ export function AuthForm({
 
       {isSignup && (
         <fieldset className="grid grid-cols-2 gap-2">
-          <TypeCard
-            value="athlete"
-            label="Sou piloto"
-            hint="Busco patrocínio"
-            checked={type === "athlete"}
-            onSelect={setType}
-          />
-          <TypeCard
-            value="company"
-            label="Sou empresa"
-            hint="Quero patrocinar"
-            checked={type === "company"}
-            onSelect={setType}
-          />
+          {PROFILE_TYPES.map((t) => (
+            <TypeCard
+              key={t}
+              value={t}
+              label={PARTICIPANT[t].label}
+              hint={PARTICIPANT[t].hint}
+              checked={type === t}
+              onSelect={setType}
+            />
+          ))}
         </fieldset>
       )}
 
@@ -279,11 +277,11 @@ function TypeCard({
   checked,
   onSelect,
 }: {
-  value: "athlete" | "company";
+  value: ProfileType;
   label: string;
   hint: string;
   checked: boolean;
-  onSelect: (v: "athlete" | "company") => void;
+  onSelect: (v: ProfileType) => void;
 }) {
   return (
     <label className="border-border has-[:checked]:border-primary has-[:checked]:bg-accent/40 flex cursor-pointer flex-col rounded-lg border p-3 transition-colors">

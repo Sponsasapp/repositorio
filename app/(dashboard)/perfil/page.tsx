@@ -7,6 +7,17 @@ import { MODALITIES, MODALITY_VALUES } from "@/lib/sports";
 import type { AthleteModality } from "@/lib/types/database.types";
 import { PerfilPilotoForm } from "./perfil-form";
 import { PerfilEmpresaForm } from "./perfil-empresa-form";
+import {
+  PerfilPistaForm,
+  PerfilEventoForm,
+  PerfilMidiaForm,
+} from "./perfil-outros-forms";
+import { publicPath } from "@/lib/participant-types";
+import type {
+  TrackProfile,
+  EventProfile,
+  MediaProfile,
+} from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Meu perfil — Sponsas" };
 
@@ -54,6 +65,61 @@ export default async function PerfilPage({
           </Link>
         </div>
         <PerfilEmpresaForm profile={profile} company={company ?? null} />
+      </div>
+    );
+  }
+
+  if (
+    profile.type === "track" ||
+    profile.type === "event" ||
+    profile.type === "media"
+  ) {
+    const table =
+      profile.type === "track"
+        ? "track_profiles"
+        : profile.type === "event"
+          ? "event_profiles"
+          : "media_profiles";
+    const { data: row } = await supabase
+      .from(table)
+      .select("*")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl">Meu perfil</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              É assim que as marcas vão te encontrar.
+            </p>
+          </div>
+          <Link
+            href={publicPath(profile.type, user.id)}
+            className="text-foreground shrink-0 text-sm underline underline-offset-2"
+          >
+            Ver perfil público
+          </Link>
+        </div>
+        {profile.type === "track" && (
+          <PerfilPistaForm
+            profile={profile}
+            track={(row as TrackProfile | null) ?? null}
+          />
+        )}
+        {profile.type === "event" && (
+          <PerfilEventoForm
+            profile={profile}
+            event={(row as EventProfile | null) ?? null}
+          />
+        )}
+        {profile.type === "media" && (
+          <PerfilMidiaForm
+            profile={profile}
+            media={(row as MediaProfile | null) ?? null}
+          />
+        )}
       </div>
     );
   }

@@ -426,3 +426,114 @@ export async function salvarPerfilEmpresa(
   revalidatePath(`/e/${user.id}`);
   return { ok: true };
 }
+
+async function salvarBase(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { user: null, supabase, error: "Sessão expirada." as const };
+
+  const name = text(formData.get("name"));
+  if (!name) return { user: null, supabase, error: "O nome é obrigatório." as const };
+
+  const uf = text(formData.get("state"));
+  if (uf && !BR_UF.includes(uf as (typeof BR_UF)[number])) {
+    return { user: null, supabase, error: "Estado (UF) inválido." as const };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name,
+      city: text(formData.get("city")),
+      state: uf,
+      photo_url: text(formData.get("photo_url")),
+      bio: text(formData.get("bio")),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+  if (error) return { user: null, supabase, error: "Não foi possível salvar." as const };
+
+  return { user, supabase, error: null };
+}
+
+const list = (fd: FormData, key: string) =>
+  [...new Set(fd.getAll(key).map(String).filter(Boolean))];
+
+export async function salvarPerfilPista(
+  _prev: PerfilState,
+  formData: FormData,
+): Promise<PerfilState> {
+  const { user, supabase, error } = await salvarBase(formData);
+  if (!user) return { error: error ?? "Erro." };
+
+  const { error: e2 } = await supabase.from("track_profiles").upsert({
+    profile_id: user.id,
+    layouts: list(formData, "layouts"),
+    length_m: int(formData.get("length_m")),
+    capacity: int(formData.get("capacity")),
+    sponsor_spaces: text(formData.get("sponsor_spaces")),
+    website: text(formData.get("website")),
+    instagram: text(formData.get("instagram")),
+    description: text(formData.get("description")),
+    updated_at: new Date().toISOString(),
+  });
+  if (e2) return { error: "Não foi possível salvar os dados da pista." };
+
+  revalidatePath("/perfil");
+  revalidatePath("/pistas");
+  revalidatePath(`/pista/${user.id}`);
+  return { ok: true };
+}
+
+export async function salvarPerfilEvento(
+  _prev: PerfilState,
+  formData: FormData,
+): Promise<PerfilState> {
+  const { user, supabase, error } = await salvarBase(formData);
+  if (!user) return { error: error ?? "Erro." };
+
+  const { error: e2 } = await supabase.from("event_profiles").upsert({
+    profile_id: user.id,
+    event_kind: text(formData.get("event_kind")),
+    next_date: text(formData.get("next_date")),
+    track_name: text(formData.get("track_name")),
+    expected_public: int(formData.get("expected_public")),
+    sponsor_packages: text(formData.get("sponsor_packages")),
+    website: text(formData.get("website")),
+    instagram: text(formData.get("instagram")),
+    description: text(formData.get("description")),
+    updated_at: new Date().toISOString(),
+  });
+  if (e2) return { error: "Não foi possível salvar os dados do evento." };
+
+  revalidatePath("/perfil");
+  revalidatePath("/eventos");
+  revalidatePath(`/evento/${user.id}`);
+  return { ok: true };
+}
+
+export async function salvarPerfilMidia(
+  _prev: PerfilState,
+  formData: FormData,
+): Promise<PerfilState> {
+  const { user, supabase, error } = await salvarBase(formData);
+  if (!user) return { error: error ?? "Erro." };
+
+  const { error: e2 } = await supabase.from("media_profiles").upsert({
+    profile_id: user.id,
+    roles: list(formData, "roles"),
+    portfolio_url: text(formData.get("portfolio_url")),
+    website: text(formData.get("website")),
+    instagram: text(formData.get("instagram")),
+    description: text(formData.get("description")),
+    updated_at: new Date().toISOString(),
+  });
+  if (e2) return { error: "Não foi possível salvar os dados de mídia." };
+
+  revalidatePath("/perfil");
+  revalidatePath("/midias");
+  revalidatePath(`/m/${user.id}`);
+  return { ok: true };
+}

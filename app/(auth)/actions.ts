@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site";
 import { isValidCPF, onlyDigits } from "@/lib/br";
+import { PROFILE_TYPES } from "@/lib/participant-types";
 import type { ProfileType } from "@/lib/types/database.types";
 
 export type AuthState = { error: string } | undefined;
@@ -70,8 +71,8 @@ export async function signup(
     return { error: "Preencha nome, e-mail e senha." };
   if (password.length < 8)
     return { error: "A senha precisa de ao menos 8 caracteres." };
-  if (type !== "athlete" && type !== "company")
-    return { error: "Escolha se você é piloto ou empresa." };
+  if (!PROFILE_TYPES.includes(type))
+    return { error: "Escolha o tipo de conta." };
   if (formData.get("consent") !== "on")
     return { error: "Aceite os Termos e a Política de Privacidade para continuar." };
 
