@@ -468,6 +468,18 @@ export type Database = {
         Args: { p_me: string; p_other: string };
         Returns: boolean;
       };
+      respond_proposal: {
+        Args: { p_proposal: string; p_action: string };
+        Returns: string;
+      };
+      end_sponsorship: {
+        Args: { p_sponsorship: string };
+        Returns: boolean;
+      };
+      review_deliverable: {
+        Args: { p_deliverable: string; p_decision: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       profile_type: ProfileType;

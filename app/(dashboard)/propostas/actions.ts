@@ -131,51 +131,32 @@ export async function responderProposta(formData: FormData): Promise<void> {
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("*")
+    .select("from_profile_id, to_profile_id, status")
     .eq("id", id)
     .single();
-
-  // Só o destinatário responde, e só uma vez.
   if (!proposal || proposal.to_profile_id !== user.id) return;
   if (proposal.status !== "pending") return;
 
+  // Aceite/recusa passam pela RPC respond_proposal (SECURITY DEFINER):
+  // é ela que cria o patrocínio e trava os termos — não dá mais pra
+  // fabricar/mexer num patrocínio direto pelo client.
+  const { data: result } = await supabase.rpc("respond_proposal", {
+    p_proposal: id,
+    p_action: decision === "accepted" ? "accept" : "reject",
+  });
+
   if (decision === "rejected") {
-    await supabase
-      .from("proposals")
-      .update({ status: "rejected" })
-      .eq("id", id);
     revalidatePath(`/propostas/${id}`);
     revalidatePath("/propostas");
     return;
   }
 
-  // Aceite: descobrir quem é piloto e quem é empresa.
-  const { data: parts } = await supabase
-    .from("profiles")
-    .select("id, type")
-    .in("id", [proposal.from_profile_id, proposal.to_profile_id]);
-  const athlete = parts?.find((p) => p.type === "athlete");
-  const company = parts?.find((p) => p.type === "company");
-  if (!athlete || !company) return;
-
-  const { data: sponsorship, error: spErr } = await supabase
-    .from("sponsorships")
-    .insert({
-      proposal_id: proposal.id,
-      athlete_id: athlete.id,
-      company_id: company.id,
-      payment_type: proposal.payment_type,
-      value: proposal.value,
-      trade_description: proposal.trade_description,
-      trade_value: proposal.trade_value,
-      duration_months: proposal.duration_months,
-    })
-    .select("id")
-    .single();
-
-  if (spErr || !sponsorship) return;
-
-  await supabase.from("proposals").update({ status: "accepted" }).eq("id", id);
+  const sponsorshipId = String(result ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(sponsorshipId)) {
+    // não voltou um uuid → aceite falhou
+    revalidatePath(`/propostas/${id}`);
+    return;
+  }
 
   after(() =>
     notifyUser(proposal.from_profile_id, {
@@ -185,7 +166,7 @@ export async function responderProposta(formData: FormData): Promise<void> {
       body: "A outra parte aceitou sua proposta. O patrocínio já está ativo, com os termos combinados.",
       cta: {
         label: "Ver patrocínio",
-        path: `/patrocinios/${sponsorship.id}`,
+        path: `/patrocinios/${sponsorshipId}`,
       },
     }),
   );
@@ -193,7 +174,7 @@ export async function responderProposta(formData: FormData): Promise<void> {
   revalidatePath(`/propostas/${id}`);
   revalidatePath("/propostas");
   revalidatePath("/patrocinios");
-  redirect(`/patrocinios/${sponsorship.id}`);
+  redirect(`/patrocinios/${sponsorshipId}`);
 }
 
 export async function retirarProposta(formData: FormData): Promise<void> {
@@ -203,12 +184,7 @@ export async function retirarProposta(formData: FormData): Promise<void> {
   const id = String(formData.get("proposal_id") ?? "");
   if (!id) return;
 
-  await supabase
-    .from("proposals")
-    .update({ status: "withdrawn" })
-    .eq("id", id)
-    .eq("from_profile_id", user.id)
-    .eq("status", "pending");
+  await supabase.rpc("respond_proposal", { p_proposal: id, p_action: "withdraw" });
 
   revalidatePath(`/propostas/${id}`);
   revalidatePath("/propostas");

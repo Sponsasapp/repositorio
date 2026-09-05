@@ -28,12 +28,7 @@ export async function encerrarPatrocinio(formData: FormData): Promise<void> {
   const id = String(formData.get("sponsorship_id") ?? "");
   if (!id) return;
 
-  // RLS: só as partes do patrocínio conseguem atualizar.
-  await supabase
-    .from("sponsorships")
-    .update({ status: "ended" })
-    .eq("id", id)
-    .eq("status", "active");
+  await supabase.rpc("end_sponsorship", { p_sponsorship: id });
 
   revalidatePath(`/patrocinios/${id}`);
   revalidatePath("/patrocinios");
@@ -94,11 +89,7 @@ export async function enviarComprovacao(
   });
   if (error) return { error: "Não foi possível enviar. Você é o piloto deste patrocínio?" };
 
-  // Marca a entrega como enviada para revisão.
-  await supabase
-    .from("deliverables")
-    .update({ status: "submitted" })
-    .eq("id", deliverableId);
+  // O trigger proof_marks_submitted no banco leva a entrega pra "submitted".
 
   revalidatePath(`/patrocinios/${sponsorshipId}`);
   revalidatePath("/entregas");
@@ -114,18 +105,21 @@ export async function avaliarEntrega(formData: FormData): Promise<void> {
   const decision = String(formData.get("decision") ?? "");
   if (!deliverableId || !["approved", "rejected"].includes(decision)) return;
 
-  // Só a empresa do patrocínio aprova/rejeita.
+  // A RPC review_deliverable (SECURITY DEFINER) só deixa a EMPRESA do
+  // patrocínio aprovar/recusar — o piloto não consegue mais aprovar a
+  // própria entrega direto no banco.
+  const { data: ok } = await supabase.rpc("review_deliverable", {
+    p_deliverable: deliverableId,
+    p_decision: decision,
+  });
+  if (!ok) return;
+
   const { data: sp } = await supabase
     .from("sponsorships")
-    .select("company_id, athlete_id")
+    .select("athlete_id")
     .eq("id", sponsorshipId)
     .maybeSingle();
-  if (!sp || sp.company_id !== user.id) return;
-
-  await supabase
-    .from("deliverables")
-    .update({ status: decision as "approved" | "rejected" })
-    .eq("id", deliverableId);
+  if (!sp) return;
 
   const { data: dlv } = await supabase
     .from("deliverables")
