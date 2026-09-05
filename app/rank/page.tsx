@@ -154,8 +154,9 @@ export default async function RankPage({
           Rank Sponsas{modLabel ? ` · ${modLabel.label}` : ""}
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Reputação do piloto na plataforma: entrega no prazo, cumprimento da
-          demanda, engajamento e atividade. Quem entrega, sobe.
+          O piloto acumula pontos entregando no prazo, fechando patrocínios com
+          contrato e crescendo o engajamento. A cada faixa de pontos, sobe de
+          tier — e cada tier custa mais que o anterior.
         </p>
 
         {/* Modalidade */}

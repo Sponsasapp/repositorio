@@ -10,7 +10,7 @@ import {
   formatNumber,
   formatRange,
 } from "@/lib/format";
-import { tierInfo } from "@/lib/rank";
+import { tierInfo, tierProgress, DEFAULT_RANK_CONFIG } from "@/lib/rank";
 import { SITE_URL } from "@/lib/site";
 import {
   MODALITY_VALUES,
@@ -19,7 +19,10 @@ import {
 } from "@/lib/sports";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/avatar";
-import type { AthleteModality } from "@/lib/types/database.types";
+import type {
+  AthleteModality,
+  RankConfig,
+} from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
 
@@ -47,6 +50,7 @@ async function getPiloto(id: string, modalityParam?: string) {
     { data: socials },
     { data: packages },
     { data: auth },
+    cfgRow,
   ] = await Promise.all([
     supabase.from("athlete_modalities").select("*").eq("profile_id", id),
     supabase
@@ -70,7 +74,9 @@ async function getPiloto(id: string, modalityParam?: string) {
       .eq("athlete_id", id)
       .order("position"),
     supabase.auth.getUser(),
+    supabase.from("rank_config").select("*").limit(1).maybeSingle(),
   ]);
+  const rankCfg = (cfgRow.data as RankConfig | null) ?? DEFAULT_RANK_CONFIG;
 
   const modalities = (modalitiesData ?? []) as AthleteModality[];
 
@@ -156,6 +162,8 @@ async function getPiloto(id: string, modalityParam?: string) {
     messageHint,
     empty: false as const,
     athlete: safeAthlete,
+    rankPoints: active.rank_score ?? 0,
+    rankCfg,
     modalities: modalities.map((m) => m.modality),
     activeModality: mv,
     cars: modCars,
@@ -238,6 +246,8 @@ export default async function PerfilPublicoPage({
   const {
     profile,
     athlete,
+    rankPoints,
+    rankCfg,
     modalities,
     activeModality,
     cars,
@@ -250,6 +260,7 @@ export default async function PerfilPublicoPage({
     messageHint,
   } = data;
   const isOwner = viewerId === profile.id;
+  const rankProg = tierProgress(rankPoints, rankCfg);
 
   const carPhoto = cars.find((c) => c.photo_url)?.photo_url ?? null;
   const carAchievements = (carId: string) =>
@@ -309,6 +320,24 @@ export default async function PerfilPublicoPage({
               </div>
               {linha && (
                 <p className="mt-1 text-sm text-white/70">{linha}</p>
+              )}
+              {isOwner && (
+                <div className="mt-3 max-w-xs">
+                  <div className="flex justify-between text-[11px] text-white/50">
+                    <span>{rankPoints} pts</span>
+                    <span>
+                      {rankProg.nextTier
+                        ? `+${rankProg.toNext} pro ${tierInfo(rankProg.nextTier)?.label}`
+                        : "topo do rank"}
+                    </span>
+                  </div>
+                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <span
+                      className="bg-primary block h-full rounded-full"
+                      style={{ width: `${rankProg.pct}%` }}
+                    />
+                  </span>
+                </div>
               )}
             </div>
           </div>

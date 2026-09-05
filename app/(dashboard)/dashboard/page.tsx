@@ -5,9 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 import { formatBRL, formatDateBR, paymentSummary } from "@/lib/format";
 import { timeAgo } from "@/lib/relative-time";
 import { deliverableLabel } from "@/lib/deliverables";
-import { FACTOR_LABELS, tierInfo, suggestedMonthlyRange } from "@/lib/rank";
+import {
+  POINT_LABELS,
+  tierInfo,
+  tierProgress,
+  suggestedMonthlyRange,
+  DEFAULT_RANK_CONFIG,
+} from "@/lib/rank";
 import { pickPrimaryModality } from "@/lib/sports";
-import type { RankFactors, RankTier } from "@/lib/types/database.types";
+import type {
+  RankFactors,
+  RankTier,
+  RankConfig,
+} from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Dashboard — Sponsas" };
@@ -116,6 +126,7 @@ async function PainelPiloto({ userId }: { userId: string }) {
     { data: spRaw },
     { data: dlvRaw },
     { data: propRaw },
+    { data: cfgRaw },
   ] = await Promise.all([
     supabase
       .from("athlete_modalities")
@@ -142,7 +153,10 @@ async function PainelPiloto({ userId }: { userId: string }) {
       .eq("to_profile_id", userId)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    supabase.from("rank_config").select("*").limit(1).maybeSingle(),
   ]);
+
+  const rankCfg = (cfgRaw as RankConfig | null) ?? DEFAULT_RANK_CONFIG;
 
   const socials = (socialsRaw ?? []) as {
     followers: number | null;
@@ -200,6 +214,8 @@ async function PainelPiloto({ userId }: { userId: string }) {
 
   const tier = tierInfo(athlete?.rank_tier);
   const factors = (athlete?.rank_factors ?? null) as RankFactors | null;
+  const points = athlete?.rank_score ?? 0;
+  const prog = tierProgress(points, rankCfg);
   const range = suggestedMonthlyRange(
     followers,
     engagement,
@@ -215,12 +231,10 @@ async function PainelPiloto({ userId }: { userId: string }) {
             <p className="text-muted-foreground text-[13px]">Rank Sponsas</p>
             <p className="font-[family-name:var(--font-heading)] text-3xl">
               {tier ? tier.label : "—"}
-              {athlete?.rank_score != null && (
-                <span className="text-muted-foreground text-lg">
-                  {" "}
-                  · {athlete.rank_score}/100
-                </span>
-              )}
+              <span className="text-muted-foreground text-lg">
+                {" "}
+                · {points} pts
+              </span>
             </p>
           </div>
           <Link
@@ -231,38 +245,61 @@ async function PainelPiloto({ userId }: { userId: string }) {
           </Link>
         </div>
 
-        {factors && (
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {(
-              [
-                "prazo",
-                "demanda",
-                "engajamento",
-                "atividade",
-                "perfil",
-              ] as const
-            ).map((k) => (
-              <div key={k} className="flex items-center gap-3 text-sm">
-                <span className="text-muted-foreground w-40 shrink-0">
-                  {FACTOR_LABELS[k]}
-                </span>
-                <span className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-                  <span
-                    className="bg-primary block h-full"
-                    style={{ width: `${Math.round((factors[k] ?? 0) * 100)}%` }}
-                  />
-                </span>
-              </div>
-            ))}
+        {/* Barra de progresso pro próximo tier */}
+        <div className="mt-4">
+          <div className="text-muted-foreground flex justify-between text-xs">
+            <span>{tierInfo(prog.tier)?.label}</span>
+            <span>
+              {prog.nextTier
+                ? `faltam ${prog.toNext} pts pro ${tierInfo(prog.nextTier)?.label}`
+                : "topo do rank"}
+            </span>
           </div>
+          <span className="bg-muted mt-1.5 block h-2.5 overflow-hidden rounded-full">
+            <span
+              className="bg-primary block h-full rounded-full"
+              style={{ width: `${prog.pct}%` }}
+            />
+          </span>
+          {prog.nextTier && (
+            <p className="text-muted-foreground mt-1 text-[11px]">
+              {prog.currentAt} pts → {prog.nextAt} pts · o próximo tier custa mais
+              que o anterior.
+            </p>
+          )}
+        </div>
+
+        {factors && (
+          <ul className="mt-4 grid gap-1.5 text-sm sm:grid-cols-2">
+            {(Object.keys(POINT_LABELS) as (keyof RankFactors)[]).map((k) => {
+              const v = factors[k] ?? 0;
+              if (v === 0) return null;
+              const neg = k === "penalidades";
+              return (
+                <li key={k} className="flex justify-between gap-2">
+                  <span className="text-muted-foreground">{POINT_LABELS[k]}</span>
+                  <span
+                    className={
+                      neg
+                        ? "text-destructive font-medium"
+                        : "text-foreground font-medium"
+                    }
+                  >
+                    {neg ? "−" : "+"}
+                    {v}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         )}
 
         {factors && (
           <p className="text-muted-foreground mt-3 text-xs">
-            {factors.entregas_no_prazo}/{factors.entregas_total} entregas no
-            prazo · {factors.entregas_aprovadas} aprovadas. Entregue no prazo e
-            cresça o engajamento para subir de rank — isso puxa o valor dos seus
-            patrocínios e permutas.
+            {factors.qt_entregas_prazo}/{factors.qt_entregas_total} entregas
+            aprovadas no prazo · {factors.qt_patrocinios} patrocínio(s) ativo(s).
+            Entregar no prazo e fechar patrocínios com contrato é o que mais
+            soma pontos.
           </p>
         )}
 

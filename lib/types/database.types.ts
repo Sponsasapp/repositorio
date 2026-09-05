@@ -34,15 +34,33 @@ export type Profile = {
 
 export type RankTier = "iniciante" | "bronze" | "prata" | "ouro" | "elite";
 
+/** Quebra dos pontos do Rank Sponsas (ver recompute_athlete_rank, migration 0027). */
 export type RankFactors = {
-  prazo: number;
-  demanda: number;
-  engajamento: number;
-  atividade: number;
-  perfil: number;
-  entregas_total: number;
-  entregas_no_prazo: number;
+  entregas_prazo: number;
   entregas_aprovadas: number;
+  patrocinios: number;
+  concluidos: number;
+  perfil: number;
+  engajamento: number;
+  penalidades: number;
+  qt_entregas_prazo: number;
+  qt_entregas_total: number;
+  qt_patrocinios: number;
+};
+
+export type RankConfig = {
+  id: boolean;
+  pts_entrega_prazo: number;
+  pts_entrega_aprovada: number;
+  pts_patrocinio_fechado: number;
+  pts_patrocinio_concluido: number;
+  pts_perfil_completo: number;
+  pts_engajamento_max: number;
+  pts_penalidade_entrega: number;
+  tier_bronze: number;
+  tier_prata: number;
+  tier_ouro: number;
+  tier_elite: number;
 };
 
 /**
@@ -436,6 +454,7 @@ export type Database = {
         "id" | "last_message_at" | "created_at"
       >;
       messages: TableDef<Message, "id" | "created_at" | "read_at">;
+      rank_config: TableDef<RankConfig, "id">;
     };
     Views: Record<string, never>;
     Functions: {
