@@ -107,13 +107,15 @@ async function getPiloto(id: string, modalityParam?: string) {
   // Valores (preços dos pacotes, faixa desejada) são informação pessoal do
   // piloto: só o dono e empresas veem. Outros pilotos/visitantes, não.
   let viewerType: string | null = null;
+  let viewerPlan: string | null = null;
   if (viewerId) {
     const { data: viewer } = await supabase
       .from("profiles")
-      .select("type")
+      .select("type, plan")
       .eq("id", viewerId)
       .maybeSingle();
     viewerType = viewer?.type ?? null;
+    viewerPlan = viewer?.plan ?? null;
   }
   const canSeeValues = viewerId === id || viewerType === "company";
 
@@ -124,8 +126,34 @@ async function getPiloto(id: string, modalityParam?: string) {
     ? active
     : { ...active, desired_value_min: null, desired_value_max: null };
 
+  // Chat: piloto-piloto só com os dois no PRO; piloto(visitante)-empresa
+  // dono só se já existir proposta entre os dois (evita combinar por fora).
+  let canMessage = false;
+  let messageHint: string | null = null;
+  if (viewerId && viewerId !== id) {
+    if (viewerType === "athlete") {
+      canMessage = viewerPlan === "pro" && profile.plan === "pro";
+      if (!canMessage) {
+        messageHint = "Conversa entre pilotos é exclusiva do plano PRO.";
+      }
+    } else if (viewerType === "company") {
+      const { count } = await supabase
+        .from("proposals")
+        .select("id", { count: "exact", head: true })
+        .or(
+          `and(from_profile_id.eq.${viewerId},to_profile_id.eq.${id}),and(from_profile_id.eq.${id},to_profile_id.eq.${viewerId})`,
+        );
+      canMessage = (count ?? 0) > 0;
+      if (!canMessage) {
+        messageHint = "Envie uma proposta pra poder conversar.";
+      }
+    }
+  }
+
   return {
     profile,
+    canMessage,
+    messageHint,
     empty: false as const,
     athlete: safeAthlete,
     modalities: modalities.map((m) => m.modality),
@@ -218,6 +246,8 @@ export default async function PerfilPublicoPage({
     packages,
     viewerId,
     canSeeValues,
+    canMessage,
+    messageHint,
   } = data;
   const isOwner = viewerId === profile.id;
 
@@ -500,7 +530,7 @@ export default async function PerfilPublicoPage({
                   </Link>
                 )}
               </Button>
-              {!isOwner && viewerId && (
+              {!isOwner && viewerId && canMessage && (
                 <form action={iniciarConversa} className="mt-2">
                   <input type="hidden" name="para" value={profile.id} />
                   <Button
@@ -512,6 +542,11 @@ export default async function PerfilPublicoPage({
                     Mandar mensagem
                   </Button>
                 </form>
+              )}
+              {!isOwner && viewerId && !canMessage && messageHint && (
+                <p className="text-muted-foreground mt-3 text-center text-xs">
+                  {messageHint}
+                </p>
               )}
             </div>
 

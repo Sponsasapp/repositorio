@@ -55,6 +55,23 @@ async function getEmpresa(id: string) {
     viewerState = viewer?.state ?? null;
   }
 
+  // Chat piloto-empresa só se já existir proposta entre os dois (evita
+  // combinar por fora da Sponsas). Empresa-empresa não tem caso de uso.
+  let canMessage = false;
+  if (viewerId && viewerId !== id && viewerType === "athlete") {
+    const { count } = await supabase
+      .from("proposals")
+      .select("id", { count: "exact", head: true })
+      .or(
+        `and(from_profile_id.eq.${viewerId},to_profile_id.eq.${id}),and(from_profile_id.eq.${id},to_profile_id.eq.${viewerId})`,
+      );
+    canMessage = (count ?? 0) > 0;
+  }
+  const messageHint =
+    !canMessage && viewerId && viewerId !== id && viewerType === "athlete"
+      ? "Envie uma proposta pra poder conversar."
+      : null;
+
   return {
     profile,
     company,
@@ -65,6 +82,8 @@ async function getEmpresa(id: string) {
     viewerId,
     viewerType,
     viewerState,
+    canMessage,
+    messageHint,
   };
 }
 
@@ -102,8 +121,16 @@ export default async function PerfilEmpresaPublicoPage({
   const data = await getEmpresa(id);
   if (!data) notFound();
 
-  const { profile, company, opportunities, viewerId, viewerType, viewerState } =
-    data;
+  const {
+    profile,
+    company,
+    opportunities,
+    viewerId,
+    viewerType,
+    viewerState,
+    canMessage,
+    messageHint,
+  } = data;
   const isOwner = viewerId === profile.id;
   const isAthlete = viewerType === "athlete";
 
@@ -256,7 +283,7 @@ export default async function PerfilEmpresaPublicoPage({
                   </Link>
                 )}
               </Button>
-              {!isOwner && viewerId && (
+              {!isOwner && viewerId && canMessage && (
                 <form action={iniciarConversa} className="mt-2">
                   <input type="hidden" name="para" value={profile.id} />
                   <Button
@@ -268,6 +295,11 @@ export default async function PerfilEmpresaPublicoPage({
                     Mandar mensagem
                   </Button>
                 </form>
+              )}
+              {!isOwner && viewerId && !canMessage && messageHint && (
+                <p className="text-muted-foreground mt-3 text-center text-xs">
+                  {messageHint}
+                </p>
               )}
             </div>
 

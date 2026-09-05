@@ -464,6 +464,10 @@ export type Database = {
         Args: { p_conversation: string };
         Returns: undefined;
       };
+      can_message: {
+        Args: { p_me: string; p_other: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       profile_type: ProfileType;
