@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LIMITS, PLAN_LABEL, startOfMonthISO } from "@/lib/plan";
+import { formatBRL, formatDateBR } from "@/lib/format";
 import { alternarPlanoTeste } from "./actions";
 import { Button } from "@/components/ui/button";
+import type { CouponCommission } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Configurações — Sponsas" };
 
@@ -45,6 +47,18 @@ export default async function ConfiguracoesPage() {
           .eq("athlete_id", user.id)
       : Promise.resolve({ data: [] }),
   ]);
+
+  const { data: commRaw } = await supabase
+    .from("coupon_commissions")
+    .select("*")
+    .order("created_at", { ascending: false });
+  const comissoes = (commRaw ?? []) as CouponCommission[];
+  const commPendente = comissoes
+    .filter((c) => c.status === "pending")
+    .reduce((s, c) => s + Number(c.commission_amount), 0);
+  const commPaga = comissoes
+    .filter((c) => c.status === "paid")
+    .reduce((s, c) => s + Number(c.commission_amount), 0);
 
   // Limite da tabela de preços é por modalidade — mostra a mais cheia.
   const pkgByModality = new Map<string, number>();
@@ -154,6 +168,61 @@ export default async function ConfiguracoesPage() {
           </Button>
         </form>
       )}
+
+      {comissoes.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl">Comissões de influencer</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {commPct(comissoes)}% de cada assinatura PRO feita com seus
+            cupons. O repasse é combinado direto com a Sponsas.
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="border-border bg-card rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs">A receber</p>
+              <p className="font-[family-name:var(--font-heading)] text-2xl">
+                {formatBRL(commPendente)}
+              </p>
+            </div>
+            <div className="border-border bg-card rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs">Já pago</p>
+              <p className="font-[family-name:var(--font-heading)] text-2xl">
+                {formatBRL(commPaga)}
+              </p>
+            </div>
+          </div>
+          <ul className="border-border mt-4 flex flex-col divide-y rounded-lg border text-sm">
+            {comissoes.map((c) => (
+              <li
+                key={c.id}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <span className="text-muted-foreground">
+                  {formatDateBR(c.created_at.slice(0, 10))} · {c.plan_months}{" "}
+                  {c.plan_months === 1 ? "mês" : "meses"} de PRO
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {formatBRL(Number(c.commission_amount))}
+                  </span>
+                  <span
+                    className={
+                      c.status === "paid"
+                        ? "bg-success-soft text-success rounded-full px-2 py-0.5 text-[11px]"
+                        : "bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px]"
+                    }
+                  >
+                    {c.status === "paid" ? "pago" : "a receber"}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
+}
+
+function commPct(cs: CouponCommission[]): number {
+  return cs[0] ? Number(cs[0].commission_pct) : 5;
 }

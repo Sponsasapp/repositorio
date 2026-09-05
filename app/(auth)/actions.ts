@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site";
+import { isValidCPF, onlyDigits } from "@/lib/br";
 import type { ProfileType } from "@/lib/types/database.types";
 
 export type AuthState = { error: string } | undefined;
@@ -39,6 +40,20 @@ export async function login(
   redirect(next.startsWith("/") ? next : "/dashboard");
 }
 
+type Kyc = {
+  full_name: string;
+  cpf: string;
+  rg: string;
+  birth: string;
+  zip: string;
+  street: string;
+  number: string;
+  complement: string;
+  district: string;
+  city: string;
+  state: string;
+};
+
 export async function signup(
   _prev: AuthState,
   formData: FormData,
@@ -60,6 +75,43 @@ export async function signup(
   if (formData.get("consent") !== "on")
     return { error: "Aceite os Termos e a Política de Privacidade para continuar." };
 
+  // Piloto: dados pessoais obrigatórios já no cadastro.
+  let kyc: Kyc | null = null;
+  if (type === "athlete") {
+    const g = (k: string) => String(formData.get(k) ?? "").trim();
+    kyc = {
+      full_name: g("full_name"),
+      cpf: onlyDigits(g("cpf")),
+      rg: g("rg"),
+      birth: g("birth_date"),
+      zip: onlyDigits(g("cep")),
+      street: g("street"),
+      number: g("number"),
+      complement: g("complement"),
+      district: g("district"),
+      city: g("city"),
+      state: g("uf").toUpperCase(),
+    };
+    if (
+      !kyc.full_name ||
+      !kyc.rg ||
+      !kyc.birth ||
+      !kyc.street ||
+      !kyc.number ||
+      !kyc.district ||
+      !kyc.city ||
+      kyc.state.length !== 2
+    ) {
+      return { error: "Preencha todos os dados pessoais e o endereço." };
+    }
+    if (!isValidCPF(kyc.cpf)) return { error: "CPF inválido." };
+    if (kyc.zip.length !== 8) return { error: "CEP inválido." };
+    const d = new Date(kyc.birth);
+    if (isNaN(d.getTime()) || d >= new Date() || d < new Date("1920-01-01")) {
+      return { error: "Data de nascimento inválida." };
+    }
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -79,6 +131,27 @@ export async function signup(
   // identities (anti-enumeração), sem erro. Trata como conta existente.
   if (data.user && (data.user.identities?.length ?? 0) === 0) {
     return { error: "Esse e-mail já tem uma conta. Tente entrar." };
+  }
+
+  // Piloto: grava os dados pessoais na tabela isolada (RPC, sem sessão ainda).
+  if (kyc && data.user) {
+    const { data: r } = await supabase.rpc("submit_athlete_documents", {
+      p_user: data.user.id,
+      p_full_name: kyc.full_name,
+      p_cpf: kyc.cpf,
+      p_rg: kyc.rg,
+      p_birth: kyc.birth,
+      p_zip: kyc.zip,
+      p_street: kyc.street,
+      p_number: kyc.number,
+      p_complement: kyc.complement,
+      p_district: kyc.district,
+      p_city: kyc.city,
+      p_state: kyc.state,
+    });
+    if (r !== "ok") {
+      console.error("[signup] athlete_documents ->", JSON.stringify(r));
+    }
   }
 
   // Cupom (opcional): aplica o PRO best-effort — nunca bloqueia o cadastro.

@@ -327,6 +327,62 @@ export type Message = {
   read_at: string | null;
 };
 
+/** Dados pessoais do piloto (LGPD) — tabela isolada, acesso só do dono. */
+export type AthleteDocument = {
+  profile_id: string;
+  full_legal_name: string;
+  cpf: string;
+  rg: string;
+  birth_date: string;
+  address_zip: string;
+  address_street: string;
+  address_number: string;
+  address_complement: string | null;
+  address_district: string;
+  address_city: string;
+  address_state: string;
+  updated_at: string;
+};
+
+export type Coupon = {
+  id: string;
+  code: string;
+  plan_months: number;
+  max_uses: number | null;
+  uses: number;
+  active: boolean;
+  expires_at: string | null;
+  note: string | null;
+  influencer_id: string | null;
+  commission_pct: number;
+  created_at: string;
+};
+
+export type CouponRedemption = {
+  coupon_id: string;
+  profile_id: string;
+  redeemed_at: string;
+};
+
+export type PlanConfig = {
+  id: boolean;
+  pro_monthly_price: number;
+};
+
+export type CouponCommission = {
+  id: string;
+  coupon_id: string;
+  influencer_id: string;
+  redeemer_id: string;
+  plan_months: number;
+  base_amount: number;
+  commission_pct: number;
+  commission_amount: number;
+  status: "pending" | "paid";
+  created_at: string;
+  paid_at: string | null;
+};
+
 type Insert<T, Optional extends keyof T = never> = Omit<T, Optional> &
   Partial<Pick<T, Optional>>;
 
@@ -455,6 +511,28 @@ export type Database = {
       >;
       messages: TableDef<Message, "id" | "created_at" | "read_at">;
       rank_config: TableDef<RankConfig, "id">;
+      athlete_documents: TableDef<
+        AthleteDocument,
+        "address_complement" | "updated_at"
+      >;
+      coupons: TableDef<
+        Coupon,
+        | "id"
+        | "max_uses"
+        | "uses"
+        | "active"
+        | "expires_at"
+        | "note"
+        | "influencer_id"
+        | "commission_pct"
+        | "created_at"
+      >;
+      coupon_redemptions: TableDef<CouponRedemption, "redeemed_at">;
+      plan_config: TableDef<PlanConfig, "id">;
+      coupon_commissions: TableDef<
+        CouponCommission,
+        "id" | "status" | "created_at" | "paid_at"
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -507,6 +585,23 @@ export type Database = {
       };
       set_contract_acceptance: {
         Args: { p_sponsorship: string; p_accept: boolean };
+        Returns: string;
+      };
+      submit_athlete_documents: {
+        Args: {
+          p_user: string;
+          p_full_name: string;
+          p_cpf: string;
+          p_rg: string;
+          p_birth: string;
+          p_zip: string;
+          p_street: string;
+          p_number: string;
+          p_complement: string;
+          p_district: string;
+          p_city: string;
+          p_state: string;
+        };
         Returns: string;
       };
     };

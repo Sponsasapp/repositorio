@@ -127,6 +127,7 @@ async function PainelPiloto({ userId }: { userId: string }) {
     { data: dlvRaw },
     { data: propRaw },
     { data: cfgRaw },
+    { data: docRaw },
   ] = await Promise.all([
     supabase
       .from("athlete_modalities")
@@ -154,9 +155,15 @@ async function PainelPiloto({ userId }: { userId: string }) {
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
     supabase.from("rank_config").select("*").limit(1).maybeSingle(),
+    supabase
+      .from("athlete_documents")
+      .select("profile_id")
+      .eq("profile_id", userId)
+      .maybeSingle(),
   ]);
 
   const rankCfg = (cfgRaw as RankConfig | null) ?? DEFAULT_RANK_CONFIG;
+  const semDados = !docRaw;
 
   const socials = (socialsRaw ?? []) as {
     followers: number | null;
@@ -224,6 +231,18 @@ async function PainelPiloto({ userId }: { userId: string }) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
+      {semDados && (
+        <Link
+          href="/perfil/dados"
+          className="border-primary/30 bg-primary/5 hover:bg-primary/10 flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition-colors"
+        >
+          <span className="font-medium">
+            Complete seus dados pessoais (CPF, RG, endereço)
+          </span>
+          <span className="text-primary shrink-0">Preencher →</span>
+        </Link>
+      )}
+
       {/* Rank */}
       <section className="border-primary bg-card rounded-xl border border-l-3 p-5">
         <div className="flex items-start justify-between gap-4">

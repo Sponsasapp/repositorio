@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { login, signup, type AuthState } from "../actions";
+import { BR_UF } from "@/lib/br";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,8 @@ export function AuthForm({
     action,
     undefined,
   );
+  const [type, setType] = useState<"athlete" | "company">(defaultType);
+  const isSignup = mode === "signup";
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -43,19 +46,21 @@ export function AuthForm({
         </p>
       </div>
 
-      {mode === "signup" && (
+      {isSignup && (
         <fieldset className="grid grid-cols-2 gap-2">
           <TypeCard
             value="athlete"
             label="Sou piloto"
             hint="Busco patrocínio"
-            checked={defaultType === "athlete"}
+            checked={type === "athlete"}
+            onSelect={setType}
           />
           <TypeCard
             value="company"
             label="Sou empresa"
             hint="Quero patrocinar"
-            checked={defaultType === "company"}
+            checked={type === "company"}
+            onSelect={setType}
           />
         </fieldset>
       )}
@@ -99,7 +104,75 @@ export function AuthForm({
         />
       </div>
 
-      {mode === "signup" && (
+      {isSignup && type === "athlete" && (
+        <fieldset className="border-border flex flex-col gap-3 rounded-lg border p-3">
+          <legend className="px-1 text-sm font-semibold">
+            Dados pessoais do piloto
+          </legend>
+          <p className="text-muted-foreground -mt-1 text-xs">
+            Ficam privados — visíveis só pra você e a Sponsas. Usados para
+            contratos e repasses.
+          </p>
+          <Field id="full_name" label="Nome completo (como no documento)">
+            <Input id="full_name" name="full_name" autoComplete="name" required />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field id="cpf" label="CPF">
+              <Input id="cpf" name="cpf" inputMode="numeric" placeholder="000.000.000-00" required />
+            </Field>
+            <Field id="rg" label="RG">
+              <Input id="rg" name="rg" required />
+            </Field>
+          </div>
+          <Field id="birth_date" label="Data de nascimento">
+            <Input id="birth_date" name="birth_date" type="date" required className="max-w-48" />
+          </Field>
+          <div className="grid grid-cols-[1fr_120px] gap-3">
+            <Field id="street" label="Rua / logradouro">
+              <Input id="street" name="street" autoComplete="address-line1" required />
+            </Field>
+            <Field id="number" label="Número">
+              <Input id="number" name="number" required />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field id="complement" label="Complemento (opcional)">
+              <Input id="complement" name="complement" />
+            </Field>
+            <Field id="district" label="Bairro">
+              <Input id="district" name="district" required />
+            </Field>
+          </div>
+          <div className="grid grid-cols-[1fr_1fr_90px] gap-3">
+            <Field id="cep" label="CEP">
+              <Input id="cep" name="cep" inputMode="numeric" placeholder="00000-000" required />
+            </Field>
+            <Field id="city" label="Cidade">
+              <Input id="city" name="city" autoComplete="address-level2" required />
+            </Field>
+            <Field id="uf" label="UF">
+              <select
+                id="uf"
+                name="uf"
+                required
+                defaultValue=""
+                className="border-input bg-card h-9 w-full rounded-lg border px-2 text-sm"
+              >
+                <option value="" disabled>
+                  —
+                </option>
+                {BR_UF.map((uf) => (
+                  <option key={uf} value={uf}>
+                    {uf}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </fieldset>
+      )}
+
+      {isSignup && (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="coupon">Cupom (opcional)</Label>
           <Input
@@ -180,16 +253,37 @@ export function AuthForm({
   );
 }
 
+function Field({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id} className="text-xs">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
 function TypeCard({
   value,
   label,
   hint,
   checked,
+  onSelect,
 }: {
   value: "athlete" | "company";
   label: string;
   hint: string;
   checked: boolean;
+  onSelect: (v: "athlete" | "company") => void;
 }) {
   return (
     <label className="border-border has-[:checked]:border-primary has-[:checked]:bg-accent/40 flex cursor-pointer flex-col rounded-lg border p-3 transition-colors">
@@ -197,7 +291,8 @@ function TypeCard({
         type="radio"
         name="type"
         value={value}
-        defaultChecked={checked}
+        checked={checked}
+        onChange={() => onSelect(value)}
         className="sr-only"
       />
       <span className="text-sm font-semibold">{label}</span>
