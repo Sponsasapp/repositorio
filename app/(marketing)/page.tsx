@@ -7,6 +7,7 @@ import { formatCompact } from "@/lib/format";
 import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/marketing/eyebrow";
 import { cn } from "@/lib/utils";
 import type { RankTier } from "@/lib/types/database.types";
 
@@ -481,16 +482,6 @@ function RankPodiumCard({
         <ArrowRightIcon className="size-3.5" />
       </Link>
     </div>
-  );
-}
-
-/** Pill de eyebrow — ponto + texto tracked em caixa alta, inspirado no CineLook. */
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="border-primary/30 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-wide uppercase">
-      <span className="bg-primary size-1.5 rounded-full" />
-      {children}
-    </span>
   );
 }
 

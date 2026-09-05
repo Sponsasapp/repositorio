@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/marketing/eyebrow";
 
 const DESCRIPTION =
   "Do perfil comercial ao patrocínio fechado, com entregas acompanhadas.";
@@ -53,16 +54,21 @@ function Fluxo({ titulo, passos }: { titulo: string; passos: string[][] }) {
   return (
     <div>
       <h2 className="text-2xl">{titulo}</h2>
-      <ol className="mt-6 flex flex-col gap-6">
+      <ol className="mt-6 flex flex-col gap-5">
         {passos.map(([t, d], i) => (
-          <li key={t} className="border-foreground border-l-2 pl-5">
-            <span className="text-primary font-[family-name:var(--font-heading)] text-sm font-bold">
-              {String(i + 1).padStart(2, "0")}
+          <li
+            key={t}
+            className="border-border bg-card flex gap-4 rounded-xl border p-5"
+          >
+            <span className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full font-[family-name:var(--font-heading)] text-sm font-bold">
+              {i + 1}
             </span>
-            <p className="mt-1 font-semibold">{t}</p>
-            <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-              {d}
-            </p>
+            <div>
+              <p className="font-semibold">{t}</p>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                {d}
+              </p>
+            </div>
           </li>
         ))}
       </ol>
@@ -73,7 +79,8 @@ function Fluxo({ titulo, passos }: { titulo: string; passos: string[][] }) {
 export default function ComoFuncionaPage() {
   return (
     <main className="mx-auto max-w-[1120px] px-6 py-16">
-      <h1 className="max-w-2xl text-5xl">
+      <Eyebrow>Simples assim</Eyebrow>
+      <h1 className="mt-4 max-w-2xl text-5xl">
         Da conversa informal ao patrocínio acompanhado.
       </h1>
       <p className="text-muted-foreground mt-4 max-w-xl text-lg">
