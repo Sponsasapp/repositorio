@@ -129,7 +129,7 @@ export function SponseePublic({
               <p className="text-muted-foreground mt-2 text-sm">
                 {isOwner
                   ? "É assim que as marcas veem você. Mantenha os dados atualizados."
-                  : `Envie uma proposta direta pra este ${meta.label.toLowerCase()}.`}
+                  : "Envie uma proposta direta com valor, duração e entregas."}
               </p>
               <Button
                 asChild
