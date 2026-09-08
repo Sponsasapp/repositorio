@@ -215,6 +215,15 @@ export type MediaProfile = {
   updated_at: string;
 };
 
+/** Rank Sponsas de pista/evento/mídia — por perfil (ver migration 0031). */
+export type SponseeRank = {
+  profile_id: string;
+  score: number;
+  tier: RankTier;
+  factors: RankFactors | null;
+  updated_at: string;
+};
+
 export type SocialLink = {
   id: string;
   profile_id: string;
@@ -465,6 +474,10 @@ export type Database = {
         MediaProfile,
         Exclude<keyof MediaProfile, "profile_id">
       >;
+      sponsee_rank: TableDef<
+        SponseeRank,
+        "score" | "tier" | "factors" | "updated_at"
+      >;
       social_links: TableDef<
         SocialLink,
         | "id"
@@ -601,6 +614,10 @@ export type Database = {
       capture_rank_snapshots: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      recompute_sponsee_rank: {
+        Args: { p_id: string };
+        Returns: undefined;
       };
       notify_expiring_plans: {
         Args: Record<string, never>;

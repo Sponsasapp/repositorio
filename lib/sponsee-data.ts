@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, ProfileType, SocialLink } from "@/lib/types/database.types";
+import type {
+  Profile,
+  ProfileType,
+  RankConfig,
+  SocialLink,
+  SponseeRank,
+} from "@/lib/types/database.types";
 
 type Table = "track_profiles" | "event_profiles" | "media_profiles";
 
@@ -17,16 +23,23 @@ export async function getSponsee(id: string, type: ProfileType, table: Table) {
     .maybeSingle();
   if (!profile || profile.type !== type) return null;
 
-  const [{ data: detail }, { data: socials }, { data: auth }] =
-    await Promise.all([
-      supabase.from(table).select("*").eq("profile_id", id).maybeSingle(),
-      supabase
-        .from("social_links")
-        .select("*")
-        .eq("profile_id", id)
-        .order("followers", { ascending: false, nullsFirst: false }),
-      supabase.auth.getUser(),
-    ]);
+  const [
+    { data: detail },
+    { data: socials },
+    { data: auth },
+    { data: rank },
+    { data: rankCfg },
+  ] = await Promise.all([
+    supabase.from(table).select("*").eq("profile_id", id).maybeSingle(),
+    supabase
+      .from("social_links")
+      .select("*")
+      .eq("profile_id", id)
+      .order("followers", { ascending: false, nullsFirst: false }),
+    supabase.auth.getUser(),
+    supabase.from("sponsee_rank").select("*").eq("profile_id", id).maybeSingle(),
+    supabase.from("rank_config").select("*").maybeSingle(),
+  ]);
 
   const viewerId = auth.user?.id ?? null;
   let viewerType: ProfileType | null = null;
@@ -61,6 +74,8 @@ export async function getSponsee(id: string, type: ProfileType, table: Table) {
     profile: profile as Profile,
     detail,
     socials: (socials ?? []) as SocialLink[],
+    rank: (rank as SponseeRank | null) ?? null,
+    rankCfg: (rankCfg as RankConfig | null) ?? null,
     viewerId,
     viewerType,
     canMessage,

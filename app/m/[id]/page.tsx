@@ -45,6 +45,8 @@ export default async function MidiaPublicaPage({
       type="media"
       subtitle={subtitle}
       socials={data.socials}
+      rank={data.rank}
+      rankCfg={data.rankCfg}
       viewerId={data.viewerId}
       viewerType={data.viewerType}
       canMessage={data.canMessage}

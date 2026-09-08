@@ -85,23 +85,38 @@ async function PainelSponsee({
   type: string;
 }) {
   const supabase = await createClient();
-  const [{ data: spRaw }, { data: profRow }] = await Promise.all([
-    supabase
-      .from("sponsorships")
-      .select("id, value, status, athlete_accepted_at, company_accepted_at")
-      .eq("athlete_id", userId),
-    supabase
-      .from(
-        type === "track"
-          ? "track_profiles"
-          : type === "event"
-            ? "event_profiles"
-            : "media_profiles",
-      )
-      .select("profile_id")
-      .eq("profile_id", userId)
-      .maybeSingle(),
-  ]);
+  const [{ data: spRaw }, { data: profRow }, { data: rankRaw }, { data: cfgRaw }] =
+    await Promise.all([
+      supabase
+        .from("sponsorships")
+        .select("id, value, status, athlete_accepted_at, company_accepted_at")
+        .eq("athlete_id", userId),
+      supabase
+        .from(
+          type === "track"
+            ? "track_profiles"
+            : type === "event"
+              ? "event_profiles"
+              : "media_profiles",
+        )
+        .select("profile_id")
+        .eq("profile_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("sponsee_rank")
+        .select("score, tier, factors")
+        .eq("profile_id", userId)
+        .maybeSingle(),
+      supabase.from("rank_config").select("*").limit(1).maybeSingle(),
+    ]);
+  const rankCfg = (cfgRaw as RankConfig | null) ?? DEFAULT_RANK_CONFIG;
+  const rank = rankRaw as {
+    score: number;
+    tier: RankTier;
+    factors: RankFactors | null;
+  } | null;
+  const prog = rank ? tierProgress(rank.score, rankCfg) : null;
+  const rankMeta = rank ? tierInfo(rank.tier) : null;
   const sps = (spRaw ?? []) as {
     id: string;
     value: number | null;
@@ -132,6 +147,44 @@ async function PainelSponsee({
         <Kpi label="Patrocínios ativos" value={ativos.length} />
         <Kpi label="Entregas" value={0} href="/entregas" />
       </div>
+      {rank && rankMeta && prog && (
+        <Panel title="Rank Sponsas">
+          <div className="flex items-baseline justify-between">
+            <span className={`text-lg font-semibold ${rankMeta.cls}`}>
+              {rankMeta.label}
+            </span>
+            <span className="text-muted-foreground text-sm">
+              {rank.score} pts
+            </span>
+          </div>
+          <div className="bg-muted mt-3 h-2 overflow-hidden rounded-full">
+            <div
+              className="bg-primary h-full rounded-full"
+              style={{ width: `${prog.pct}%` }}
+            />
+          </div>
+          <p className="text-muted-foreground mt-2 text-xs">
+            {prog.nextTier
+              ? `Faltam ${prog.toNext} pts para ${tierInfo(prog.nextTier)?.label}.`
+              : "Rank máximo alcançado."}
+          </p>
+          {rank.factors && (
+            <ul className="mt-4 flex flex-col gap-1 text-sm">
+              {(Object.keys(POINT_LABELS) as (keyof RankFactors)[])
+                .map((k) => [POINT_LABELS[k]!, rank.factors![k] as number] as const)
+                .filter(([, v]) => v !== 0)
+                .map(([label, v]) => (
+                  <li key={label} className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className={v < 0 ? "text-primary" : ""}>
+                      {v > 0 ? `+${v}` : v}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </Panel>
+      )}
       <div className="flex flex-wrap gap-3">
         <Button asChild>
           <Link href="/empresas">Encontrar patrocinadores</Link>
@@ -576,9 +629,18 @@ async function PainelEmpresa({ userId }: { userId: string }) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button asChild size="sm">
           <Link href="/pilotos">Encontrar pilotos</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/pistas">Pistas</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/eventos">Eventos</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/midias">Mídias</Link>
         </Button>
       </div>
 

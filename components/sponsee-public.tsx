@@ -3,7 +3,15 @@ import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
 import { PARTICIPANT } from "@/lib/participant-types";
-import type { Profile, ProfileType, SocialLink } from "@/lib/types/database.types";
+import { DEFAULT_RANK_CONFIG, POINT_LABELS, RANK_TIERS, tierProgress } from "@/lib/rank";
+import type {
+  Profile,
+  ProfileType,
+  RankConfig,
+  RankFactors,
+  SocialLink,
+  SponseeRank,
+} from "@/lib/types/database.types";
 
 const PLATFORM_LABEL: Record<string, string> = {
   instagram: "Instagram",
@@ -28,6 +36,8 @@ export function SponseePublic({
   type,
   subtitle,
   socials,
+  rank,
+  rankCfg,
   viewerId,
   viewerType,
   canMessage,
@@ -38,6 +48,8 @@ export function SponseePublic({
   type: ProfileType;
   subtitle: string;
   socials: SocialLink[];
+  rank?: SponseeRank | null;
+  rankCfg?: RankConfig | null;
   viewerId: string | null;
   viewerType: ProfileType | null;
   canMessage: boolean;
@@ -47,6 +59,7 @@ export function SponseePublic({
   const isOwner = viewerId === profile.id;
   const isCompany = viewerType === "company";
   const meta = PARTICIPANT[type];
+  const tierMeta = rank ? RANK_TIERS[rank.tier] : null;
 
   return (
     <main className="flex-1">
@@ -69,6 +82,11 @@ export function SponseePublic({
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
                   {meta.label}
                 </span>
+                {tierMeta && rank && (
+                  <span className="rounded-full bg-primary/90 text-primary-foreground px-3 py-1 text-xs font-semibold">
+                    Rank {tierMeta.label} · {rank.score} pts
+                  </span>
+                )}
               </div>
               {subtitle && (
                 <p className="mt-1 text-sm text-white/70">{subtitle}</p>
@@ -82,6 +100,14 @@ export function SponseePublic({
         <div className="grid gap-6 md:grid-cols-[1fr_320px]">
           <div className="flex flex-col gap-6">
             {children}
+
+            {rank && (
+              <SponseeRankPanel
+                rank={rank}
+                cfg={rankCfg ?? DEFAULT_RANK_CONFIG}
+                showBreakdown={isOwner}
+              />
+            )}
 
             {profile.bio && (
               <Panel title="Sobre">
@@ -191,5 +217,58 @@ export function Panel({
       </h2>
       <div className="mt-3">{children}</div>
     </section>
+  );
+}
+
+function SponseeRankPanel({
+  rank,
+  cfg,
+  showBreakdown,
+}: {
+  rank: SponseeRank;
+  cfg: RankConfig;
+  showBreakdown: boolean;
+}) {
+  const prog = tierProgress(rank.score, cfg);
+  const tierMeta = RANK_TIERS[rank.tier];
+  const f = rank.factors;
+  const rows = f
+    ? (Object.keys(POINT_LABELS) as (keyof RankFactors)[])
+        .map((k) => [POINT_LABELS[k]!, f[k] as number] as const)
+        .filter(([, v]) => v !== 0)
+    : [];
+
+  return (
+    <Panel title="Rank Sponsas">
+      <div className="flex items-baseline justify-between">
+        <span className={`text-lg font-semibold ${tierMeta.cls}`}>
+          {tierMeta.label}
+        </span>
+        <span className="text-muted-foreground text-sm">{rank.score} pts</span>
+      </div>
+      <div className="bg-muted mt-3 h-2 overflow-hidden rounded-full">
+        <div
+          className="bg-primary h-full rounded-full"
+          style={{ width: `${prog.pct}%` }}
+        />
+      </div>
+      <p className="text-muted-foreground mt-2 text-xs">
+        {prog.nextTier
+          ? `Faltam ${prog.toNext} pts para ${RANK_TIERS[prog.nextTier].label}.`
+          : "Rank máximo alcançado."}
+      </p>
+      {showBreakdown && rows.length > 0 && (
+        <ul className="mt-4 flex flex-col gap-1 text-sm">
+          {rows.map(([label, v]) => (
+            <li key={label} className="flex justify-between gap-3">
+              <span className="text-muted-foreground">{label}</span>
+              <span className={v < 0 ? "text-primary" : ""}>
+                {v > 0 ? `+${v}` : v}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }

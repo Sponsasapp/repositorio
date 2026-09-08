@@ -43,6 +43,8 @@ export default async function PistaPublicaPage({
       type="track"
       subtitle={subtitle}
       socials={data.socials}
+      rank={data.rank}
+      rankCfg={data.rankCfg}
       viewerId={data.viewerId}
       viewerType={data.viewerType}
       canMessage={data.canMessage}
