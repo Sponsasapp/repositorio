@@ -12,7 +12,22 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { Avatar } from "@/components/avatar";
 import { cn } from "@/lib/utils";
-import type { RankTier, AthleteRankSnapshot } from "@/lib/types/database.types";
+import { PARTICIPANT, publicPath } from "@/lib/participant-types";
+import type {
+  RankTier,
+  AthleteRankSnapshot,
+  ProfileType,
+} from "@/lib/types/database.types";
+
+const MEDAL = ["🥇", "🥈", "🥉"];
+
+/** Categorias no topo do /rank. `null` = pilotos (a visão padrão). */
+const RANK_CATS: { key: string; type: ProfileType | null; label: string }[] = [
+  { key: "pilotos", type: null, label: "Pilotos" },
+  { key: "pistas", type: "track", label: "Pistas" },
+  { key: "eventos", type: "event", label: "Eventos" },
+  { key: "midias", type: "media", label: "Mídias" },
+];
 
 export const metadata: Metadata = {
   title: "Rank Sponsas — Sponsas",
@@ -43,12 +58,10 @@ function isoDaysAgo(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-const MEDAL = ["🥇", "🥈", "🥉"];
-
 export default async function RankPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; modalidade?: string }>;
+  searchParams: Promise<{ periodo?: string; modalidade?: string; cat?: string }>;
 }) {
   const sp = await searchParams;
   const periodo: Periodo =
@@ -57,8 +70,11 @@ export default async function RankPage({
     sp.modalidade && MODALITY_VALUES.includes(sp.modalidade)
       ? sp.modalidade
       : null;
+  const cat = RANK_CATS.find((c) => c.key === sp.cat) ?? RANK_CATS[0];
 
   const supabase = await createClient();
+
+  if (cat.type) return <SponseeRank type={cat.type} />;
 
   const [{ data: athletesData }, { data: snapsData }] = await Promise.all([
     supabase
@@ -158,6 +174,8 @@ export default async function RankPage({
           contrato e crescendo o engajamento. A cada faixa de pontos, sobe de
           tier — e cada tier custa mais que o anterior.
         </p>
+
+        <CatChips active="pilotos" />
 
         {/* Modalidade */}
         <div className="mt-5 flex flex-wrap gap-2">
@@ -289,6 +307,141 @@ export default async function RankPage({
                   className="border-border text-muted-foreground hover:text-foreground rounded-full border px-3 py-1 text-xs"
                 >
                   {a.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
+
+function CatChips({ active }: { active: string }) {
+  return (
+    <div className="mt-5 flex flex-wrap gap-2">
+      {RANK_CATS.map((c) => (
+        <Chip
+          key={c.key}
+          href={c.key === "pilotos" ? "/rank" : `/rank?cat=${c.key}`}
+          label={c.label}
+          active={c.key === active}
+        />
+      ))}
+    </div>
+  );
+}
+
+async function SponseeRank({ type }: { type: ProfileType }) {
+  const supabase = await createClient();
+  const meta = PARTICIPANT[type];
+  const [{ data: profsData }, { data: ranksData }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, name, photo_url, city, state, plan")
+      .eq("type", type),
+    supabase.from("sponsee_rank").select("profile_id, score, tier"),
+  ]);
+
+  type Prof = {
+    id: string;
+    name: string;
+    photo_url: string | null;
+    city: string | null;
+    state: string | null;
+    plan: "free" | "pro";
+  };
+  const profs = (profsData ?? []) as Prof[];
+  const rankById = new Map(
+    ((ranksData ?? []) as { profile_id: string; score: number; tier: RankTier }[]).map(
+      (r) => [r.profile_id, r],
+    ),
+  );
+
+  const ranked = profs
+    .map((p) => ({ p, r: rankById.get(p.id) }))
+    .filter((x): x is { p: Prof; r: { profile_id: string; score: number; tier: RankTier } } =>
+      x.r != null && x.r.score > 0,
+    )
+    .sort((a, b) => b.r.score - a.r.score);
+  const semRank = profs.filter((p) => (rankById.get(p.id)?.score ?? 0) === 0);
+
+  return (
+    <AppShell>
+      <div className="mx-auto max-w-3xl">
+        <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+          Automobilismo
+        </p>
+        <h1 className="text-4xl">Rank Sponsas · {meta.labelPlural}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          {meta.labelPlural} acumulam pontos fechando patrocínios com contrato,
+          entregando no prazo e crescendo o engajamento. A cada faixa de pontos,
+          sobe de tier.
+        </p>
+
+        <CatChips active={meta.urlList} />
+
+        <ol className="mt-6 flex flex-col divide-y">
+          {ranked.map(({ p, r }, i) => {
+            const tier = tierInfo(r.tier);
+            const local = [p.city, p.state].filter(Boolean).join(", ");
+            const href = publicPath(type, p.id);
+            return (
+              <li key={p.id} className="flex items-center gap-4 py-3 first:pt-0">
+                <span className="w-8 shrink-0 text-center text-lg font-[family-name:var(--font-heading)]">
+                  {MEDAL[i] ?? i + 1}
+                </span>
+                <Link href={href} className="shrink-0">
+                  <Avatar
+                    src={p.photo_url}
+                    name={p.name}
+                    className="size-10 text-sm"
+                  />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={href}
+                    className="truncate font-medium hover:underline"
+                  >
+                    {p.name}
+                  </Link>
+                  <p className="text-muted-foreground text-xs">{local || "—"}</p>
+                </div>
+                {tier && (
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                      tier.badgeCls,
+                    )}
+                  >
+                    {tier.label}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        {ranked.length === 0 && (
+          <p className="text-muted-foreground mt-8 text-sm">
+            Ainda não há {meta.labelPlural.toLowerCase()} no rank. A pontuação
+            entra conforme completam o perfil e fecham patrocínios.
+          </p>
+        )}
+
+        {semRank.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Ainda sem rank
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {semRank.map((p) => (
+                <Link
+                  key={p.id}
+                  href={publicPath(type, p.id)}
+                  className="border-border text-muted-foreground hover:text-foreground rounded-full border px-3 py-1 text-xs"
+                >
+                  {p.name}
                 </Link>
               ))}
             </div>
