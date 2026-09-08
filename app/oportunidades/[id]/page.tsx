@@ -15,7 +15,8 @@ import { ApplyForm } from "./apply-form";
 import { Button } from "@/components/ui/button";
 import { RegionFit } from "@/components/region-fit";
 import { AppShell } from "@/components/app-shell";
-import type { Opportunity } from "@/lib/types/database.types";
+import { publicPath } from "@/lib/participant-types";
+import type { Opportunity, ProfileType } from "@/lib/types/database.types";
 
 type OppWithCompany = Opportunity & {
   company: { name: string | null; city: string | null; state: string | null } | null;
@@ -28,6 +29,7 @@ type ApplicationRow = {
   athlete: {
     id: string;
     name: string;
+    type: ProfileType;
     city: string | null;
     state: string | null;
     photo_url: string | null;
@@ -89,8 +91,8 @@ export default async function OportunidadePage({
   }
 
   const isOwner = user?.id === opp.company_id;
-  const isAthlete = myType === "athlete";
-  const regionFit = isAthlete
+  const isSponsee = !!myType && myType !== "company";
+  const regionFit = isSponsee
     ? matchesCampaignRegion(myState, opp.region)
     : null;
 
@@ -99,16 +101,16 @@ export default async function OportunidadePage({
     ? await supabase
         .from("applications")
         .select(
-          "id, message, status, created_at, athlete:profiles(id, name, city, state, photo_url)",
+          "id, message, status, created_at, athlete:profiles(id, name, type, city, state, photo_url)",
         )
         .eq("opportunity_id", id)
         .order("created_at", { ascending: false })
     : { data: null };
   const applications = (applicationsData ?? null) as ApplicationRow[] | null;
 
-  // Candidatura do próprio piloto
+  // Candidatura do próprio patrocinado
   const { data: myApplication } =
-    isAthlete && user
+    isSponsee && user
       ? await supabase
           .from("applications")
           .select("status, message, created_at")
@@ -211,7 +213,7 @@ export default async function OportunidadePage({
           </div>
         )}
 
-        {isAthlete && opp.status === "open" && (
+        {isSponsee && opp.status === "open" && (
           <section className="mt-6">
             <h2 className="mb-3 text-xl">Sua candidatura</h2>
             {myApplication ? (
@@ -249,7 +251,7 @@ export default async function OportunidadePage({
           </section>
         )}
 
-        {isAthlete && opp.status === "closed" && !myApplication && (
+        {isSponsee && opp.status === "closed" && !myApplication && (
           <p className="text-muted-foreground mt-6 text-sm">
             Esta oportunidade está encerrada.
           </p>
@@ -296,7 +298,11 @@ export default async function OportunidadePage({
                       />
                       <div className="min-w-0 flex-1">
                         <Link
-                          href={`/p/${athlete?.id}`}
+                          href={
+                            athlete
+                              ? publicPath(athlete.type, athlete.id)
+                              : "#"
+                          }
                           className="font-medium hover:underline"
                         >
                           {athlete?.name}

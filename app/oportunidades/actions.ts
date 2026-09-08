@@ -90,8 +90,8 @@ export async function candidatarse(
     .select("type")
     .eq("id", user.id)
     .single();
-  if (profile?.type !== "athlete") {
-    return { error: "Só pilotos podem se candidatar." };
+  if (!profile?.type || profile.type === "company") {
+    return { error: "Só quem busca patrocínio pode se candidatar." };
   }
 
   const { error } = await supabase.from("applications").insert({
@@ -122,7 +122,7 @@ export async function candidatarse(
       notifyUser(opp.company_id, {
         type: "application_received",
         subject: "Nova candidatura na sua oportunidade",
-        title: `${me?.name ?? "Um piloto"} se candidatou`,
+        title: `${me?.name ?? "Alguém"} se candidatou`,
         body: `Você recebeu uma nova candidatura para "${opp.title}".`,
         cta: { label: "Ver candidatura", path: `/oportunidades/${opportunityId}` },
       }),
