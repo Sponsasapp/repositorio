@@ -299,7 +299,34 @@ export type Sponsorship = {
   trade_value: number | null;
   athlete_accepted_at: string | null;
   company_accepted_at: string | null;
+  stripe_subscription_id: string | null;
+  payment_status: SponsorshipPaymentStatus;
   created_at: string;
+};
+
+export type SponsorshipPaymentStatus =
+  | "none"
+  | "setup"
+  | "active"
+  | "past_due"
+  | "canceled";
+
+/** Estado do Stripe de um profile (ver migration 0033). Isolada, leitura só do dono. */
+export type StripeAccount = {
+  profile_id: string;
+  account_id: string | null;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  details_submitted: boolean;
+  customer_id: string | null;
+  default_payment_method: string | null;
+  updated_at: string;
+};
+
+export type StripeEvent = {
+  id: string;
+  type: string;
+  received_at: string;
 };
 
 export type Deliverable = {
@@ -411,6 +438,7 @@ export type CouponRedemption = {
 export type PlanConfig = {
   id: boolean;
   pro_monthly_price: number;
+  platform_fee_pct: number;
 };
 
 export type CouponCommission = {
@@ -571,6 +599,11 @@ export type Database = {
       >;
       messages: TableDef<Message, "id" | "created_at" | "read_at">;
       rank_config: TableDef<RankConfig, "id">;
+      stripe_accounts: TableDef<
+        StripeAccount,
+        Exclude<keyof StripeAccount, "profile_id">
+      >;
+      stripe_events: TableDef<StripeEvent, "received_at">;
       athlete_documents: TableDef<
         AthleteDocument,
         "address_complement" | "updated_at"
