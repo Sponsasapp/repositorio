@@ -5,6 +5,7 @@ import { PLAN_LIMITS, PLAN_LABEL, startOfMonthISO } from "@/lib/plan";
 import { formatBRL, formatDateBR } from "@/lib/format";
 import { alternarPlanoTeste } from "./actions";
 import { Button } from "@/components/ui/button";
+import { RecebimentosCard } from "@/components/payments/recebimentos-card";
 import type { CouponCommission } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Configurações — Sponsas" };
@@ -24,7 +25,16 @@ export default async function ConfiguracoesPage() {
 
   const isCompany = profile?.type === "company";
   const isAthlete = profile?.type === "athlete";
+  const isSponsee = !!profile?.type && profile.type !== "company";
   const isFree = profile?.plan !== "pro";
+
+  const { data: payAcct } = isSponsee
+    ? await supabase
+        .from("payment_accounts")
+        .select("onboarding_status, asaas_account_id")
+        .eq("profile_id", user.id)
+        .maybeSingle()
+    : { data: null };
   const isDev = process.env.NODE_ENV !== "production";
 
   // Uso atual
@@ -132,6 +142,13 @@ export default async function ConfiguracoesPage() {
           </div>
         )}
       </section>
+
+      {isSponsee && (
+        <RecebimentosCard
+          status={payAcct?.onboarding_status ?? "none"}
+          hasAccount={!!payAcct?.asaas_account_id}
+        />
+      )}
 
       {isFree && (
         <section className="mt-6">
