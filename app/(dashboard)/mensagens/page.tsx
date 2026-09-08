@@ -66,13 +66,13 @@ export default async function MensagensPage() {
     <div className="mx-auto max-w-2xl">
       <h1 className="text-4xl">Mensagens</h1>
       <p className="text-muted-foreground mt-1 text-sm">
-        Converse direto com pilotos e empresas.
+        Converse direto com marcas e patrocinados.
       </p>
 
       {rows.length === 0 ? (
         <p className="text-muted-foreground mt-12 text-sm">
-          Nenhuma conversa ainda. Abra o perfil de um piloto ou empresa e
-          clique em &ldquo;Mandar mensagem&rdquo;.
+          Nenhuma conversa ainda. Abra um perfil e clique em &ldquo;Mandar
+          mensagem&rdquo;.
         </p>
       ) : (
         <ul className="border-border mt-8 flex flex-col divide-y rounded-xl border">

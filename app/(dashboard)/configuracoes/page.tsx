@@ -23,6 +23,7 @@ export default async function ConfiguracoesPage() {
     .single();
 
   const isCompany = profile?.type === "company";
+  const isAthlete = profile?.type === "athlete";
   const isFree = profile?.plan !== "pro";
   const isDev = process.env.NODE_ENV !== "production";
 
@@ -40,7 +41,7 @@ export default async function ConfiguracoesPage() {
       .select("id", { count: "exact", head: true })
       .eq("from_profile_id", user.id)
       .gte("created_at", startOfMonthISO()),
-    !isCompany
+    isAthlete
       ? supabase
           .from("athlete_packages")
           .select("modality")
@@ -82,7 +83,7 @@ export default async function ConfiguracoesPage() {
       atual: props ?? 0,
       limite: PLAN_LIMITS.proposalsPerMonth,
     },
-    ...(!isCompany
+    ...(isAthlete
       ? [
           {
             label: "Itens na tabela de preços (por modalidade)",
