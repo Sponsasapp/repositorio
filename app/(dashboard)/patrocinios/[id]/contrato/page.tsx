@@ -7,12 +7,17 @@ import { deliverableLabel } from "@/lib/deliverables";
 import { formatBRL, formatDateBR } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { aceitarContrato } from "../../actions";
-import type { Sponsorship, Proposal } from "@/lib/types/database.types";
+import { PARTICIPANT, publicPath } from "@/lib/participant-types";
+import type {
+  Sponsorship,
+  Proposal,
+  ProfileType,
+} from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Contrato — Sponsas" };
 
 type Row = Sponsorship & {
-  athlete: { id: string; name: string | null } | null;
+  athlete: { id: string; name: string | null; type: ProfileType } | null;
   company: { id: string; name: string | null } | null;
   proposal: Pick<Proposal, "deliverables" | "message"> | null;
 };
@@ -41,7 +46,7 @@ export default async function ContratoPage({
   const { data } = await supabase
     .from("sponsorships")
     .select(
-      "*, athlete:profiles!sponsorships_athlete_id_fkey(id, name), company:profiles!sponsorships_company_id_fkey(id, name), proposal:proposals(deliverables, message)",
+      "*, athlete:profiles!sponsorships_athlete_id_fkey(id, name, type), company:profiles!sponsorships_company_id_fkey(id, name), proposal:proposals(deliverables, message)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -49,6 +54,8 @@ export default async function ContratoPage({
   const s = data as unknown as Row;
   if (s.athlete_id !== user.id && s.company_id !== user.id) notFound();
 
+  const sponseeType = s.athlete?.type ?? "athlete";
+  const sponseeLabel = PARTICIPANT[sponseeType].label;
   const iAmAthlete = s.athlete_id === user.id;
   const myAcceptedAt = iAmAthlete ? s.athlete_accepted_at : s.company_accepted_at;
   const otherAcceptedAt = iAmAthlete
@@ -87,8 +94,11 @@ export default async function ContratoPage({
               {s.company?.name ?? "—"}
             </Link>
           </Row2>
-          <Row2 k="Piloto">
-            <Link href={`/p/${s.athlete?.id}`} className="underline">
+          <Row2 k={sponseeLabel}>
+            <Link
+              href={publicPath(sponseeType, s.athlete?.id ?? "")}
+              className="underline"
+            >
               {s.athlete?.name ?? "—"}
             </Link>
           </Row2>
@@ -144,7 +154,7 @@ export default async function ContratoPage({
               acceptedAt={s.company_accepted_at}
             />
             <AcceptRow
-              nome={s.athlete?.name ?? "Piloto"}
+              nome={s.athlete?.name ?? sponseeLabel}
               acceptedAt={s.athlete_accepted_at}
             />
           </div>

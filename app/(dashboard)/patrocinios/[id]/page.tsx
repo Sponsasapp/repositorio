@@ -169,7 +169,7 @@ export default async function PatrocinioPage({
           <p className="text-muted-foreground mt-1 text-sm">
             {iAmAthlete
               ? "Anexe o link da comprovação de cada entrega. A empresa aprova."
-              : "Acompanhe as entregas do piloto e aprove as comprovações."}
+              : "Acompanhe as entregas do patrocinado e aprove as comprovações."}
           </p>
 
           <div className="mt-4 flex flex-col gap-3">
