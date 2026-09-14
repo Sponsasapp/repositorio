@@ -192,6 +192,9 @@ async function PainelSponsee({
         <Button asChild variant="outline">
           <Link href="/perfil">Editar perfil</Link>
         </Button>
+        <Button asChild variant="outline">
+          <Link href="/calendario">Calendário</Link>
+        </Button>
       </div>
     </div>
   );
@@ -481,9 +484,14 @@ async function PainelPiloto({ userId }: { userId: string }) {
         <Panel
           title="Próximas entregas"
           action={
-            <Link href="/entregas" className="text-muted-foreground text-xs">
-              ver todas
-            </Link>
+            <span className="flex gap-3">
+              <Link href="/entregas" className="text-muted-foreground text-xs">
+                lista
+              </Link>
+              <Link href="/calendario" className="text-muted-foreground text-xs">
+                calendário
+              </Link>
+            </span>
           }
         >
           {(deliverables ?? []).length === 0 ? (
@@ -641,6 +649,9 @@ async function PainelEmpresa({ userId }: { userId: string }) {
         </Button>
         <Button asChild size="sm" variant="outline">
           <Link href="/midias">Mídias</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/calendario">Calendário</Link>
         </Button>
       </div>
 

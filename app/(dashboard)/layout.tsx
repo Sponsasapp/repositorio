@@ -9,6 +9,7 @@ import { MobileNav } from "./_components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { MessageIcon } from "@/components/message-icon";
+import { CalendarIcon } from "@/components/calendar-icon";
 import { Avatar } from "@/components/avatar";
 
 export default async function DashboardLayout({
@@ -46,6 +47,7 @@ export default async function DashboardLayout({
             >
               <HomeIcon className="size-5" />
             </Link>
+            <CalendarIcon userId={user.id} />
             <MessageIcon userId={user.id} />
             <NotificationBell userId={user.id} />
           </div>

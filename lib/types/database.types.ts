@@ -371,7 +371,8 @@ export type NotificationType =
   | "plan_expiring"
   | "message_received"
   | "contract_accepted"
-  | "contract_active";
+  | "contract_active"
+  | "deliverables_due";
 
 export type Notification = {
   id: string;
@@ -649,6 +650,10 @@ export type Database = {
         Returns: string | null;
       };
       capture_rank_snapshots: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      notify_deliverables_due_today: {
         Args: Record<string, never>;
         Returns: number;
       };
