@@ -149,3 +149,74 @@
     color: var(--foreground);
   }
 }
+
+/* ============================================================
+   Movimento — só na entrada da página (staggered reveal), CSS
+   puro. Respeita prefers-reduced-motion: sem a media query, os
+   elementos ficam visíveis normalmente (a keyframe só existe
+   dentro dela, então não há opacity:0 travado pra quem desliga
+   animação).
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .reveal {
+    animation: reveal-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .reveal-1 {
+    animation-delay: 0.05s;
+  }
+  .reveal-2 {
+    animation-delay: 0.16s;
+  }
+  .reveal-3 {
+    animation-delay: 0.27s;
+  }
+  .reveal-4 {
+    animation-delay: 0.38s;
+  }
+  .reveal-5 {
+    animation-delay: 0.49s;
+  }
+}
+
+/* Fundo com profundidade pro hero — glow em camadas + grade de pontos
+   sutil, em vez de azul-marinho chapado. */
+.hero-atmosphere {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(680px circle at 88% -12%, rgba(255, 90, 31, 0.18), transparent 60%),
+    radial-gradient(520px circle at -8% 70%, rgba(52, 211, 153, 0.09), transparent 55%);
+}
+.hero-atmosphere::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(244, 243, 239, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, black, transparent 75%);
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 75%);
+}
+
+/* Mesma ideia pro bloco de CTA final (hoje laranja chapado). */
+.cta-atmosphere {
+  position: relative;
+  isolation: isolate;
+}
+.cta-atmosphere::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(620px circle at 92% 5%, rgba(255, 255, 255, 0.16), transparent 60%);
+}

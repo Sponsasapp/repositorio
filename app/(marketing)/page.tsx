@@ -123,26 +123,28 @@ export default async function HomePage() {
   return (
     <main>
       {/* Hero */}
-      <section className="mx-auto max-w-[1120px] px-6 pt-16 pb-20">
+      <section className="hero-atmosphere mx-auto max-w-[1120px] px-6 pt-16 pb-20">
         <div className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <Eyebrow>
-              {athletes.length > 0
-                ? `${athletes.length} pilotos com perfil ativo`
-                : "Sponsorship made simple"}
-            </Eyebrow>
-            <h1 className="mt-4 text-5xl md:text-6xl">
+            <div className="reveal reveal-1">
+              <Eyebrow>
+                {athletes.length > 0
+                  ? `${athletes.length} pilotos com perfil ativo`
+                  : "Sponsorship made simple"}
+              </Eyebrow>
+            </div>
+            <h1 className="reveal reveal-2 mt-4 text-5xl font-extrabold md:text-6xl">
               Patrocínio sem
               <br />
               mensagem no escuro.
             </h1>
-            <p className="text-muted-foreground mt-6 max-w-md text-lg leading-relaxed">
+            <p className="reveal reveal-3 text-muted-foreground mt-6 max-w-md text-lg leading-relaxed">
               Pilotos organizam seu perfil comercial e suas entregas. Marcas
               encontram quem combina com elas e acompanham cada patrocínio num
               só lugar.
             </p>
 
-            <ul className="mt-7 flex flex-col gap-3">
+            <ul className="reveal reveal-4 mt-7 flex flex-col gap-3">
               {[
                 [
                   "Perfil comercial de verdade",
@@ -169,13 +171,13 @@ export default async function HomePage() {
               ))}
             </ul>
 
-            <div className="border-primary/25 bg-primary/5 mt-7 max-w-md rounded-lg border px-4 py-3">
+            <div className="reveal reveal-5 border-primary/25 bg-primary/5 mt-7 max-w-md rounded-lg border px-4 py-3">
               <p className="text-foreground text-xs font-semibold tracking-wide uppercase">
                 Monte o perfil e já apareça pras empresas certas
               </p>
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="reveal reveal-5 mt-7 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/cadastro?tipo=piloto">Criar perfil de piloto</Link>
               </Button>
@@ -185,11 +187,13 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {top3.length > 0 ? (
-            <RankPodiumCard top3={top3} mes={MES} />
-          ) : (
-            <ExemploPatrocinio />
-          )}
+          <div className="reveal reveal-5">
+            {top3.length > 0 ? (
+              <RankPodiumCard top3={top3} mes={MES} />
+            ) : (
+              <ExemploPatrocinio />
+            )}
+          </div>
         </div>
       </section>
 
@@ -288,7 +292,7 @@ export default async function HomePage() {
             ].map(([n, t, d]) => (
               <div
                 key={n}
-                className="border-border bg-card rounded-xl border p-6"
+                className="border-border bg-card hover:border-primary/40 rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1"
               >
                 <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-full font-[family-name:var(--font-heading)] text-base font-bold">
                   {n}
@@ -339,7 +343,7 @@ export default async function HomePage() {
       )}
 
       {/* CTA final */}
-      <section className="bg-primary text-primary-foreground">
+      <section className="cta-atmosphere bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-[1120px] flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-3xl">Comece com o plano gratuito</h2>
