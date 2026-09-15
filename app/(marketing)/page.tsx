@@ -199,10 +199,10 @@ export default async function HomePage() {
 
       {/* Exemplo de patrocínio ativo (quando o Top 3 já ocupa o hero) */}
       {top3.length > 0 && (
-        <section className="border-border border-t">
+        <section className="section-teal border-border border-t">
           <div className="mx-auto max-w-[1120px] px-6 py-14">
             <div className="grid items-center gap-10 md:grid-cols-[1fr_0.9fr]">
-              <div>
+              <div className="reveal reveal-1">
                 <Eyebrow>Como um acordo fica na Sponsas</Eyebrow>
                 <h2 className="mt-2 text-3xl">Do print de DM a um contrato</h2>
                 <p className="text-muted-foreground mt-3 max-w-md">
@@ -210,7 +210,9 @@ export default async function HomePage() {
                   acompanhado num só lugar.
                 </p>
               </div>
-              <ExemploPatrocinio />
+              <div className="reveal reveal-2">
+                <ExemploPatrocinio />
+              </div>
             </div>
           </div>
         </section>
@@ -218,7 +220,7 @@ export default async function HomePage() {
 
       {/* Post do mês */}
       {postDoMes && postDoMes.athlete && (
-        <section className="border-border border-t">
+        <section className="section-amber border-border border-t">
           <div className="mx-auto max-w-[1120px] px-6 py-14">
             <Eyebrow>Post do mês</Eyebrow>
             <h2 className="mt-2 text-3xl">O conteúdo mais curtido</h2>
@@ -264,7 +266,7 @@ export default async function HomePage() {
       )}
 
       {/* Como funciona */}
-      <section className="border-border border-t">
+      <section className="section-bege border-border border-t">
         <div className="mx-auto max-w-[1120px] px-6 py-20">
           <Eyebrow>Simples assim</Eyebrow>
           <h2 className="mt-3 max-w-xl text-4xl">Como funciona</h2>
@@ -317,7 +319,7 @@ export default async function HomePage() {
 
       {/* Pilotos em destaque */}
       {destaques.length > 0 && (
-        <section className="border-border border-t">
+        <section className="section-primary border-border border-t">
           <div className="mx-auto max-w-[1120px] px-6 py-20">
             <div className="flex items-end justify-between gap-4">
               <div>

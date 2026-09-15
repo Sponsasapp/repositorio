@@ -50,9 +50,19 @@ const PASSOS_EMPRESA = [
   ],
 ];
 
-function Fluxo({ titulo, passos }: { titulo: string; passos: string[][] }) {
+function Fluxo({
+  titulo,
+  passos,
+  tint,
+}: {
+  titulo: string;
+  passos: string[][];
+  tint: "teal" | "primary";
+}) {
   return (
-    <div>
+    <div
+      className={`rounded-2xl border p-6 ${tint === "teal" ? "panel-teal" : "panel-primary"}`}
+    >
       <h2 className="text-2xl">{titulo}</h2>
       <ol className="mt-6 flex flex-col gap-5">
         {passos.map(([t, d], i) => (
@@ -79,21 +89,27 @@ function Fluxo({ titulo, passos }: { titulo: string; passos: string[][] }) {
 export default function ComoFuncionaPage() {
   return (
     <main className="mx-auto max-w-[1120px] px-6 py-16">
-      <Eyebrow>Simples assim</Eyebrow>
-      <h1 className="mt-4 max-w-2xl text-5xl">
-        Da conversa informal ao patrocínio acompanhado.
-      </h1>
-      <p className="text-muted-foreground mt-4 max-w-xl text-lg">
-        A Sponsas organiza os dois lados: o piloto monta um perfil comercial de
-        verdade, a marca encontra quem combina e acompanha cada entrega.
-      </p>
-
-      <div className="mt-14 grid gap-12 md:grid-cols-2">
-        <Fluxo titulo="Para pilotos" passos={PASSOS_PILOTO} />
-        <Fluxo titulo="Para empresas" passos={PASSOS_EMPRESA} />
+      <div className="reveal reveal-1">
+        <Eyebrow>Simples assim</Eyebrow>
+        <h1 className="mt-4 max-w-2xl text-5xl">
+          Da conversa informal ao patrocínio acompanhado.
+        </h1>
+        <p className="text-muted-foreground mt-4 max-w-xl text-lg">
+          A Sponsas organiza os dois lados: o piloto monta um perfil comercial
+          de verdade, a marca encontra quem combina e acompanha cada entrega.
+        </p>
       </div>
 
-      <div className="mt-16 flex flex-wrap gap-3">
+      <div className="mt-14 grid gap-8 md:grid-cols-2">
+        <div className="reveal reveal-2">
+          <Fluxo titulo="Para pilotos" passos={PASSOS_PILOTO} tint="teal" />
+        </div>
+        <div className="reveal reveal-3">
+          <Fluxo titulo="Para empresas" passos={PASSOS_EMPRESA} tint="primary" />
+        </div>
+      </div>
+
+      <div className="reveal reveal-4 mt-16 flex flex-wrap gap-3">
         <Button asChild size="lg">
           <Link href="/cadastro">Criar conta</Link>
         </Button>

@@ -47,14 +47,16 @@ function Cell({ value }: { value: string }) {
 
 export default function PlanosPage() {
   return (
-    <main className="mx-auto max-w-[900px] px-6 py-16">
-      <Eyebrow>Planos</Eyebrow>
-      <h1 className="mt-4 text-5xl">Planos</h1>
-      <p className="text-muted-foreground mt-4 max-w-xl text-lg">
-        Comece de graça. Suba para o PRO quando o volume pedir.
-      </p>
+    <main className="section-amber mx-auto max-w-[900px] px-6 py-16">
+      <div className="reveal reveal-1">
+        <Eyebrow>Planos</Eyebrow>
+        <h1 className="mt-4 text-5xl">Planos</h1>
+        <p className="text-muted-foreground mt-4 max-w-xl text-lg">
+          Comece de graça. Suba para o PRO quando o volume pedir.
+        </p>
+      </div>
 
-      <div className="mt-12 grid gap-6 sm:grid-cols-2">
+      <div className="reveal reveal-2 mt-12 grid gap-6 sm:grid-cols-2">
         <div className="border-border rounded-xl border p-6">
           <p className="font-[family-name:var(--font-heading)] text-2xl">Free</p>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -81,7 +83,7 @@ export default function PlanosPage() {
         </div>
       </div>
 
-      <div className="mt-12 overflow-x-auto">
+      <div className="reveal reveal-3 mt-12 overflow-x-auto">
         <table className="w-full min-w-[520px] text-sm">
           <thead>
             <tr className="border-border text-muted-foreground border-b text-left">

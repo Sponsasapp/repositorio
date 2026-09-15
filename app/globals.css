@@ -220,3 +220,38 @@
   z-index: -1;
   background: radial-gradient(620px circle at 92% 5%, rgba(255, 255, 255, 0.16), transparent 60%);
 }
+
+/* ============================================================
+   Seções do scroll — cada uma com uma leve variação de cor, pra
+   marcar visualmente que é um assunto diferente. Base continua
+   sempre o navy (--background), só muda o verniz por cima — não
+   é uma paleta nova, é a mesma família de cores do tema (sucesso,
+   destaque, bege, laranja) usada como acento em vez de status.
+   ============================================================ */
+.section-teal {
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.07), transparent 45%);
+}
+.section-amber {
+  background: linear-gradient(180deg, rgba(255, 176, 140, 0.07), transparent 45%);
+}
+.section-bege {
+  background: linear-gradient(180deg, rgba(244, 243, 239, 0.05), transparent 50%);
+}
+.section-primary {
+  background: linear-gradient(180deg, rgba(255, 90, 31, 0.07), transparent 45%);
+}
+
+/* Painéis lado a lado (ex.: "para pilotos" x "para empresas") — mesma
+   ideia, mas como bloco fechado em vez de faixa de seção. */
+.panel-teal {
+  background: rgba(52, 211, 153, 0.06);
+  border-color: rgba(52, 211, 153, 0.22);
+}
+.panel-primary {
+  background: rgba(255, 90, 31, 0.06);
+  border-color: rgba(255, 90, 31, 0.22);
+}
+.panel-amber {
+  background: rgba(255, 176, 140, 0.07);
+  border-color: rgba(255, 176, 140, 0.25);
+}
