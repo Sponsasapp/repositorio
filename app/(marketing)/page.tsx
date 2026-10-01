@@ -197,6 +197,36 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Faixa em loop */}
+      <div className="bg-primary overflow-hidden py-3" aria-hidden="true">
+        <div className="marquee">
+          <div className="marquee-track">
+            {[0, 1].map((rep) => (
+              <div key={rep} className="flex shrink-0 items-center gap-12 pr-12">
+                {[
+                  "Arrancada",
+                  "Kart",
+                  "Circuito",
+                  "Drift",
+                  "Dinheiro",
+                  "Permuta",
+                  "Rank Sponsas",
+                  "Entregas acompanhadas",
+                ].map((t) => (
+                  <span
+                    key={t}
+                    className="text-primary-foreground font-[family-name:var(--font-heading)] flex items-center gap-3 text-xl font-bold tracking-wide uppercase"
+                  >
+                    {t}
+                    <span className="bg-primary-foreground inline-block size-2.5 shrink-0 -skew-x-12" />
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Exemplo de patrocínio ativo (quando o Top 3 já ocupa o hero) */}
       {top3.length > 0 && (
         <section className="section-teal border-border border-t">
@@ -423,8 +453,11 @@ function RankPodiumCard({
 
   return (
     <div className="bg-navy text-navy-foreground relative overflow-hidden rounded-2xl p-7 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
-      <div className="bg-primary/25 pointer-events-none absolute -top-20 -right-14 size-52 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-amber-300/10 blur-3xl" />
+      <div className="bg-primary/25 float-soft pointer-events-none absolute -top-20 -right-14 size-52 rounded-full blur-3xl" />
+      <div
+        className="float-soft pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-amber-300/10 blur-3xl"
+        style={{ animationDelay: "-3.5s" }}
+      />
 
       <div className="relative flex items-center justify-between">
         <span className="bg-primary/15 text-primary inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold">

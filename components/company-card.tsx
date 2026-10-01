@@ -19,7 +19,7 @@ export function CompanyCard({ company }: { company: CompanyCardData }) {
   return (
     <Link
       href={`/e/${company.id}`}
-      className="border-border border-l-primary bg-card hover:border-l-primary/60 flex flex-col rounded-lg border border-l-3 p-5 transition-colors"
+      className="border-border border-l-primary bg-card hover:border-l-primary/60 flex flex-col rounded-lg border border-l-3 p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
       <Avatar
         src={company.logo_url}

@@ -17,7 +17,7 @@ export function SponseeCard({
   return (
     <Link
       href={`/${urlPrefix}/${id}`}
-      className="border-border border-l-primary bg-card hover:border-l-primary/60 flex items-center gap-3 rounded-lg border border-l-3 p-4 transition-colors"
+      className="border-border border-l-primary bg-card hover:border-l-primary/60 flex items-center gap-3 rounded-lg border border-l-3 p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
       <Avatar src={photo_url} name={name} className="size-11 shrink-0 text-sm" />
       <div className="min-w-0">
