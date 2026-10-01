@@ -319,27 +319,37 @@ export default async function HomePage() {
                 icon: UserRoundPlusIcon,
                 t: "Monte seu perfil",
                 d: "Resultados, categoria, redes sociais e o tipo de entrega que você oferece a um patrocinador.",
+                badge: "bg-primary/15 text-primary",
+                border: "hover:border-primary/40",
               },
               {
                 icon: SearchIcon,
                 t: "Encontre ou seja encontrado",
                 d: "Candidate-se a oportunidades de marcas ou receba propostas diretas — em dinheiro, permuta ou os dois.",
+                badge: "bg-success-soft text-success",
+                border: "hover:border-success/40",
               },
               {
                 icon: PackageCheckIcon,
                 t: "Acompanhe as entregas",
                 d: "Cada patrocínio fechado vira uma lista de entregas, com comprovação e aprovação num só lugar.",
+                badge: "bg-amber-500/15 text-amber-500",
+                border: "hover:border-amber-500/40",
               },
-            ].map(({ icon: Icon, t, d }, i) => (
+            ].map(({ icon: Icon, t, d, badge, border }, i) => (
               <div key={t} className={`reveal reveal-${i + 1} relative`}>
                 {i < 2 && (
                   <ArrowRightIcon
-                    className="text-primary/30 absolute top-9 -right-10 z-10 hidden size-6 md:block"
+                    className="text-muted-foreground/40 absolute top-9 -right-10 z-10 hidden size-6 md:block"
                     aria-hidden="true"
                   />
                 )}
-                <div className="border-border bg-card hover:border-primary/40 flex h-full flex-col rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1">
-                  <div className="bg-primary/15 text-primary flex size-14 items-center justify-center rounded-full">
+                <div
+                  className={`border-border bg-card flex h-full flex-col rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1 ${border}`}
+                >
+                  <div
+                    className={`flex size-14 items-center justify-center rounded-full ${badge}`}
+                  >
                     <Icon className="size-7" strokeWidth={1.75} />
                   </div>
                   <span className="text-muted-foreground mt-5 block text-xs font-semibold tracking-wide uppercase">

@@ -38,7 +38,7 @@ export default function ParaPilotosPage() {
       <section>
         <div className="mx-auto max-w-[1120px] px-6 py-16">
           <div className="reveal reveal-1">
-            <Eyebrow>Para pilotos</Eyebrow>
+            <Eyebrow tone="teal">Para pilotos</Eyebrow>
             <h1 className="mt-4 max-w-2xl text-5xl">
               Pare de pedir{" "}
               <span className="text-gradient">patrocínio por DM.</span>

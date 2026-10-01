@@ -118,7 +118,9 @@ function Fluxo({
             className="border-border bg-card flex gap-4 rounded-xl border p-5"
           >
             <div className="flex shrink-0 flex-col items-center gap-1.5">
-              <span className="bg-primary/15 text-primary flex size-10 items-center justify-center rounded-full">
+              <span
+                className={`flex size-10 items-center justify-center rounded-full ${tint === "teal" ? "bg-success-soft text-success" : "bg-primary/15 text-primary"}`}
+              >
                 <Icon className="size-5" strokeWidth={1.75} />
               </span>
               <span className="text-muted-foreground text-[11px] font-semibold">

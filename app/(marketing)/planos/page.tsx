@@ -50,7 +50,7 @@ export default function PlanosPage() {
     <main>
       <div className="mx-auto max-w-[900px] px-6 py-16">
         <div className="reveal reveal-1">
-          <Eyebrow>Planos</Eyebrow>
+          <Eyebrow tone="amber">Planos</Eyebrow>
           <h1 className="mt-4 text-5xl">Planos</h1>
           <p className="text-muted-foreground mt-4 max-w-xl text-lg">
             Comece de graça. Suba para o PRO quando o volume pedir.
