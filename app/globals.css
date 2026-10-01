@@ -208,6 +208,26 @@
   }
 }
 
+/* Setinha "empurrando" na direção do próximo passo — pros conectores
+   entre cards de um fluxo (ex.: "Como funciona"). Cascata via
+   animation-delay em cada instância. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes nudge-right {
+    0%,
+    100% {
+      transform: translateX(0);
+      opacity: 0.45;
+    }
+    50% {
+      transform: translateX(7px);
+      opacity: 1;
+    }
+  }
+  .animate-nudge {
+    animation: nudge-right 1.4s ease-in-out infinite;
+  }
+}
+
 /* Faixa de texto em loop (marquee) — mesma ideia de "sempre em
    movimento" pra reforçar um assunto sem pedir atenção demais. */
 .marquee {

@@ -340,7 +340,8 @@ export default async function HomePage() {
               <div key={t} className={`reveal reveal-${i + 1} relative`}>
                 {i < 2 && (
                   <ArrowRightIcon
-                    className="text-muted-foreground/40 absolute top-9 -right-10 z-10 hidden size-6 md:block"
+                    className="text-primary animate-nudge absolute top-9 -right-10 z-10 hidden size-6 md:block"
+                    style={{ animationDelay: `${i * 0.35}s` }}
                     aria-hidden="true"
                   />
                 )}
