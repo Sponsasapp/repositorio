@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  UserRoundPlusIcon,
+  SearchIcon,
+  MessageSquareIcon,
+  PackageCheckIcon,
+  MegaphoneIcon,
+  HandshakeIcon,
+  ClipboardCheckIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/marketing/eyebrow";
 
@@ -12,23 +22,29 @@ export const metadata: Metadata = {
   openGraph: { title: "Como funciona — Sponsas", description: DESCRIPTION },
 };
 
-const PASSOS_PILOTO = [
-  [
-    "Monte seu perfil comercial",
-    "Categoria, equipe, resultados e redes sociais (com seguidores, alcance e interações). Monte uma tabela de preços com o que uma marca pode contratar — de adesivo no carro a pacote de stories + reels.",
-  ],
-  [
-    "Apareça para as marcas",
-    "Seu perfil é público e aparece na busca com filtros de modalidade, categoria, estado, orçamento e Rank Sponsas. Você também se candidata a oportunidades abertas por empresas.",
-  ],
-  [
-    "Receba e responda propostas",
-    "Propostas chegam com valor, duração, entregas e observações. Podem ser em dinheiro, permuta (produto/serviço com valor estimado) ou os dois. Você aceita ou recusa.",
-  ],
-  [
-    "Cumpra as entregas",
-    "Ao aceitar, nasce o patrocínio com uma lista de entregas. Você anexa o link da comprovação (post, story, vídeo) e a marca aprova. Entregar no prazo sobe seu Rank Sponsas.",
-  ],
+type Passo = { icon: LucideIcon; t: string; d: string };
+
+const PASSOS_PILOTO: Passo[] = [
+  {
+    icon: UserRoundPlusIcon,
+    t: "Monte seu perfil comercial",
+    d: "Categoria, equipe, resultados e redes sociais (com seguidores, alcance e interações). Monte uma tabela de preços com o que uma marca pode contratar — de adesivo no carro a pacote de stories + reels.",
+  },
+  {
+    icon: SearchIcon,
+    t: "Apareça para as marcas",
+    d: "Seu perfil é público e aparece na busca com filtros de modalidade, categoria, estado, orçamento e Rank Sponsas. Você também se candidata a oportunidades abertas por empresas.",
+  },
+  {
+    icon: MessageSquareIcon,
+    t: "Receba e responda propostas",
+    d: "Propostas chegam com valor, duração, entregas e observações. Podem ser em dinheiro, permuta (produto/serviço com valor estimado) ou os dois. Você aceita ou recusa.",
+  },
+  {
+    icon: PackageCheckIcon,
+    t: "Cumpra as entregas",
+    d: "Ao aceitar, nasce o patrocínio com uma lista de entregas. Você anexa o link da comprovação (post, story, vídeo) e a marca aprova. Entregar no prazo sobe seu Rank Sponsas.",
+  },
 ];
 
 const FAQ: [string, string][] = [
@@ -58,23 +74,27 @@ const FAQ: [string, string][] = [
   ],
 ];
 
-const PASSOS_EMPRESA = [
-  [
-    "Encontre pilotos",
-    "Busque por modalidade, região, faixa de valor, engajamento e Rank Sponsas. O rank é um termômetro de quem cumpre o combinado.",
-  ],
-  [
-    "Abra uma oportunidade ou proponha direto",
-    "Publique uma vaga de patrocínio e receba candidaturas, ou envie uma proposta direta para um piloto específico.",
-  ],
-  [
-    "Feche o acordo",
-    "Defina valor, permuta, duração e entregas esperadas. Quando o piloto aceita, o patrocínio é criado automaticamente com esses termos.",
-  ],
-  [
-    "Acompanhe e aprove",
-    "Cada entrega chega com a comprovação anexada. Você aprova ou pede ajuste. Tudo fica registrado.",
-  ],
+const PASSOS_EMPRESA: Passo[] = [
+  {
+    icon: SearchIcon,
+    t: "Encontre pilotos",
+    d: "Busque por modalidade, região, faixa de valor, engajamento e Rank Sponsas. O rank é um termômetro de quem cumpre o combinado.",
+  },
+  {
+    icon: MegaphoneIcon,
+    t: "Abra uma oportunidade ou proponha direto",
+    d: "Publique uma vaga de patrocínio e receba candidaturas, ou envie uma proposta direta para um piloto específico.",
+  },
+  {
+    icon: HandshakeIcon,
+    t: "Feche o acordo",
+    d: "Defina valor, permuta, duração e entregas esperadas. Quando o piloto aceita, o patrocínio é criado automaticamente com esses termos.",
+  },
+  {
+    icon: ClipboardCheckIcon,
+    t: "Acompanhe e aprove",
+    d: "Cada entrega chega com a comprovação anexada. Você aprova ou pede ajuste. Tudo fica registrado.",
+  },
 ];
 
 function Fluxo({
@@ -83,7 +103,7 @@ function Fluxo({
   tint,
 }: {
   titulo: string;
-  passos: string[][];
+  passos: Passo[];
   tint: "teal" | "primary";
 }) {
   return (
@@ -92,14 +112,19 @@ function Fluxo({
     >
       <h2 className="text-2xl">{titulo}</h2>
       <ol className="mt-6 flex flex-col gap-5">
-        {passos.map(([t, d], i) => (
+        {passos.map(({ icon: Icon, t, d }, i) => (
           <li
             key={t}
             className="border-border bg-card flex gap-4 rounded-xl border p-5"
           >
-            <span className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full font-[family-name:var(--font-heading)] text-sm font-bold">
-              {i + 1}
-            </span>
+            <div className="flex shrink-0 flex-col items-center gap-1.5">
+              <span className="bg-primary/15 text-primary flex size-10 items-center justify-center rounded-full">
+                <Icon className="size-5" strokeWidth={1.75} />
+              </span>
+              <span className="text-muted-foreground text-[11px] font-semibold">
+                {i + 1}
+              </span>
+            </div>
             <div>
               <p className="font-semibold">{t}</p>
               <p className="text-muted-foreground mt-1 text-sm leading-relaxed">

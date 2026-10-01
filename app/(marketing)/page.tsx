@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { TrophyIcon, ArrowRightIcon, CheckIcon } from "lucide-react";
+import {
+  TrophyIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  UserRoundPlusIcon,
+  SearchIcon,
+  PackageCheckIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { pickPrimaryModality, modalityLabel } from "@/lib/sports";
 import { tierInfo } from "@/lib/rank";
@@ -308,33 +315,41 @@ export default async function HomePage() {
           </p>
           <div className="mt-12 grid gap-7 md:grid-cols-3">
             {[
-              [
-                "1",
-                "Monte seu perfil",
-                "Resultados, categoria, redes sociais e o tipo de entrega que você oferece a um patrocinador.",
-              ],
-              [
-                "2",
-                "Encontre ou seja encontrado",
-                "Candidate-se a oportunidades de marcas ou receba propostas diretas — em dinheiro, permuta ou os dois.",
-              ],
-              [
-                "3",
-                "Acompanhe as entregas",
-                "Cada patrocínio fechado vira uma lista de entregas, com comprovação e aprovação num só lugar.",
-              ],
-            ].map(([n, t, d], i) => (
-              <div
-                key={n}
-                className={`reveal reveal-${i + 1} border-border bg-card hover:border-primary/40 rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1`}
-              >
-                <span className="font-[family-name:var(--font-heading)] text-primary block text-5xl leading-none font-black">
-                  0{n}
-                </span>
-                <h3 className="mt-5 text-xl font-semibold">{t}</h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {d}
-                </p>
+              {
+                icon: UserRoundPlusIcon,
+                t: "Monte seu perfil",
+                d: "Resultados, categoria, redes sociais e o tipo de entrega que você oferece a um patrocinador.",
+              },
+              {
+                icon: SearchIcon,
+                t: "Encontre ou seja encontrado",
+                d: "Candidate-se a oportunidades de marcas ou receba propostas diretas — em dinheiro, permuta ou os dois.",
+              },
+              {
+                icon: PackageCheckIcon,
+                t: "Acompanhe as entregas",
+                d: "Cada patrocínio fechado vira uma lista de entregas, com comprovação e aprovação num só lugar.",
+              },
+            ].map(({ icon: Icon, t, d }, i) => (
+              <div key={t} className={`reveal reveal-${i + 1} relative`}>
+                {i < 2 && (
+                  <ArrowRightIcon
+                    className="text-primary/30 absolute top-9 -right-10 z-10 hidden size-6 md:block"
+                    aria-hidden="true"
+                  />
+                )}
+                <div className="border-border bg-card hover:border-primary/40 flex h-full flex-col rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1">
+                  <div className="bg-primary/15 text-primary flex size-14 items-center justify-center rounded-full">
+                    <Icon className="size-7" strokeWidth={1.75} />
+                  </div>
+                  <span className="text-muted-foreground mt-5 block text-xs font-semibold tracking-wide uppercase">
+                    Passo {i + 1}
+                  </span>
+                  <h3 className="mt-1 text-xl font-semibold">{t}</h3>
+                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                    {d}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
