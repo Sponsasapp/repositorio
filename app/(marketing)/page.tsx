@@ -123,7 +123,7 @@ export default async function HomePage() {
   return (
     <main>
       {/* Hero */}
-      <section className="hero-atmosphere">
+      <section>
         <div className="mx-auto max-w-[1120px] px-6 pt-16 pb-20">
           <div className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <div>
