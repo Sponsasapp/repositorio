@@ -8,7 +8,6 @@ import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/marketing/eyebrow";
-import { CursorSpotlight } from "@/components/marketing/cursor-spotlight";
 import { cn } from "@/lib/utils";
 import type { RankTier } from "@/lib/types/database.types";
 
@@ -125,7 +124,6 @@ export default async function HomePage() {
     <main>
       {/* Hero */}
       <section className="hero-atmosphere mx-auto max-w-[1120px] px-6 pt-16 pb-20">
-        <CursorSpotlight />
         <div className="relative grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="reveal reveal-1">
@@ -328,10 +326,7 @@ export default async function HomePage() {
                 key={n}
                 className={`reveal reveal-${i + 1} border-border bg-card hover:border-primary/40 rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1`}
               >
-                <span
-                  className="font-[family-name:var(--font-heading)] block text-5xl leading-none font-black text-transparent"
-                  style={{ WebkitTextStroke: "1.5px var(--primary)" }}
-                >
+                <span className="font-[family-name:var(--font-heading)] text-primary block text-5xl leading-none font-black">
                   0{n}
                 </span>
                 <h3 className="mt-5 text-xl font-semibold">{t}</h3>

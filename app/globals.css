@@ -279,32 +279,6 @@
   }
 }
 
-/* Spotlight que segue o cursor — components/marketing/cursor-spotlight.tsx
-   seta --mx/--my em %. Só ativa em dispositivos com hover de verdade. */
-.spotlight {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .hero-atmosphere:hover .spotlight {
-    opacity: 1;
-  }
-}
-.spotlight::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    420px circle at var(--mx, 50%) var(--my, 30%),
-    rgba(255, 90, 31, 0.14),
-    transparent 70%
-  );
-}
-
 /* Texto com gradiente — reservar pra 1 destaque por página, não virar
    padrão de todo título (perderia o efeito). */
 .text-gradient {
