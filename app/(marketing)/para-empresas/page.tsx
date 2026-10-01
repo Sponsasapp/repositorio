@@ -35,7 +35,7 @@ const BENEFICIOS = [
 export default function ParaEmpresasPage() {
   return (
     <main>
-      <section className="section-primary">
+      <section>
         <div className="mx-auto max-w-[1120px] px-6 py-16">
           <div className="reveal reveal-1">
             <Eyebrow>Para empresas</Eyebrow>

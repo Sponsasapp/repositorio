@@ -47,7 +47,7 @@ function Cell({ value }: { value: string }) {
 
 export default function PlanosPage() {
   return (
-    <main className="section-amber">
+    <main>
       <div className="mx-auto max-w-[900px] px-6 py-16">
         <div className="reveal reveal-1">
           <Eyebrow>Planos</Eyebrow>
