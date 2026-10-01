@@ -123,8 +123,9 @@ export default async function HomePage() {
   return (
     <main>
       {/* Hero */}
-      <section className="hero-atmosphere mx-auto max-w-[1120px] px-6 pt-16 pb-20">
-        <div className="relative grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
+      <section className="hero-atmosphere">
+        <div className="mx-auto max-w-[1120px] px-6 pt-16 pb-20">
+          <div className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="reveal reveal-1">
               <Eyebrow>
@@ -193,6 +194,7 @@ export default async function HomePage() {
             ) : (
               <ExemploPatrocinio />
             )}
+          </div>
           </div>
         </div>
       </section>
