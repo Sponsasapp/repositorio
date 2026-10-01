@@ -39,7 +39,7 @@ export default function ParaPilotosPage() {
         <div className="reveal reveal-1">
           <Eyebrow>Para pilotos</Eyebrow>
           <h1 className="mt-4 max-w-2xl text-5xl">
-            Pare de pedir patrocínio por DM.
+            Pare de pedir <span className="text-gradient">patrocínio por DM.</span>
           </h1>
           <p className="text-muted-foreground mt-4 max-w-xl text-lg">
             Monte seu perfil comercial uma vez. As marcas te encontram, mandam

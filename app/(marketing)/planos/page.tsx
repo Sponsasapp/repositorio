@@ -66,7 +66,7 @@ export default function PlanosPage() {
             <Link href="/cadastro">Criar conta</Link>
           </Button>
         </div>
-        <div className="bg-navy text-navy-foreground relative overflow-hidden rounded-xl p-6">
+        <div className="gradient-border bg-navy text-navy-foreground relative overflow-hidden rounded-xl p-6">
           <div className="bg-primary/25 pointer-events-none absolute -top-16 -right-10 size-40 rounded-full blur-3xl" />
           <span className="bg-primary/15 text-primary relative inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
             Mais escolhido

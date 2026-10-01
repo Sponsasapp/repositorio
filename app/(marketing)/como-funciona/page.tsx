@@ -88,7 +88,7 @@ function Fluxo({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-6 ${tint === "teal" ? "panel-teal" : "panel-primary"}`}
+      className={`gradient-border relative rounded-2xl border p-6 ${tint === "teal" ? "panel-teal" : "panel-primary"}`}
     >
       <h2 className="text-2xl">{titulo}</h2>
       <ol className="mt-6 flex flex-col gap-5">
@@ -119,7 +119,8 @@ export default function ComoFuncionaPage() {
       <div className="reveal reveal-1">
         <Eyebrow>Simples assim</Eyebrow>
         <h1 className="mt-4 max-w-2xl text-5xl">
-          Da conversa informal ao patrocínio acompanhado.
+          Da conversa informal ao{" "}
+          <span className="text-gradient">patrocínio acompanhado.</span>
         </h1>
         <p className="text-muted-foreground mt-4 max-w-xl text-lg">
           A Sponsas organiza os dois lados: o piloto monta um perfil comercial

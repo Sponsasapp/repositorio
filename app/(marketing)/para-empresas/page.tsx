@@ -39,7 +39,8 @@ export default function ParaEmpresasPage() {
         <div className="reveal reveal-1">
           <Eyebrow>Para empresas</Eyebrow>
           <h1 className="mt-4 max-w-2xl text-5xl">
-            Patrocine quem entrega — e prove que entregou.
+            Patrocine quem entrega — e{" "}
+            <span className="text-gradient">prove que entregou.</span>
           </h1>
           <p className="text-muted-foreground mt-4 max-w-xl text-lg">
             A Sponsas te dá o perfil comercial completo do piloto, um rank de
