@@ -31,6 +31,33 @@ const PASSOS_PILOTO = [
   ],
 ];
 
+const FAQ: [string, string][] = [
+  [
+    "Quanto custa usar a Sponsas?",
+    "O plano Free é grátis pra sempre: perfil público, candidaturas e propostas. O PRO (R$ 39,90/mês) libera sem limites e dá destaque no topo da busca.",
+  ],
+  [
+    "Como funciona o pagamento do patrocínio?",
+    "Valor, permuta e duração são combinados direto entre a marca e o patrocinado dentro da proposta. A Sponsas organiza o acordo e as entregas — o pagamento em si hoje é combinado fora da plataforma.",
+  ],
+  [
+    "Preciso ter muitos seguidores pra participar?",
+    "Não. O Rank Sponsas considera entregar no prazo e cumprir o combinado, não só alcance. Perfis pequenos com boa entrega sobem de rank normalmente.",
+  ],
+  [
+    "Meus dados pessoais (CPF, endereço) ficam seguros?",
+    "Sim. Dados como CPF, RG e endereço ficam numa tabela isolada, visível só pra você — nunca aparecem no perfil público nem pra outros usuários.",
+  ],
+  [
+    "Empresas só podem patrocinar pilotos?",
+    "Não. Além de pilotos, dá pra patrocinar pistas, eventos e perfis de mídia (fotógrafos, filmmakers, influenciadores do esporte).",
+  ],
+  [
+    "Posso cancelar quando quiser?",
+    "Sim, sem fidelidade. O plano PRO pode ser cancelado a qualquer momento e seu perfil continua ativo no Free.",
+  ],
+];
+
 const PASSOS_EMPRESA = [
   [
     "Encontre pilotos",
@@ -117,6 +144,25 @@ export default function ComoFuncionaPage() {
           <Link href="/pilotos">Ver pilotos</Link>
         </Button>
       </div>
+
+      <section className="reveal mt-20 max-w-2xl">
+        <h2 className="text-2xl">Perguntas frequentes</h2>
+        <div className="border-border mt-6 divide-y rounded-xl border">
+          {FAQ.map(([q, a]) => (
+            <details key={q} className="group px-5 py-4">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
+                {q}
+                <span className="text-primary shrink-0 text-xl leading-none transition-transform duration-200 group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+                {a}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

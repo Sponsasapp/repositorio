@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MenuIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/como-funciona", label: "Como funciona" },
@@ -23,7 +24,15 @@ const NAV = [
 export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const close = () => setOpen(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    addEventListener("scroll", onScroll, { passive: true });
+    return () => removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -39,7 +48,14 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   }, [open]);
 
   return (
-    <header className="border-border relative border-b">
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b transition-all duration-300",
+        scrolled
+          ? "border-border bg-background/85 shadow-black/20 shadow-lg backdrop-blur-md"
+          : "border-transparent bg-transparent",
+      )}
+    >
       <div className="mx-auto flex max-w-[1120px] items-center justify-between px-6 py-5">
         <LogoLink className="text-xl" />
 

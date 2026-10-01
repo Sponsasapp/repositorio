@@ -8,6 +8,7 @@ import { PilotCard, type PilotCardData } from "@/components/pilot-card";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/marketing/eyebrow";
+import { CursorSpotlight } from "@/components/marketing/cursor-spotlight";
 import { cn } from "@/lib/utils";
 import type { RankTier } from "@/lib/types/database.types";
 
@@ -124,7 +125,8 @@ export default async function HomePage() {
     <main>
       {/* Hero */}
       <section className="hero-atmosphere mx-auto max-w-[1120px] px-6 pt-16 pb-20">
-        <div className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
+        <CursorSpotlight />
+        <div className="relative grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="reveal reveal-1">
               <Eyebrow>
@@ -136,7 +138,7 @@ export default async function HomePage() {
             <h1 className="reveal reveal-2 mt-4 text-5xl font-extrabold md:text-6xl">
               Patrocínio sem
               <br />
-              mensagem no escuro.
+              <span className="text-gradient">mensagem no escuro.</span>
             </h1>
             <p className="reveal reveal-3 text-muted-foreground mt-6 max-w-md text-lg leading-relaxed">
               Pilotos organizam seu perfil comercial e suas entregas. Marcas
@@ -321,15 +323,18 @@ export default async function HomePage() {
                 "Acompanhe as entregas",
                 "Cada patrocínio fechado vira uma lista de entregas, com comprovação e aprovação num só lugar.",
               ],
-            ].map(([n, t, d]) => (
+            ].map(([n, t, d], i) => (
               <div
                 key={n}
-                className="border-border bg-card hover:border-primary/40 rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1"
+                className={`reveal reveal-${i + 1} border-border bg-card hover:border-primary/40 rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1`}
               >
-                <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-full font-[family-name:var(--font-heading)] text-base font-bold">
-                  {n}
+                <span
+                  className="font-[family-name:var(--font-heading)] block text-5xl leading-none font-black text-transparent"
+                  style={{ WebkitTextStroke: "1.5px var(--primary)" }}
+                >
+                  0{n}
                 </span>
-                <h3 className="mt-4 text-xl font-semibold">{t}</h3>
+                <h3 className="mt-5 text-xl font-semibold">{t}</h3>
                 <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
                   {d}
                 </p>
@@ -452,7 +457,7 @@ function RankPodiumCard({
     .filter((r): r is (typeof ranked)[number] => Boolean(r));
 
   return (
-    <div className="bg-navy text-navy-foreground relative overflow-hidden rounded-2xl p-7 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
+    <div className="gradient-border bg-navy text-navy-foreground relative overflow-hidden rounded-2xl p-7">
       <div className="bg-primary/25 float-soft pointer-events-none absolute -top-20 -right-14 size-52 rounded-full blur-3xl" />
       <div
         className="float-soft pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-amber-300/10 blur-3xl"
@@ -526,7 +531,7 @@ function RankPodiumCard({
 
 function ExemploPatrocinio() {
   return (
-    <div className="bg-navy text-navy-foreground rounded-xl p-7">
+    <div className="gradient-border bg-navy text-navy-foreground relative rounded-xl p-7">
       <span className="bg-primary/15 text-primary inline-block rounded-md px-2.5 py-1 text-xs font-semibold">
         Exemplo de patrocínio ativo
       </span>
