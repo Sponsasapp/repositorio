@@ -35,25 +35,28 @@ const BENEFICIOS = [
 export default function ParaEmpresasPage() {
   return (
     <main>
-      <section className="section-primary mx-auto max-w-[1120px] px-6 py-16">
-        <div className="reveal reveal-1">
-          <Eyebrow>Para empresas</Eyebrow>
-          <h1 className="mt-4 max-w-2xl text-5xl">
-            Patrocine quem entrega — e{" "}
-            <span className="text-gradient">prove que entregou.</span>
-          </h1>
-          <p className="text-muted-foreground mt-4 max-w-xl text-lg">
-            A Sponsas te dá o perfil comercial completo do piloto, um rank de
-            confiabilidade e o acompanhamento das entregas do começo ao fim.
-          </p>
-        </div>
-        <div className="reveal reveal-2 mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link href="/cadastro?tipo=empresa">Criar conta de empresa</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/pilotos">Explorar pilotos</Link>
-          </Button>
+      <section className="section-primary">
+        <div className="mx-auto max-w-[1120px] px-6 py-16">
+          <div className="reveal reveal-1">
+            <Eyebrow>Para empresas</Eyebrow>
+            <h1 className="mt-4 max-w-2xl text-5xl">
+              Patrocine quem entrega — e{" "}
+              <span className="text-gradient">prove que entregou.</span>
+            </h1>
+            <p className="text-muted-foreground mt-4 max-w-xl text-lg">
+              A Sponsas te dá o perfil comercial completo do piloto, um rank
+              de confiabilidade e o acompanhamento das entregas do começo ao
+              fim.
+            </p>
+          </div>
+          <div className="reveal reveal-2 mt-8 flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href="/cadastro?tipo=empresa">Criar conta de empresa</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/pilotos">Explorar pilotos</Link>
+            </Button>
+          </div>
         </div>
       </section>
 

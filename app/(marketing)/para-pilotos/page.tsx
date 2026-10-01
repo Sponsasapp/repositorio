@@ -35,25 +35,28 @@ const BENEFICIOS = [
 export default function ParaPilotosPage() {
   return (
     <main>
-      <section className="section-teal mx-auto max-w-[1120px] px-6 py-16">
-        <div className="reveal reveal-1">
-          <Eyebrow>Para pilotos</Eyebrow>
-          <h1 className="mt-4 max-w-2xl text-5xl">
-            Pare de pedir <span className="text-gradient">patrocínio por DM.</span>
-          </h1>
-          <p className="text-muted-foreground mt-4 max-w-xl text-lg">
-            Monte seu perfil comercial uma vez. As marcas te encontram, mandam
-            proposta e você fecha com entregas combinadas — não no boca a
-            boca.
-          </p>
-        </div>
-        <div className="reveal reveal-2 mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link href="/cadastro?tipo=piloto">Criar perfil de piloto</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/como-funciona">Como funciona</Link>
-          </Button>
+      <section className="section-teal">
+        <div className="mx-auto max-w-[1120px] px-6 py-16">
+          <div className="reveal reveal-1">
+            <Eyebrow>Para pilotos</Eyebrow>
+            <h1 className="mt-4 max-w-2xl text-5xl">
+              Pare de pedir{" "}
+              <span className="text-gradient">patrocínio por DM.</span>
+            </h1>
+            <p className="text-muted-foreground mt-4 max-w-xl text-lg">
+              Monte seu perfil comercial uma vez. As marcas te encontram,
+              mandam proposta e você fecha com entregas combinadas — não no
+              boca a boca.
+            </p>
+          </div>
+          <div className="reveal reveal-2 mt-8 flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href="/cadastro?tipo=piloto">Criar perfil de piloto</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/como-funciona">Como funciona</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
