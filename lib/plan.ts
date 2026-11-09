@@ -25,6 +25,18 @@ export function limitMessage(kind: keyof typeof PLAN_LIMITS): string {
   }
 }
 
+/**
+ * O banco também barra os limites (migration 0035, erro `plan_limit:<kind>`).
+ * Converte esse erro na mensagem amigável; `null` se não for erro de limite.
+ */
+export function planLimitError(
+  error: { message?: string } | null | undefined,
+): string | null {
+  const m = error?.message?.match(/plan_limit:(\w+)/);
+  if (!m || !(m[1] in PLAN_LIMITS)) return null;
+  return limitMessage(m[1] as keyof typeof PLAN_LIMITS);
+}
+
 /** Primeiro dia do mês corrente em ISO (para contar propostas do mês). */
 export function startOfMonthISO(): string {
   const d = new Date();

@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * Apenas em desenvolvimento: alterna o plano da própria conta para
  * testar os limites. Em produção o upgrade é manual (sem gateway no MVP).
+ * Desde a migration 0035 o usuário não grava mais em `subscriptions` — este
+ * toggle vira no-op; pra testar PRO, mude o plano no editor do Supabase.
  */
 export async function alternarPlanoTeste(): Promise<void> {
   if (process.env.NODE_ENV === "production") return;

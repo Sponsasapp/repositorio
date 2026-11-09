@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
-import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
+import { PLAN_LIMITS, limitMessage, planLimitError } from "@/lib/plan";
 import { BR_UF } from "@/lib/br";
 import { MODALITY_VALUES } from "@/lib/sports";
 import { fetchYouTubeStats } from "@/lib/youtube";
@@ -245,7 +245,12 @@ export async function salvarPerfilPiloto(
     const { error: e4 } = await supabase
       .from("athlete_packages")
       .insert(pkgRows);
-    if (e4) return { error: "Não foi possível salvar a tabela de preços." };
+    if (e4) {
+      return {
+        error:
+          planLimitError(e4) ?? "Não foi possível salvar a tabela de preços.",
+      };
+    }
   }
 
   // 5. athlete_posts — posts em destaque (compartilhado, substitui tudo)

@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
-import { PLAN_LIMITS, limitMessage, startOfMonthISO } from "@/lib/plan";
+import {
+  PLAN_LIMITS,
+  limitMessage,
+  planLimitError,
+  startOfMonthISO,
+} from "@/lib/plan";
 import { notifyUser } from "@/lib/email";
 import { canPropose } from "@/lib/participant-types";
 import type { ProposalPaymentType } from "@/lib/types/database.types";
@@ -100,7 +105,9 @@ export async function enviarProposta(
     .single();
 
   if (error || !data) {
-    return { error: "Não foi possível enviar a proposta." };
+    return {
+      error: planLimitError(error) ?? "Não foi possível enviar a proposta.",
+    };
   }
 
   const { data: sender } = await supabase

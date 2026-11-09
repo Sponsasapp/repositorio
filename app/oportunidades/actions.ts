@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
-import { PLAN_LIMITS, limitMessage } from "@/lib/plan";
+import { PLAN_LIMITS, limitMessage, planLimitError } from "@/lib/plan";
 import { notifyUser } from "@/lib/email";
 
 export type OppState = { ok?: true; error?: string } | undefined;
@@ -69,7 +69,11 @@ export async function criarOportunidade(
     .select("id")
     .single();
 
-  if (error || !data) return { error: "Não foi possível criar. Tente de novo." };
+  if (error || !data) {
+    return {
+      error: planLimitError(error) ?? "Não foi possível criar. Tente de novo.",
+    };
+  }
 
   revalidatePath("/oportunidades");
   redirect(`/oportunidades/${data.id}`);
