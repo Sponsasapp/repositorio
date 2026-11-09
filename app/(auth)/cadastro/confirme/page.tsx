@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ResendConfirmation } from "../../_components/resend-confirmation";
 
 export const metadata: Metadata = { title: "Confirme seu e-mail — Sponsas" };
 
@@ -30,13 +31,7 @@ export default async function ConfirmePage({
         Enviamos um link de confirmação para o seu e-mail. Clique nele para
         ativar sua conta e entrar.
       </p>
-      <p className="text-muted-foreground text-sm">
-        Não recebeu? Verifique o spam ou{" "}
-        <Link href="/cadastro" className="text-foreground underline">
-          tente de novo
-        </Link>
-        .
-      </p>
+      <ResendConfirmation />
       <Link href="/login" className="text-foreground mt-2 text-sm underline">
         Ir para o login
       </Link>

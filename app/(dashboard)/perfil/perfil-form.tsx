@@ -355,10 +355,12 @@ function SocialRow({
       <p className="text-sm font-semibold">{platform.label}</p>
       <Input
         name={`social_${platform.key}_url`}
-        type="url"
+        type="text"
+        inputMode="url"
+        autoCapitalize="none"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder={isYoutube ? "@canal ou URL do canal" : "URL do perfil"}
+        placeholder={isYoutube ? "@canal ou URL do canal" : "@perfil ou URL do perfil"}
       />
       {isYoutube && (
         <div className="flex flex-wrap items-center gap-2">

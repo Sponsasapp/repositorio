@@ -92,9 +92,13 @@ function Foot({
 function BaseFields({
   profile,
   nameLabel,
+  website,
+  instagram,
 }: {
   profile: Profile;
   nameLabel: string;
+  website?: string | null;
+  instagram?: string | null;
 }) {
   return (
     <>
@@ -111,10 +115,23 @@ function BaseFields({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Site" htmlFor="website">
-          <Input id="website" name="website" type="url" placeholder="https://..." />
+          <Input
+            id="website"
+            name="website"
+            inputMode="url"
+            autoCapitalize="none"
+            defaultValue={website ?? ""}
+            placeholder="seusite.com.br"
+          />
         </Field>
         <Field label="Instagram" htmlFor="instagram">
-          <Input id="instagram" name="instagram" placeholder="@perfil" />
+          <Input
+            id="instagram"
+            name="instagram"
+            autoCapitalize="none"
+            defaultValue={instagram ?? ""}
+            placeholder="@perfil"
+          />
         </Field>
       </div>
       <Field label="Foto / logo">
@@ -147,7 +164,12 @@ export function PerfilPistaForm({
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-6">
       <Section title="Dados da pista">
-        <BaseFields profile={profile} nameLabel="Nome da pista / autódromo" />
+        <BaseFields
+          profile={profile}
+          nameLabel="Nome da pista / autódromo"
+          website={track?.website}
+          instagram={track?.instagram}
+        />
         <Field label="Traçados disponíveis">
           <Chips
             name="layouts"
@@ -219,7 +241,12 @@ export function PerfilEventoForm({
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-6">
       <Section title="Dados do evento">
-        <BaseFields profile={profile} nameLabel="Nome do evento" />
+        <BaseFields
+          profile={profile}
+          nameLabel="Nome do evento"
+          website={event?.website}
+          instagram={event?.instagram}
+        />
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tipo de evento" htmlFor="event_kind">
             <Input
@@ -302,7 +329,12 @@ export function PerfilMidiaForm({
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-6">
       <Section title="Dados de mídia">
-        <BaseFields profile={profile} nameLabel="Nome / marca" />
+        <BaseFields
+          profile={profile}
+          nameLabel="Nome / marca"
+          website={media?.website}
+          instagram={media?.instagram}
+        />
         <Field label="O que você faz">
           <Chips
             name="roles"

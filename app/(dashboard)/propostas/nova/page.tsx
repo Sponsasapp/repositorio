@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PropostaForm } from "./proposta-form";
+import { canPropose, publicPath } from "@/lib/participant-types";
 
 export const metadata: Metadata = { title: "Nova proposta — Sponsas" };
 
@@ -36,15 +37,15 @@ export default async function NovaPropostaPage({
       ? "Perfil não encontrado."
       : para === user.id
         ? "Você não pode enviar uma proposta para si mesmo."
-        : mine?.type === dest.type
-          ? "Propostas são entre uma empresa e um piloto."
+        : !mine || !canPropose(mine.type, dest.type)
+          ? "Propostas são entre uma empresa e um patrocinado (piloto, pista, evento ou mídia)."
           : null;
 
   return (
     <div className="flex-1">
       <div className="mx-auto max-w-2xl">
         <Link
-          href={para ? `/p/${para}` : "/pilotos"}
+          href={dest ? publicPath(dest.type, para) : "/pilotos"}
           className="text-muted-foreground text-sm hover:text-foreground"
         >
           ← Voltar

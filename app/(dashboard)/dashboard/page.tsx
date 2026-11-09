@@ -143,7 +143,7 @@ async function PainelSponsee({
         </Link>
       )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <Kpi label="Receita mensal" value={formatBRL(receita)} />
+        <Kpi label="Valor contratado / mês" value={formatBRL(receita)} />
         <Kpi label="Patrocínios ativos" value={ativos.length} />
         <Kpi label="Entregas" value={0} href="/entregas" />
       </div>
@@ -466,7 +466,7 @@ async function PainelPiloto({ userId }: { userId: string }) {
       </section>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Receita mensal" value={formatBRL(receita)} />
+        <Kpi label="Valor contratado / mês" value={formatBRL(receita)} />
         <Kpi label="Patrocinadores ativos" value={ativos.length} />
         <Kpi
           label="Entregas em aberto"
@@ -656,7 +656,7 @@ async function PainelEmpresa({ userId }: { userId: string }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Investimento mensal" value={formatBRL(investimento)} />
+        <Kpi label="Valor contratado / mês" value={formatBRL(investimento)} />
         <Kpi label="Pilotos patrocinados" value={ativos.length} />
         <Kpi
           label="Oportunidades abertas"

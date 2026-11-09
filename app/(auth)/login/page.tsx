@@ -14,8 +14,15 @@ export default async function LoginPage({
     redefinida === "1"
       ? "Senha redefinida. Entre com a nova senha."
       : erro === "confirmacao"
-        ? "Não foi possível confirmar. O link pode ter expirado — tente entrar ou peça um novo."
+        ? "Não foi possível confirmar. O link pode ter expirado — tente entrar ou peça um novo em “Reenviar confirmação”."
         : undefined;
 
-  return <AuthForm mode="login" next={next} notice={notice} />;
+  return (
+    <AuthForm
+      mode="login"
+      next={next}
+      notice={notice}
+      noticeTone={erro === "confirmacao" ? "error" : "success"}
+    />
+  );
 }

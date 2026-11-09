@@ -14,6 +14,8 @@ import {
   type OpportunityCardData,
 } from "@/components/opportunity-card";
 import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
+import { PARTICIPANT } from "@/lib/participant-types";
+import type { ProfileType } from "@/lib/types/database.types";
 
 async function getEmpresa(id: string) {
   const supabase = await createClient();
@@ -55,10 +57,11 @@ async function getEmpresa(id: string) {
     viewerState = viewer?.state ?? null;
   }
 
-  // Chat piloto-empresa só se já existir proposta entre os dois (evita
+  // Chat patrocinado-empresa só se já existir proposta entre os dois (evita
   // combinar por fora da Sponsas). Empresa-empresa não tem caso de uso.
   let canMessage = false;
-  if (viewerId && viewerId !== id && viewerType === "athlete") {
+  const viewerIsSponsee = PARTICIPANT[viewerType as ProfileType]?.isSponsor === false;
+  if (viewerId && viewerId !== id && viewerIsSponsee) {
     const { count } = await supabase
       .from("proposals")
       .select("id", { count: "exact", head: true })
@@ -68,7 +71,7 @@ async function getEmpresa(id: string) {
     canMessage = (count ?? 0) > 0;
   }
   const messageHint =
-    !canMessage && viewerId && viewerId !== id && viewerType === "athlete"
+    !canMessage && viewerId && viewerId !== id && viewerIsSponsee
       ? "Envie uma proposta pra poder conversar."
       : null;
 
@@ -98,7 +101,7 @@ export async function generateMetadata({
   const url = `${SITE_URL}/e/${id}`;
   const description =
     data.company?.description ??
-    `${data.profile.name} na Sponsas — marca buscando pilotos para patrocinar.`;
+    `${data.profile.name} na Sponsas — marca buscando patrocinados na Sponsas.`;
   return {
     title: `${data.profile.name} — Sponsas`,
     description,
@@ -132,7 +135,7 @@ export default async function PerfilEmpresaPublicoPage({
     messageHint,
   } = data;
   const isOwner = viewerId === profile.id;
-  const isAthlete = viewerType === "athlete";
+  const isSponsee = PARTICIPANT[viewerType as ProfileType]?.isSponsor === false;
 
   const local = [profile.city, profile.state].filter(Boolean).join(", ");
   const linha = [company?.segment, local].filter(Boolean).join(" · ");
@@ -142,7 +145,7 @@ export default async function PerfilEmpresaPublicoPage({
     companyName: profile.name,
   }));
 
-  const regionFit = isAthlete
+  const regionFit = isSponsee
     ? matchesCampaignRegion(viewerState, company?.region_of_interest)
     : null;
 
@@ -260,7 +263,7 @@ export default async function PerfilEmpresaPublicoPage({
               </h3>
               <p className="text-muted-foreground mt-2 text-sm">
                 {isOwner
-                  ? "É assim que os pilotos veem sua marca. Mantenha os dados atualizados."
+                  ? "É assim que pilotos, pistas, eventos e mídias veem sua marca. Mantenha os dados atualizados."
                   : "Envie uma proposta com suas entregas, alcance e o valor que você busca."}
               </p>
               <Button
@@ -271,7 +274,7 @@ export default async function PerfilEmpresaPublicoPage({
               >
                 {isOwner ? (
                   <Link href="/perfil">Editar perfil</Link>
-                ) : isAthlete ? (
+                ) : isSponsee ? (
                   <Link href={`/propostas/nova?para=${profile.id}`}>
                     Enviar proposta
                   </Link>

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/avatar";
 import { MessageThread } from "@/components/messages/message-thread";
 import { enviarMensagem } from "../actions";
+import { publicPath } from "@/lib/participant-types";
 import type { Message, ProfileType } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Mensagens — Sponsas" };
@@ -48,7 +49,7 @@ export default async function ConversaPage({
     .limit(200);
   const messages = (msgs ?? []) as Message[];
 
-  const publicPath = other.type === ("company" as ProfileType) ? "e" : "p";
+  const otherHref = publicPath(other.type as ProfileType, other.id);
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-2xl flex-col">
@@ -58,7 +59,7 @@ export default async function ConversaPage({
         </Link>
       </div>
       <Link
-        href={`/${publicPath}/${other.id}`}
+        href={otherHref}
         className="border-border flex items-center gap-3 border-b py-4"
       >
         <Avatar src={other.photo_url} name={other.name} className="size-10 text-sm" />

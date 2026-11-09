@@ -38,7 +38,36 @@ export async function login(
   if (error) return { error: traduzErro(error.message) };
 
   revalidatePath("/", "layout");
-  redirect(next.startsWith("/") ? next : "/dashboard");
+  redirect(safeNext(next));
+}
+
+/** Só caminho interno: bloqueia "//site.com" e "/\site.com" (open redirect). */
+function safeNext(next: string): string {
+  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
+    return "/dashboard";
+  }
+  return next;
+}
+
+export type ResendState = { ok?: true; error?: string } | undefined;
+
+/** Reenvia o e-mail de confirmação de cadastro (link expirado / não chegou). */
+export async function reenviarConfirmacao(
+  _prev: ResendState,
+  formData: FormData,
+): Promise<ResendState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email || !email.includes("@")) return { error: "Informe seu e-mail." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${SITE_URL}/auth/confirm` },
+  });
+  if (error) return { error: traduzErro(error.message) };
+  // Mesma resposta exista ou não a conta (não revela quem está cadastrado).
+  return { ok: true };
 }
 
 type Kyc = {

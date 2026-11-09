@@ -15,11 +15,13 @@ export function AuthForm({
   mode,
   next,
   notice,
+  noticeTone = "success",
   defaultType = "athlete",
 }: {
   mode: "login" | "signup";
   next?: string;
   notice?: string;
+  noticeTone?: "success" | "error";
   defaultType?: ProfileType;
 }) {
   const action = mode === "login" ? login : signup;
@@ -33,7 +35,14 @@ export function AuthForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {notice && (
-        <p className="border-success/30 bg-success-soft text-success rounded-md border-l-2 px-3 py-2 text-sm">
+        <p
+          role={noticeTone === "error" ? "alert" : undefined}
+          className={
+            noticeTone === "error"
+              ? "border-destructive/30 bg-destructive/10 text-destructive rounded-md border-l-2 px-3 py-2 text-sm"
+              : "border-success/30 bg-success-soft text-success rounded-md border-l-2 px-3 py-2 text-sm"
+          }
+        >
           {notice}
         </p>
       )}
@@ -219,6 +228,14 @@ export function AuthForm({
           className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border-l-2 px-3 py-2 text-sm"
         >
           {state.error}
+          {state.error.startsWith("Confirme seu e-mail") && (
+            <>
+              {" "}
+              <Link href="/cadastro/confirme" className="underline">
+                Reenviar confirmação
+              </Link>
+            </>
+          )}
         </p>
       )}
 

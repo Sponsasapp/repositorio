@@ -7,6 +7,7 @@ import { PLAN_LIMITS, limitMessage, planLimitError } from "@/lib/plan";
 import { BR_UF } from "@/lib/br";
 import { MODALITY_VALUES } from "@/lib/sports";
 import { fetchYouTubeStats } from "@/lib/youtube";
+import { normalizeUrl } from "@/lib/social";
 
 export type PerfilState = { ok?: true; error?: string } | undefined;
 
@@ -200,7 +201,7 @@ export async function salvarPerfilPiloto(
     .map((platform) => ({
       profile_id: user.id,
       platform,
-      url: text(formData.get(`social_${platform}_url`)),
+      url: normalizeUrl(text(formData.get(`social_${platform}_url`)), platform),
       followers: num(formData.get(`social_${platform}_followers`)),
       avg_reach: num(formData.get(`social_${platform}_avg_reach`)),
       avg_interactions: num(formData.get(`social_${platform}_avg_interactions`)),
@@ -412,7 +413,7 @@ export async function salvarPerfilEmpresa(
   const { error: e2 } = await supabase.from("company_profiles").upsert({
     profile_id: user.id,
     segment: text(formData.get("segment")),
-    website: text(formData.get("website")),
+    website: normalizeUrl(text(formData.get("website"))),
     instagram: text(formData.get("instagram")),
     description: text(formData.get("description")),
     campaign_goal: text(formData.get("campaign_goal")),
@@ -454,7 +455,9 @@ async function salvarBase(formData: FormData) {
       city: text(formData.get("city")),
       state: uf,
       photo_url: text(formData.get("photo_url")),
-      bio: text(formData.get("bio")),
+      // Pista/evento/mídia não têm campo "bio" separado: a descrição faz o
+      // papel (antes gravava null e apagava a bio / ponto de perfil no rank).
+      bio: text(formData.get("bio") ?? formData.get("description")),
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id);
@@ -479,7 +482,7 @@ export async function salvarPerfilPista(
     length_m: int(formData.get("length_m")),
     capacity: int(formData.get("capacity")),
     sponsor_spaces: text(formData.get("sponsor_spaces")),
-    website: text(formData.get("website")),
+    website: normalizeUrl(text(formData.get("website"))),
     instagram: text(formData.get("instagram")),
     description: text(formData.get("description")),
     updated_at: new Date().toISOString(),
@@ -506,7 +509,7 @@ export async function salvarPerfilEvento(
     track_name: text(formData.get("track_name")),
     expected_public: int(formData.get("expected_public")),
     sponsor_packages: text(formData.get("sponsor_packages")),
-    website: text(formData.get("website")),
+    website: normalizeUrl(text(formData.get("website"))),
     instagram: text(formData.get("instagram")),
     description: text(formData.get("description")),
     updated_at: new Date().toISOString(),
@@ -530,7 +533,7 @@ export async function salvarPerfilMidia(
     profile_id: user.id,
     roles: list(formData, "roles"),
     portfolio_url: text(formData.get("portfolio_url")),
-    website: text(formData.get("website")),
+    website: normalizeUrl(text(formData.get("website"))),
     instagram: text(formData.get("instagram")),
     description: text(formData.get("description")),
     updated_at: new Date().toISOString(),
