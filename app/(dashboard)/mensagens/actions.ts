@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { notifyUser } from "@/lib/email";
+import { flash } from "@/lib/flash";
 
 async function ctx() {
   const supabase = await createClient();
@@ -26,7 +27,13 @@ export async function iniciarConversa(formData: FormData): Promise<void> {
     "get_or_create_conversation",
     { p_other: other },
   );
-  if (!conversationId) redirect("/mensagens");
+  if (!conversationId) {
+    flash(
+      "/mensagens",
+      "erro",
+      "Ainda não dá pra conversar com esse perfil — envie uma proposta primeiro.",
+    );
+  }
 
   redirect(`/mensagens/${conversationId}`);
 }
@@ -56,7 +63,13 @@ export async function enviarMensagem(formData: FormData): Promise<void> {
     sender_id: user.id,
     body,
   });
-  if (error) return;
+  if (error) {
+    flash(
+      `/mensagens/${conversationId}`,
+      "erro",
+      "Mensagem não enviada. Esta conversa pode não estar mais liberada.",
+    );
+  }
 
   const { data: sender } = await supabase
     .from("profiles")

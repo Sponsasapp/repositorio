@@ -5,6 +5,14 @@ import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { deliverableLabel } from "@/lib/deliverables";
 import { notifyUser } from "@/lib/email";
+import { flash } from "@/lib/flash";
+
+const CONTRACT_ERR: Record<string, string> = {
+  no_auth: "Sua sessão expirou. Entre de novo.",
+  not_found: "Patrocínio não encontrado.",
+  not_party: "Você não faz parte deste patrocínio.",
+  closed: "Este patrocínio já foi encerrado ou cancelado.",
+};
 
 export type EntregaState = { ok?: true; error?: string } | undefined;
 
@@ -29,11 +37,18 @@ export async function aceitarContrato(formData: FormData): Promise<void> {
   const accept = String(formData.get("accept") ?? "1") === "1";
   if (!id) return;
 
-  const { data: result } = await supabase.rpc("set_contract_acceptance", {
+  const contractPath = `/patrocinios/${id}/contrato`;
+  const { data: result, error } = await supabase.rpc("set_contract_acceptance", {
     p_sponsorship: id,
     p_accept: accept,
   });
-  if (result !== "ok" && result !== "cancelled") return;
+  if (error || (result !== "ok" && result !== "cancelled")) {
+    flash(
+      contractPath,
+      "erro",
+      CONTRACT_ERR[String(result)] ?? "Não foi possível registrar. Tente de novo.",
+    );
+  }
 
   if (accept) {
     const { data: sp } = await supabase
@@ -68,8 +83,13 @@ export async function aceitarContrato(formData: FormData): Promise<void> {
   }
 
   revalidatePath(`/patrocinios/${id}`);
-  revalidatePath(`/patrocinios/${id}/contrato`);
+  revalidatePath(contractPath);
   revalidatePath("/patrocinios");
+  flash(
+    accept ? contractPath : `/patrocinios/${id}`,
+    "ok",
+    accept ? "Seu de acordo foi registrado." : "Contrato cancelado.",
+  );
 }
 
 export async function encerrarPatrocinio(formData: FormData): Promise<void> {
@@ -79,10 +99,39 @@ export async function encerrarPatrocinio(formData: FormData): Promise<void> {
   const id = String(formData.get("sponsorship_id") ?? "");
   if (!id) return;
 
-  await supabase.rpc("end_sponsorship", { p_sponsorship: id });
+  const { data: ended, error } = await supabase.rpc("end_sponsorship", {
+    p_sponsorship: id,
+  });
+  if (error || !ended) {
+    flash(`/patrocinios/${id}`, "erro", "Não foi possível encerrar o patrocínio.");
+  }
+
+  const { data: sp } = await supabase
+    .from("sponsorships")
+    .select("athlete_id, company_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (sp) {
+    const otherId = sp.athlete_id === user.id ? sp.company_id : sp.athlete_id;
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", user.id)
+      .single();
+    after(() =>
+      notifyUser(otherId, {
+        type: "sponsorship_ended",
+        subject: "Patrocínio encerrado",
+        title: `${me?.name ?? "A outra parte"} encerrou o patrocínio`,
+        body: "O patrocínio foi marcado como encerrado na Sponsas.",
+        cta: { label: "Ver patrocínio", path: `/patrocinios/${id}` },
+      }),
+    );
+  }
 
   revalidatePath(`/patrocinios/${id}`);
   revalidatePath("/patrocinios");
+  flash(`/patrocinios/${id}`, "ok", "Patrocínio encerrado.");
 }
 
 export async function adicionarEntrega(
@@ -159,11 +208,14 @@ export async function avaliarEntrega(formData: FormData): Promise<void> {
   // A RPC review_deliverable (SECURITY DEFINER) só deixa a EMPRESA do
   // patrocínio aprovar/recusar — o piloto não consegue mais aprovar a
   // própria entrega direto no banco.
+  const back = `/patrocinios/${sponsorshipId}`;
   const { data: ok } = await supabase.rpc("review_deliverable", {
     p_deliverable: deliverableId,
     p_decision: decision,
   });
-  if (!ok) return;
+  if (!ok) {
+    flash(back, "erro", "Não foi possível avaliar. Só a empresa do patrocínio avalia entregas enviadas.");
+  }
 
   const { data: sp } = await supabase
     .from("sponsorships")
@@ -200,8 +252,9 @@ export async function avaliarEntrega(formData: FormData): Promise<void> {
     }),
   );
 
-  revalidatePath(`/patrocinios/${sponsorshipId}`);
+  revalidatePath(back);
   revalidatePath("/entregas");
+  flash(back, "ok", decision === "approved" ? "Entrega aprovada." : "Entrega recusada — o patrocinado foi avisado.");
 }
 
 export async function removerEntrega(formData: FormData): Promise<void> {
@@ -213,8 +266,15 @@ export async function removerEntrega(formData: FormData): Promise<void> {
   if (!deliverableId) return;
 
   // RLS já restringe às partes do patrocínio.
-  await supabase.from("deliverables").delete().eq("id", deliverableId);
+  const { error, count } = await supabase
+    .from("deliverables")
+    .delete({ count: "exact" })
+    .eq("id", deliverableId);
 
   revalidatePath(`/patrocinios/${sponsorshipId}`);
   revalidatePath("/entregas");
+  if (error || !count) {
+    flash(`/patrocinios/${sponsorshipId}`, "erro", "Só dá pra remover entrega ainda pendente.");
+  }
+  flash(`/patrocinios/${sponsorshipId}`, "ok", "Entrega removida.");
 }

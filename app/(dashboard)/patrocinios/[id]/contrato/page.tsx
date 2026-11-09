@@ -5,7 +5,7 @@ import { CheckIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { deliverableLabel } from "@/lib/deliverables";
 import { formatBRL, formatDateBR } from "@/lib/format";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { aceitarContrato } from "../../actions";
 import { PARTICIPANT, publicPath } from "@/lib/participant-types";
 import type {
@@ -178,12 +178,17 @@ export default async function ContratoPage({
               className="mt-4 flex flex-wrap gap-2"
             >
               <input type="hidden" name="sponsorship_id" value={id} />
-              <Button type="submit" name="accept" value="1">
+              <SubmitButton name="accept" value="1">
                 De acordo com os termos
-              </Button>
-              <Button type="submit" name="accept" value="0" variant="outline">
+              </SubmitButton>
+              <SubmitButton
+                name="accept"
+                value="0"
+                variant="outline"
+                confirm="Cancelar o contrato? O patrocínio é desfeito e a proposta volta a ficar retirada."
+              >
                 Não concordo
-              </Button>
+              </SubmitButton>
             </form>
           )}
         </div>

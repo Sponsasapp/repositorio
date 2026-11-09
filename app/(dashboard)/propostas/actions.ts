@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
@@ -12,6 +11,7 @@ import {
   startOfMonthISO,
 } from "@/lib/plan";
 import { notifyUser } from "@/lib/email";
+import { flash } from "@/lib/flash";
 import { canPropose } from "@/lib/participant-types";
 import type { ProposalPaymentType } from "@/lib/types/database.types";
 
@@ -126,7 +126,7 @@ export async function enviarProposta(
   );
 
   revalidatePath("/propostas");
-  redirect(`/propostas/${data.id}`);
+  flash(`/propostas/${data.id}`, "ok", "Proposta enviada.");
 }
 
 export async function responderProposta(formData: FormData): Promise<void> {
@@ -142,8 +142,13 @@ export async function responderProposta(formData: FormData): Promise<void> {
     .select("from_profile_id, to_profile_id, status")
     .eq("id", id)
     .single();
-  if (!proposal || proposal.to_profile_id !== user.id) return;
-  if (proposal.status !== "pending") return;
+  const back = `/propostas/${id}`;
+  if (!proposal || proposal.to_profile_id !== user.id) {
+    flash(back, "erro", "Só quem recebeu a proposta pode responder.");
+  }
+  if (proposal.status !== "pending") {
+    flash(back, "erro", "Esta proposta já foi respondida ou retirada.");
+  }
 
   // Aceite/recusa passam pela RPC respond_proposal (SECURITY DEFINER):
   // é ela que cria o patrocínio e trava os termos — não dá mais pra
@@ -154,16 +159,17 @@ export async function responderProposta(formData: FormData): Promise<void> {
   });
 
   if (decision === "rejected") {
-    revalidatePath(`/propostas/${id}`);
+    revalidatePath(back);
     revalidatePath("/propostas");
-    return;
+    if (result !== "ok") flash(back, "erro", "Não foi possível recusar. Tente de novo.");
+    flash(back, "ok", "Proposta recusada.");
   }
 
   const sponsorshipId = String(result ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(sponsorshipId)) {
     // não voltou um uuid → aceite falhou
-    revalidatePath(`/propostas/${id}`);
-    return;
+    revalidatePath(back);
+    flash(back, "erro", "Não foi possível aceitar a proposta. Tente de novo.");
   }
 
   after(() =>
@@ -182,7 +188,11 @@ export async function responderProposta(formData: FormData): Promise<void> {
   revalidatePath(`/propostas/${id}`);
   revalidatePath("/propostas");
   revalidatePath("/patrocinios");
-  redirect(`/patrocinios/${sponsorshipId}`);
+  flash(
+    `/patrocinios/${sponsorshipId}`,
+    "ok",
+    "Proposta aceita! Agora as duas partes dão o de acordo no contrato.",
+  );
 }
 
 export async function retirarProposta(formData: FormData): Promise<void> {
@@ -192,8 +202,15 @@ export async function retirarProposta(formData: FormData): Promise<void> {
   const id = String(formData.get("proposal_id") ?? "");
   if (!id) return;
 
-  await supabase.rpc("respond_proposal", { p_proposal: id, p_action: "withdraw" });
+  const { data: result } = await supabase.rpc("respond_proposal", {
+    p_proposal: id,
+    p_action: "withdraw",
+  });
 
   revalidatePath(`/propostas/${id}`);
   revalidatePath("/propostas");
+  if (result !== "ok") {
+    flash(`/propostas/${id}`, "erro", "Não foi possível retirar — a proposta já foi respondida?");
+  }
+  flash(`/propostas/${id}`, "ok", "Proposta retirada.");
 }

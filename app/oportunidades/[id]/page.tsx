@@ -13,6 +13,7 @@ import {
 } from "../actions";
 import { ApplyForm } from "./apply-form";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { RegionFit } from "@/components/region-fit";
 import { AppShell } from "@/components/app-shell";
 import { publicPath } from "@/lib/participant-types";
@@ -271,9 +272,9 @@ export default async function OportunidadePage({
                   name="next"
                   value={opp.status === "open" ? "closed" : "open"}
                 />
-                <Button type="submit" variant="outline" size="sm">
+                <SubmitButton variant="outline" size="sm">
                   {opp.status === "open" ? "Encerrar vaga" : "Reabrir vaga"}
-                </Button>
+                </SubmitButton>
               </form>
             </div>
 
@@ -344,23 +345,21 @@ export default async function OportunidadePage({
                           name="opportunity_id"
                           value={id}
                         />
-                        <Button
-                          type="submit"
+                        <SubmitButton
                           name="decision"
                           value="accepted"
                           size="sm"
                         >
                           Aceitar
-                        </Button>
-                        <Button
-                          type="submit"
+                        </SubmitButton>
+                        <SubmitButton
                           name="decision"
                           value="rejected"
                           size="sm"
                           variant="ghost"
                         >
                           Recusar
-                        </Button>
+                        </SubmitButton>
                       </form>
                     )}
 

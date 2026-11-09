@@ -8,6 +8,7 @@ import { timeAgo } from "@/lib/relative-time";
 import { responderProposta, retirarProposta } from "../actions";
 import { PROPOSAL_STATUS } from "@/lib/proposal";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import type { Proposal } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Proposta — Sponsas" };
@@ -139,27 +140,31 @@ export default async function PropostaPage({
         {p.status === "pending" && amRecipient && (
           <form action={responderProposta} className="mt-6 flex gap-2">
             <input type="hidden" name="proposal_id" value={p.id} />
-            <Button type="submit" name="decision" value="accepted" size="lg">
+            <SubmitButton name="decision" value="accepted" size="lg">
               Aceitar
-            </Button>
-            <Button
-              type="submit"
+            </SubmitButton>
+            <SubmitButton
               name="decision"
               value="rejected"
               size="lg"
+              confirm="Recusar esta proposta? Não dá pra desfazer."
               variant="ghost"
             >
               Recusar
-            </Button>
+            </SubmitButton>
           </form>
         )}
 
         {p.status === "pending" && amSender && (
           <form action={retirarProposta} className="mt-6">
             <input type="hidden" name="proposal_id" value={p.id} />
-            <Button type="submit" size="lg" variant="outline">
+            <SubmitButton
+              size="lg"
+              variant="outline"
+              confirm="Retirar esta proposta? Não dá pra desfazer."
+            >
               Retirar proposta
-            </Button>
+            </SubmitButton>
           </form>
         )}
 

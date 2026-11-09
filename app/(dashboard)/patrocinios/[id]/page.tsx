@@ -11,7 +11,7 @@ import {
   removerEntrega,
 } from "../actions";
 import { AddDeliverableForm, ProofForm } from "./entrega-forms";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import type {
   Sponsorship,
   Proposal,
@@ -265,23 +265,21 @@ export default async function PatrocinioPage({
                         name="sponsorship_id"
                         value={s.id}
                       />
-                      <Button
-                        type="submit"
+                      <SubmitButton
                         name="decision"
                         value="approved"
                         size="xs"
                       >
                         Aprovar
-                      </Button>
-                      <Button
-                        type="submit"
+                      </SubmitButton>
+                      <SubmitButton
                         name="decision"
                         value="rejected"
                         size="xs"
                         variant="ghost"
                       >
                         Recusar
-                      </Button>
+                      </SubmitButton>
                     </form>
                   )}
 
@@ -318,9 +316,13 @@ export default async function PatrocinioPage({
         {s.status === "active" && (
           <form action={encerrarPatrocinio} className="mt-8">
             <input type="hidden" name="sponsorship_id" value={s.id} />
-            <Button type="submit" variant="outline" size="sm">
+            <SubmitButton
+              variant="outline"
+              size="sm"
+              confirm="Encerrar este patrocínio? A outra parte será avisada e não dá pra desfazer."
+            >
               Encerrar patrocínio
-            </Button>
+            </SubmitButton>
           </form>
         )}
       </div>

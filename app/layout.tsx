@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Barlow_Condensed } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { Suspense } from "react";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { FlashToast } from "@/components/flash-toast";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 import "./globals.css";
 
@@ -66,6 +68,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <ScrollReveal />
         <Toaster />
+        <Suspense fallback={null}>
+          <FlashToast />
+        </Suspense>
       </body>
     </html>
   );

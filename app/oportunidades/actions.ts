@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseNumberBR } from "@/lib/num";
 import { PLAN_LIMITS, limitMessage, planLimitError } from "@/lib/plan";
 import { notifyUser } from "@/lib/email";
+import { flash } from "@/lib/flash";
 
 export type OppState = { ok?: true; error?: string } | undefined;
 
@@ -146,11 +147,18 @@ export async function responderCandidatura(formData: FormData): Promise<void> {
   const opportunityId = String(formData.get("opportunity_id") ?? "");
   if (!applicationId || !["accepted", "rejected"].includes(decision)) return;
 
+  const back = `/oportunidades/${opportunityId}`;
   // RLS já garante que só a empresa da vaga (ou o piloto) pode atualizar.
-  await supabase
+  const { error, count } = await supabase
     .from("applications")
-    .update({ status: decision as "accepted" | "rejected" })
+    .update(
+      { status: decision as "accepted" | "rejected" },
+      { count: "exact" },
+    )
     .eq("id", applicationId);
+  if (error || !count) {
+    flash(back, "erro", "Não foi possível responder a candidatura.");
+  }
 
   if (decision === "accepted") {
     const { data: app } = await supabase
@@ -182,7 +190,14 @@ export async function responderCandidatura(formData: FormData): Promise<void> {
     }
   }
 
-  revalidatePath(`/oportunidades/${opportunityId}`);
+  revalidatePath(back);
+  flash(
+    back,
+    "ok",
+    decision === "accepted"
+      ? "Candidatura aceita — o candidato foi avisado."
+      : "Candidatura recusada.",
+  );
 }
 
 export async function alternarStatusOportunidade(
@@ -195,7 +210,7 @@ export async function alternarStatusOportunidade(
   const next = String(formData.get("next") ?? "");
   if (!id || !["open", "closed"].includes(next)) return;
 
-  await supabase
+  const { error } = await supabase
     .from("opportunities")
     .update({ status: next as "open" | "closed" })
     .eq("id", id)
@@ -203,4 +218,16 @@ export async function alternarStatusOportunidade(
 
   revalidatePath(`/oportunidades/${id}`);
   revalidatePath("/oportunidades");
+  if (error) {
+    flash(
+      `/oportunidades/${id}`,
+      "erro",
+      planLimitError(error) ?? "Não foi possível mudar o status da vaga.",
+    );
+  }
+  flash(
+    `/oportunidades/${id}`,
+    "ok",
+    next === "open" ? "Vaga reaberta." : "Vaga encerrada.",
+  );
 }

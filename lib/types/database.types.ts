@@ -372,7 +372,8 @@ export type NotificationType =
   | "message_received"
   | "contract_accepted"
   | "contract_active"
-  | "deliverables_due";
+  | "deliverables_due"
+  | "sponsorship_ended";
 
 export type Notification = {
   id: string;
