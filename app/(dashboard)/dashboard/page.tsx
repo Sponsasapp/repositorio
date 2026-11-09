@@ -19,6 +19,10 @@ import type {
   RankConfig,
 } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
+import {
+  OnboardingChecklist,
+  type ChecklistItem,
+} from "@/components/onboarding-checklist";
 
 export const metadata: Metadata = { title: "Dashboard — Sponsas" };
 
@@ -259,14 +263,18 @@ async function PainelPiloto({ userId }: { userId: string }) {
     { data: propRaw },
     { data: cfgRaw },
     { data: docRaw },
+    { data: me },
+    { data: carsRaw },
+    { count: packageCount },
+    { count: applicationCount },
   ] = await Promise.all([
     supabase
       .from("athlete_modalities")
-      .select("modality, rank_score, rank_tier, rank_factors")
+      .select("modality, category, rank_score, rank_tier, rank_factors")
       .eq("profile_id", userId),
     supabase
       .from("social_links")
-      .select("followers, avg_interactions")
+      .select("url, followers, avg_interactions")
       .eq("profile_id", userId),
     supabase
       .from("sponsorships")
@@ -291,15 +299,88 @@ async function PainelPiloto({ userId }: { userId: string }) {
       .select("profile_id")
       .eq("profile_id", userId)
       .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("photo_url, city, state, bio")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase.from("athlete_cars").select("photo_url").eq("athlete_id", userId),
+    supabase
+      .from("athlete_packages")
+      .select("id", { count: "exact", head: true })
+      .eq("athlete_id", userId),
+    supabase
+      .from("applications")
+      .select("id", { count: "exact", head: true })
+      .eq("athlete_id", userId),
   ]);
 
   const rankCfg = (cfgRaw as RankConfig | null) ?? DEFAULT_RANK_CONFIG;
-  const semDados = !docRaw;
 
   const socials = (socialsRaw ?? []) as {
+    url: string | null;
     followers: number | null;
     avg_interactions: number | null;
   }[];
+
+  // Onboarding: o que falta pro perfil "vender" bem pra uma marca.
+  const mods = (modalitiesRaw ?? []) as { category: string | null }[];
+  const checklist: ChecklistItem[] = [
+    {
+      label: "Foto de perfil",
+      hint: "Perfil com rosto passa mais confiança pra marca.",
+      href: "/perfil",
+      done: Boolean(me?.photo_url),
+    },
+    {
+      label: "Cidade e estado",
+      hint: "Marcas filtram pilotos pela região onde atuam.",
+      href: "/perfil",
+      done: Boolean(me?.city && me?.state),
+    },
+    {
+      label: "Bio",
+      hint: "Duas linhas sobre você e sua trajetória.",
+      href: "/perfil",
+      done: Boolean(me?.bio),
+    },
+    {
+      label: "Modalidade e categoria",
+      hint: "É assim que você aparece na busca e no rank.",
+      href: "/perfil",
+      done: mods.some((m) => Boolean(m.category)),
+    },
+    {
+      label: "Carro com foto",
+      hint: "A foto do carro é o destaque do seu card na busca.",
+      href: "/perfil",
+      done: (carsRaw ?? []).some((c) => Boolean(c.photo_url)),
+    },
+    {
+      label: "Rede social com seguidores",
+      hint: "Alcance é o primeiro número que a marca olha.",
+      href: "/perfil",
+      done: socials.some((s) => Boolean(s.url) && (s.followers ?? 0) > 0),
+    },
+    {
+      label: "Tabela de preços",
+      hint: "Pelo menos um pacote (ex.: logo no carro por mês).",
+      href: "/perfil",
+      done: (packageCount ?? 0) > 0,
+    },
+    {
+      label: "Dados pessoais",
+      hint: "CPF e endereço — necessários pro contrato e pra receber.",
+      href: "/perfil/dados",
+      done: Boolean(docRaw),
+    },
+    {
+      label: "Primeira candidatura",
+      hint: "Candidate-se a uma oportunidade aberta por uma marca.",
+      href: "/oportunidades",
+      done: (applicationCount ?? 0) > 0,
+    },
+  ];
 
   // Rank do painel: a modalidade principal do piloto (maior score).
   const athlete = pickPrimaryModality(
@@ -362,17 +443,22 @@ async function PainelPiloto({ userId }: { userId: string }) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      {semDados && (
-        <Link
-          href="/perfil/dados"
-          className="border-primary/30 bg-primary/5 hover:bg-primary/10 flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition-colors"
-        >
-          <span className="font-medium">
-            Complete seus dados pessoais (CPF, RG, endereço)
-          </span>
-          <span className="text-primary shrink-0">Preencher →</span>
-        </Link>
-      )}
+      <OnboardingChecklist
+        title="Deixe seu perfil pronto pra patrocínio"
+        items={checklist}
+      />
+
+      <div className="flex flex-wrap gap-3">
+        <Button asChild>
+          <Link href="/oportunidades">Ver oportunidades abertas</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/empresas">Encontrar patrocinadores</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href={`/p/${userId}`}>Ver meu perfil público</Link>
+        </Button>
+      </div>
 
       {/* Rank */}
       <section className="border-primary bg-card rounded-xl border border-l-3 p-5">

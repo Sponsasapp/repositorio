@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CompanyCard, type CompanyCardData } from "@/components/company-card";
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 import { modalityByValue } from "@/lib/sports";
 
 export const metadata: Metadata = {
@@ -146,10 +147,21 @@ export default async function EmpresasPage({
           </div>
         </form>
 
-        {companies.length === 0 ? (
-          <p className="text-muted-foreground mt-12 text-sm">
-            Nenhuma empresa encontrada.
-          </p>
+        {all.length === 0 ? (
+          <EmptyState
+            title="As primeiras marcas estão chegando"
+            text="A Sponsas acabou de abrir. Quem entra agora aparece primeiro pra quem busca patrocínio — e pros patrocinados, um perfil completo é o que chama a marca."
+            actions={[
+              { label: "Sou empresa — criar conta", href: "/cadastro?tipo=empresa" },
+              { label: "Ver oportunidades", href: "/oportunidades" },
+            ]}
+          />
+        ) : companies.length === 0 ? (
+          <EmptyState
+            title="Nenhuma empresa com esses filtros"
+            text="Tente outro segmento ou modalidade."
+            actions={[{ label: "Limpar filtros", href: "/empresas" }]}
+          />
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {companies.map((c) => (

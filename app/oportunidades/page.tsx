@@ -7,6 +7,7 @@ import {
 } from "@/components/opportunity-card";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 
 export const metadata: Metadata = {
   title: "Oportunidades — Sponsas",
@@ -89,9 +90,34 @@ export default async function OportunidadesPage() {
             <h2 className="mb-3 text-xl">Todas as vagas abertas</h2>
           )}
           {open.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Nenhuma oportunidade aberta no momento.
-            </p>
+            myType === "company" ? (
+              <EmptyState
+                title="Nenhuma vaga aberta ainda"
+                text="Abra a primeira: pilotos, pistas, eventos e mídias se candidatam e você escolhe com quem fechar."
+                actions={[
+                  { label: "Criar oportunidade", href: "/oportunidades/nova" },
+                  { label: "Encontrar pilotos", href: "/pilotos" },
+                ]}
+              />
+            ) : myType ? (
+              <EmptyState
+                title="As marcas estão chegando"
+                text="Ainda não há vagas abertas. Enquanto isso, deixe seu perfil completo — é ele que a marca vê quando te encontra na busca — e procure as empresas direto."
+                actions={[
+                  { label: "Completar meu perfil", href: "/dashboard" },
+                  { label: "Encontrar patrocinadores", href: "/empresas" },
+                ]}
+              />
+            ) : (
+              <EmptyState
+                title="Nenhuma vaga aberta no momento"
+                text="Crie sua conta pra montar seu perfil e ser encontrado pelas marcas — ou abra uma vaga se você é empresa."
+                actions={[
+                  { label: "Quero patrocínio", href: "/cadastro?tipo=piloto" },
+                  { label: "Sou empresa", href: "/cadastro?tipo=empresa" },
+                ]}
+              />
+            )
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {open.map((o) => (
