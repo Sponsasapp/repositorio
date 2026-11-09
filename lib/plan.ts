@@ -1,4 +1,5 @@
 import type { PlanTier } from "@/lib/types/database.types";
+import { todayISO } from "@/lib/calendar";
 
 export const PLAN_LIMITS = {
   /** Oportunidades abertas simultâneas (empresa). */
@@ -37,8 +38,12 @@ export function planLimitError(
   return limitMessage(m[1] as keyof typeof PLAN_LIMITS);
 }
 
-/** Primeiro dia do mês corrente em ISO (para contar propostas do mês). */
+/**
+ * Início do mês corrente de Brasília em ISO (para contar propostas do mês).
+ * Mesmo critério do gatilho do banco (migration 0035). Brasil sem horário de
+ * verão desde 2019 → offset fixo -03:00.
+ */
 export function startOfMonthISO(): string {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+  const [y, m] = todayISO().split("-");
+  return new Date(`${y}-${m}-01T00:00:00-03:00`).toISOString();
 }

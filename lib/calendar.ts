@@ -36,6 +36,11 @@ export const MONTH_LABELS = [
   "Dezembro",
 ];
 
+/** Fuso de referência da Sponsas (prazos, "hoje", mês do limite do plano). */
+export const TZ = "America/Sao_Paulo";
+
+/** Hoje em Brasília, "YYYY-MM-DD" (antes era UTC: virava o dia às 21h). */
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  // en-CA formata como YYYY-MM-DD
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
 }
