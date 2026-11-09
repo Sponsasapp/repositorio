@@ -4,7 +4,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LIMITS } from "@/lib/plan";
 import { MODALITIES, MODALITY_VALUES } from "@/lib/sports";
-import type { AthleteModality } from "@/lib/types/database.types";
+import type {
+  AthleteModality,
+  AthletePackage,
+} from "@/lib/types/database.types";
+import {
+  MODALITY_PUBLIC_COLS,
+  PACKAGE_PUBLIC_COLS,
+  withPrices,
+  withValueRanges,
+} from "@/lib/athlete-prices";
 import { PerfilPilotoForm } from "./perfil-form";
 import { PerfilEmpresaForm } from "./perfil-empresa-form";
 import {
@@ -129,12 +138,12 @@ export default async function PerfilPage({
     { data: cars },
     { data: achievements },
     { data: socials },
-    { data: packages },
+    { data: packagesData },
     { data: posts },
   ] = await Promise.all([
     supabase
       .from("athlete_modalities")
-      .select("*")
+      .select(MODALITY_PUBLIC_COLS)
       .eq("profile_id", user.id),
     supabase
       .from("athlete_cars")
@@ -149,7 +158,7 @@ export default async function PerfilPage({
     supabase.from("social_links").select("*").eq("profile_id", user.id),
     supabase
       .from("athlete_packages")
-      .select("*")
+      .select(PACKAGE_PUBLIC_COLS)
       .eq("athlete_id", user.id)
       .order("position"),
     supabase
@@ -159,7 +168,19 @@ export default async function PerfilPage({
       .order("likes", { ascending: false }),
   ]);
 
-  const modalities = (modalitiesData ?? []) as AthleteModality[];
+  const modalities: AthleteModality[] = await withValueRanges(
+    supabase,
+    user.id,
+    (modalitiesData ?? []) as Omit<
+      AthleteModality,
+      "desired_value_min" | "desired_value_max"
+    >[],
+  );
+  const packages = await withPrices(
+    supabase,
+    user.id,
+    (packagesData ?? []) as Omit<AthletePackage, "price">[],
+  );
   const modOrder = new Map(MODALITY_VALUES.map((v, i) => [v, i]));
   modalities.sort(
     (a, b) => (modOrder.get(a.modality) ?? 99) - (modOrder.get(b.modality) ?? 99),

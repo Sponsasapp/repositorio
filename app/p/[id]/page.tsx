@@ -21,10 +21,17 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/avatar";
 import type {
   AthleteModality,
+  AthletePackage,
   RankConfig,
 } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
+import {
+  MODALITY_PUBLIC_COLS,
+  PACKAGE_PUBLIC_COLS,
+  withPrices,
+  withValueRanges,
+} from "@/lib/athlete-prices";
 
 const PLATFORM_LABEL: Record<string, string> = {
   instagram: "Instagram",
@@ -48,11 +55,14 @@ async function getPiloto(id: string, modalityParam?: string) {
     { data: cars },
     { data: achievements },
     { data: socials },
-    { data: packages },
+    { data: packagesData },
     { data: auth },
     cfgRow,
   ] = await Promise.all([
-    supabase.from("athlete_modalities").select("*").eq("profile_id", id),
+    supabase
+      .from("athlete_modalities")
+      .select(MODALITY_PUBLIC_COLS)
+      .eq("profile_id", id),
     supabase
       .from("athlete_cars")
       .select("*")
@@ -70,7 +80,7 @@ async function getPiloto(id: string, modalityParam?: string) {
       .order("followers", { ascending: false, nullsFirst: false }),
     supabase
       .from("athlete_packages")
-      .select("*")
+      .select(PACKAGE_PUBLIC_COLS)
       .eq("athlete_id", id)
       .order("position"),
     supabase.auth.getUser(),
@@ -78,7 +88,21 @@ async function getPiloto(id: string, modalityParam?: string) {
   ]);
   const rankCfg = (cfgRow.data as RankConfig | null) ?? DEFAULT_RANK_CONFIG;
 
-  const modalities = (modalitiesData ?? []) as AthleteModality[];
+  // Preço e faixa de valor vêm por RPC (migration 0037): só voltam pro dono
+  // e pra empresa; pra qualquer outro chegam null já do banco.
+  const modalities: AthleteModality[] = await withValueRanges(
+    supabase,
+    id,
+    (modalitiesData ?? []) as Omit<
+      AthleteModality,
+      "desired_value_min" | "desired_value_max"
+    >[],
+  );
+  const packages = await withPrices(
+    supabase,
+    id,
+    (packagesData ?? []) as Omit<AthletePackage, "price">[],
+  );
 
   // Piloto recém-cadastrado, ainda sem nenhuma modalidade: página mínima.
   if (modalities.length === 0) {

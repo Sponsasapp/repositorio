@@ -56,18 +56,35 @@ export default async function PilotosPage({
   const sp = await searchParams;
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("profiles")
-    .select(
-      "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, desired_value_min, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_reach, avg_interactions)",
-    )
-    .eq("type", "athlete")
-    .order("name");
+  const [{ data }, { data: floors }, { data: auth }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "id, name, photo_url, city, state, plan, athlete_modalities!inner(modality, category, rank_tier, rank_score), athlete_cars(photo_url, position, modality), social_links(followers, avg_reach, avg_interactions)",
+      )
+      .eq("type", "athlete")
+      .order("name"),
+    // Valor mínimo de cada piloto: só volta pra EMPRESA (migration 0037).
+    supabase.rpc("athlete_value_floors"),
+    supabase.auth.getUser(),
+  ]);
+
+  let isCompany = false;
+  if (auth.user) {
+    const { data: viewer } = await supabase
+      .from("profiles")
+      .select("type")
+      .eq("id", auth.user.id)
+      .maybeSingle();
+    isCompany = viewer?.type === "company";
+  }
+  const floorOf = new Map(
+    (floors ?? []).map((f) => [`${f.profile_id}|${f.modality}`, f.desired_value_min]),
+  );
 
   type ModRow = {
     modality: string;
     category: string | null;
-    desired_value_min: number | null;
     rank_tier: RankTier | null;
     rank_score: number | null;
   };
@@ -99,7 +116,7 @@ export default async function PilotosPage({
   const modalidadeAtiva = modalityByValue(sp.modalidade);
 
   const q = (sp.q ?? "").trim().toLowerCase();
-  const orcMax = sp.orcamento ? Number(sp.orcamento) : null;
+  const orcMax = isCompany && sp.orcamento ? Number(sp.orcamento) : null;
   const seguidoresMin = sp.seguidores ? Number(sp.seguidores) : null;
   const ordenar = ORDENAR.some((o) => o.value === sp.ordenar)
     ? sp.ordenar
@@ -140,12 +157,10 @@ export default async function PilotosPage({
         if (sp.uf && p.state !== sp.uf) return false;
         if (sp.rank && mod.rank_tier !== sp.rank) return false;
         if (seguidoresMin != null && followers < seguidoresMin) return false;
-        if (
-          orcMax != null &&
-          mod.desired_value_min != null &&
-          mod.desired_value_min > orcMax
-        )
-          return false;
+        if (orcMax != null) {
+          const floor = floorOf.get(`${p.id}|${mod.modality}`);
+          if (floor != null && floor > orcMax) return false;
+        }
         return true;
       },
     )
@@ -279,12 +294,14 @@ export default async function PilotosPage({
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
               <FilterSelect name="categoria" value={sp.categoria} placeholder="Categoria" options={categorias} />
               <FilterSelect name="uf" value={sp.uf} placeholder="Estado" options={[...BR_UF]} />
-              <FilterSelect
-                name="orcamento"
-                value={sp.orcamento}
-                placeholder="Orçamento"
-                options={ORCAMENTO}
-              />
+              {isCompany && (
+                <FilterSelect
+                  name="orcamento"
+                  value={sp.orcamento}
+                  placeholder="Orçamento"
+                  options={ORCAMENTO}
+                />
+              )}
               <FilterSelect
                 name="rank"
                 value={sp.rank}

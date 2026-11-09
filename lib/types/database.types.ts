@@ -635,6 +635,26 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_athlete_prices: {
+        Args: { p_athlete: string };
+        Returns: { package_id: string; price: number | null }[];
+      };
+      get_athlete_value_ranges: {
+        Args: { p_athlete: string };
+        Returns: {
+          modality: string;
+          desired_value_min: number | null;
+          desired_value_max: number | null;
+        }[];
+      };
+      athlete_value_floors: {
+        Args: Record<string, never>;
+        Returns: {
+          profile_id: string;
+          modality: string;
+          desired_value_min: number | null;
+        }[];
+      };
       redeem_coupon: {
         Args: { p_user: string; p_code: string };
         Returns: string;
