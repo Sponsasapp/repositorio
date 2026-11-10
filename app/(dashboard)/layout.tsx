@@ -35,7 +35,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen flex-1">
       <Sidebar profileType={profileType} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-border flex items-center gap-3 border-b px-4 py-3 md:px-6">
+        <header className="border-border flex items-center gap-3 border-b px-4 py-3 md:px-6 print:hidden">
           <MobileNav email={user.email} profileType={profileType} />
           <LogoLink className="text-lg md:hidden" />
           <div className="ml-auto flex items-center gap-1">
@@ -71,7 +71,7 @@ export default async function DashboardLayout({
             </form>
           </div>
         </header>
-        <main className="flex-1 px-4 py-8 md:px-10">{children}</main>
+        <main className="flex-1 px-4 py-8 md:px-10 print:p-0">{children}</main>
       </div>
     </div>
   );

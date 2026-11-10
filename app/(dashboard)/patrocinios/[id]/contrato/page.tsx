@@ -3,15 +3,22 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { deliverableLabel } from "@/lib/deliverables";
-import { formatBRL, formatDateBR } from "@/lib/format";
+import { formatDateBR } from "@/lib/format";
 import { SubmitButton } from "@/components/submit-button";
+import { PrintButton } from "@/components/print-button";
+import { Button } from "@/components/ui/button";
 import { aceitarContrato } from "../../actions";
-import { PARTICIPANT, publicPath } from "@/lib/participant-types";
+import { PARTICIPANT } from "@/lib/participant-types";
+import {
+  CONTRACT_VERSION,
+  contractClauses,
+  loadContractTerms,
+  termsHash,
+} from "@/lib/contract";
 import type {
-  Sponsorship,
-  Proposal,
+  ContractAcceptance,
   ProfileType,
+  Sponsorship,
 } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Contrato — Sponsas" };
@@ -19,15 +26,15 @@ export const metadata: Metadata = { title: "Contrato — Sponsas" };
 type Row = Sponsorship & {
   athlete: { id: string; name: string | null; type: ProfileType } | null;
   company: { id: string; name: string | null } | null;
-  proposal: Pick<Proposal, "deliverables" | "message"> | null;
 };
 
 function dtBR(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
-  return `${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR", {
+  return `${d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} às ${d.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
   })}`;
 }
 
@@ -43,178 +50,193 @@ export default async function ContratoPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/patrocinios/${id}/contrato`);
 
-  const { data } = await supabase
-    .from("sponsorships")
-    .select(
-      "*, athlete:profiles!sponsorships_athlete_id_fkey(id, name, type), company:profiles!sponsorships_company_id_fkey(id, name), proposal:proposals(deliverables, message)",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (!data) notFound();
+  const [{ data }, terms, { data: acceptRows }] = await Promise.all([
+    supabase
+      .from("sponsorships")
+      .select(
+        "*, athlete:profiles!sponsorships_athlete_id_fkey(id, name, type), company:profiles!sponsorships_company_id_fkey(id, name)",
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    loadContractTerms(supabase, id),
+    supabase.from("contract_acceptances").select("*").eq("sponsorship_id", id),
+  ]);
+  if (!data || !terms) notFound();
   const s = data as unknown as Row;
   if (s.athlete_id !== user.id && s.company_id !== user.id) notFound();
 
   const sponseeType = s.athlete?.type ?? "athlete";
   const sponseeLabel = PARTICIPANT[sponseeType].label;
-  const iAmAthlete = s.athlete_id === user.id;
-  const myAcceptedAt = iAmAthlete ? s.athlete_accepted_at : s.company_accepted_at;
-  const otherAcceptedAt = iAmAthlete
-    ? s.company_accepted_at
-    : s.athlete_accepted_at;
+  const iAmSponsee = s.athlete_id === user.id;
+  const myAcceptedAt = iAmSponsee ? s.athlete_accepted_at : s.company_accepted_at;
   const bothIn = !!s.athlete_accepted_at && !!s.company_accepted_at;
   const cancelled = s.status === "cancelled";
   const closed = s.status === "ended" || cancelled;
-  const agreed = s.proposal?.deliverables ?? [];
+
+  const myParty = iAmSponsee ? terms.sponsee : terms.company;
+  const myLegalOk = Boolean(myParty?.complete);
+  const hash = termsHash(terms);
+  const trail = (acceptRows ?? []) as ContractAcceptance[];
+  const trailOf = (pid: string | undefined) =>
+    trail.find((a) => a.profile_id === pid) ?? null;
+
+  const companyName = s.company?.name ?? "Empresa";
+  const sponseeName = s.athlete?.name ?? sponseeLabel;
+  const { parties, clauses } = contractClauses(terms, {
+    company: companyName,
+    sponsee: sponseeName,
+  });
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <Link
-        href={`/patrocinios/${id}`}
-        className="text-muted-foreground hover:text-foreground text-sm"
-      >
-        ← Voltar ao patrocínio
-      </Link>
+    <div className="mx-auto max-w-3xl">
+      <div className="flex items-center justify-between gap-3 print:hidden">
+        <Link
+          href={`/patrocinios/${id}`}
+          className="text-muted-foreground hover:text-foreground text-sm"
+        >
+          ← Voltar ao patrocínio
+        </Link>
+        <PrintButton />
+      </div>
 
-      <div className="border-border bg-card mt-4 rounded-xl border">
-        <div className="border-border border-b px-6 py-5">
+      <article className="border-border bg-card mt-4 rounded-xl border print:mt-0 print:rounded-none print:border-0">
+        <header className="border-border border-b px-6 py-5">
           <p className="text-primary text-xs font-semibold tracking-wide uppercase">
             Contrato de patrocínio
           </p>
           <h1 className="mt-1 text-2xl">
-            {s.company?.name ?? "—"} × {s.athlete?.name ?? "—"}
+            {companyName} × {sponseeName}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Registrado em {formatDateBR(s.created_at.slice(0, 10))}
+            Registrado em {formatDateBR(s.created_at.slice(0, 10))} · modelo{" "}
+            {CONTRACT_VERSION}
           </p>
-        </div>
+        </header>
 
-        <dl className="flex flex-col divide-y text-sm">
-          <Row2 k="Empresa">
-            <Link href={`/e/${s.company?.id}`} className="underline">
-              {s.company?.name ?? "—"}
-            </Link>
-          </Row2>
-          <Row2 k={sponseeLabel}>
-            <Link
-              href={publicPath(sponseeType, s.athlete?.id ?? "")}
-              className="underline"
-            >
-              {s.athlete?.name ?? "—"}
-            </Link>
-          </Row2>
-          <Row2 k="Valor mensal">
-            {s.value != null ? `${formatBRL(s.value)} / mês` : "—"}
-          </Row2>
-          {(s.payment_type === "trade" || s.payment_type === "mixed") && (
-            <Row2 k="Permuta">
-              {s.trade_description ?? "—"}
-              {s.trade_value != null && (
-                <span className="text-muted-foreground">
-                  {" "}
-                  · valor estimado {formatBRL(s.trade_value)}
-                </span>
-              )}
-            </Row2>
-          )}
-          <Row2 k="Duração">
-            {s.duration_months != null ? `${s.duration_months} meses` : "—"}
-          </Row2>
-          <Row2 k="Início">{formatDateBR(s.start_date)}</Row2>
-          <Row2 k="Entregas combinadas">
-            {agreed.length > 0 ? (
-              <span className="flex flex-wrap gap-1.5">
-                {agreed.map((d) => (
-                  <span
-                    key={d}
-                    className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs"
-                  >
-                    {deliverableLabel(d)}
-                  </span>
-                ))}
-              </span>
-            ) : (
-              "—"
-            )}
-          </Row2>
-          {s.proposal?.message && (
-            <Row2 k="Observações">{s.proposal.message}</Row2>
-          )}
-        </dl>
+        <section className="border-border flex flex-col gap-3 border-b px-6 py-5 text-sm">
+          <h2 className="text-base font-semibold">Partes</h2>
+          {parties.map((p) => (
+            <p key={p.label} className="leading-relaxed">
+              <span className="font-semibold">{p.label}: </span>
+              {p.text}
+            </p>
+          ))}
+          <p className="text-muted-foreground text-xs">
+            As partes acima celebram o presente contrato de patrocínio, que se
+            rege pelas cláusulas a seguir.
+          </p>
+        </section>
 
-        <div className="border-border border-t px-6 py-5">
-          <p className="text-sm font-semibold">Aceite das partes</p>
+        <section className="flex flex-col gap-5 px-6 py-5 text-sm">
+          {clauses.map((c) => (
+            <div key={c.title} className="break-inside-avoid">
+              <h3 className="font-semibold">{c.title}</h3>
+              {c.paragraphs.map((para, i) => (
+                <p
+                  key={i}
+                  className="text-foreground/90 mt-1.5 leading-relaxed whitespace-pre-line"
+                >
+                  {para}
+                </p>
+              ))}
+            </div>
+          ))}
+          <p className="text-muted-foreground border-border border-t pt-4 text-xs">
+            Modelo padrão oferecido pela Sponsas. Não substitui orientação
+            jurídica — as partes podem registrar condições adicionais na
+            proposta antes de aceitar. Código de integridade dos termos:{" "}
+            <span className="font-mono break-all">{hash}</span>
+          </p>
+        </section>
+
+        <section className="border-border border-t px-6 py-5 break-inside-avoid">
+          <h2 className="text-sm font-semibold">Aceite das partes</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
             O patrocínio só vale como acordo formal depois que as duas partes
-            clicam &ldquo;De acordo&rdquo; com os termos acima.
+            dão o &ldquo;de acordo&rdquo; com os termos acima.
           </p>
 
-          <div className="mt-4 flex flex-col gap-2">
+          <div className="mt-4 flex flex-col gap-3">
             <AcceptRow
-              nome={s.company?.name ?? "Empresa"}
+              papel="PATROCINADORA"
+              nome={companyName}
               acceptedAt={s.company_accepted_at}
+              trail={trailOf(s.company?.id)}
             />
             <AcceptRow
-              nome={s.athlete?.name ?? sponseeLabel}
+              papel="PATROCINADO"
+              nome={sponseeName}
               acceptedAt={s.athlete_accepted_at}
+              trail={trailOf(s.athlete?.id)}
             />
           </div>
 
-          {cancelled ? (
-            <p className="text-destructive mt-4 text-sm">
-              Contrato cancelado — uma das partes não concordou com os termos.
-            </p>
-          ) : bothIn ? (
-            <p className="text-success mt-4 text-sm">
-              Contrato de acordo pelas duas partes.
-            </p>
-          ) : closed ? null : myAcceptedAt ? (
-            <p className="text-muted-foreground mt-4 text-sm">
-              Você aceitou em {dtBR(myAcceptedAt)}. Aguardando{" "}
-              {otherAcceptedAt ? "" : "a outra parte"}.
-            </p>
-          ) : (
-            <form
-              action={aceitarContrato}
-              className="mt-4 flex flex-wrap gap-2"
-            >
-              <input type="hidden" name="sponsorship_id" value={id} />
-              <SubmitButton name="accept" value="1">
-                De acordo com os termos
-              </SubmitButton>
-              <SubmitButton
-                name="accept"
-                value="0"
-                variant="outline"
-                confirm="Cancelar o contrato? O patrocínio é desfeito e a proposta volta a ficar retirada."
+          <div className="print:hidden">
+            {cancelled ? (
+              <p className="text-destructive mt-4 text-sm">
+                Contrato cancelado — uma das partes não concordou com os termos.
+              </p>
+            ) : bothIn ? (
+              <p className="text-success mt-4 text-sm">
+                Contrato de acordo pelas duas partes.
+              </p>
+            ) : closed ? null : myAcceptedAt ? (
+              <p className="text-muted-foreground mt-4 text-sm">
+                Você aceitou em {dtBR(myAcceptedAt)}. Aguardando a outra parte.
+              </p>
+            ) : !myLegalOk ? (
+              <div className="border-primary/30 bg-primary/5 mt-4 rounded-lg border p-4 text-sm">
+                <p className="font-medium">
+                  Preencha seus dados para contrato antes de aceitar.
+                </p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {iAmSponsee && sponseeType === "athlete"
+                    ? "Nome completo, CPF e endereço vão na qualificação das partes."
+                    : "Razão social, CNPJ (ou CPF), representante e endereço vão na qualificação das partes."}
+                </p>
+                <Button asChild size="sm" className="mt-3">
+                  <Link href="/perfil/dados">Preencher dados</Link>
+                </Button>
+              </div>
+            ) : (
+              <form
+                action={aceitarContrato}
+                className="mt-4 flex flex-wrap gap-2"
               >
-                Não concordo
-              </SubmitButton>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Row2({ k, children }: { k: string; children: React.ReactNode }) {
-  return (
-    <div className="flex justify-between gap-6 px-6 py-3">
-      <dt className="text-muted-foreground shrink-0">{k}</dt>
-      <dd className="text-right">{children}</dd>
+                <input type="hidden" name="sponsorship_id" value={id} />
+                <SubmitButton name="accept" value="1">
+                  De acordo com os termos
+                </SubmitButton>
+                <SubmitButton
+                  name="accept"
+                  value="0"
+                  variant="outline"
+                  confirm="Cancelar o contrato? O patrocínio é desfeito e a proposta volta a ficar retirada."
+                >
+                  Não concordo
+                </SubmitButton>
+              </form>
+            )}
+          </div>
+        </section>
+      </article>
     </div>
   );
 }
 
 function AcceptRow({
+  papel,
   nome,
   acceptedAt,
+  trail,
 }: {
+  papel: string;
   nome: string;
   acceptedAt: string | null;
+  trail: ContractAcceptance | null;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
+    <div className="flex items-start justify-between gap-3 text-sm">
       <span
         className={
           acceptedAt
@@ -227,12 +249,22 @@ function AcceptRow({
             <CheckIcon className="size-2.5" strokeWidth={3} />
           </span>
         )}
-        {nome}
+        <span>
+          <span className="text-muted-foreground text-xs">{papel} · </span>
+          {nome}
+        </span>
       </span>
-      <span className="text-muted-foreground text-xs">
-        {acceptedAt
-          ? new Date(acceptedAt).toLocaleDateString("pt-BR")
-          : "aguardando"}
+      <span className="text-muted-foreground text-right text-xs">
+        {acceptedAt ? (
+          <>
+            de acordo em {dtBR(acceptedAt)}
+            {trail?.ip && (
+              <span className="block">IP {trail.ip}</span>
+            )}
+          </>
+        ) : (
+          "aguardando"
+        )}
       </span>
     </div>
   );

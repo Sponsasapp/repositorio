@@ -35,7 +35,7 @@ export function Sidebar({ profileType }: { profileType: ProfileType }) {
   const pathname = usePathname();
 
   return (
-    <aside className="bg-navy text-navy-foreground border-border hidden w-56 shrink-0 flex-col gap-1 border-r p-5 md:flex">
+    <aside className="bg-navy text-navy-foreground border-border hidden w-56 shrink-0 flex-col gap-1 border-r p-5 md:flex print:hidden">
       <LogoLink tagline className="mb-6 px-2 text-xl" />
       {navTop(profileType).map((link) => (
         <NavItem key={link.href} link={link} pathname={pathname} />

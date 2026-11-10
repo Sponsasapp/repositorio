@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { after } from "next/server";
+import { loadContractTerms, termsHash } from "@/lib/contract";
 import { createClient } from "@/lib/supabase/server";
 import { deliverableLabel } from "@/lib/deliverables";
 import { notifyUser } from "@/lib/email";
@@ -12,6 +14,10 @@ const CONTRACT_ERR: Record<string, string> = {
   not_found: "Patrocínio não encontrado.",
   not_party: "Você não faz parte deste patrocínio.",
   closed: "Este patrocínio já foi encerrado ou cancelado.",
+  missing_legal:
+    "Preencha seus dados para contrato (Meu perfil → Dados) antes de aceitar.",
+  already_active:
+    "As duas partes já aceitaram — o contrato vale. Pra sair, encerre o patrocínio.",
 };
 
 export type EntregaState = { ok?: true; error?: string } | undefined;
@@ -38,10 +44,26 @@ export async function aceitarContrato(formData: FormData): Promise<void> {
   if (!id) return;
 
   const contractPath = `/patrocinios/${id}/contrato`;
-  const { data: result, error } = await supabase.rpc("set_contract_acceptance", {
-    p_sponsorship: id,
-    p_accept: accept,
-  });
+
+  // Trilha do aceite (migration 0040): IP + navegador + hash dos termos que a
+  // pessoa está aceitando — recalculado aqui a partir do banco.
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    null;
+  const terms = accept ? await loadContractTerms(supabase, id) : null;
+
+  const { data: result, error } = await supabase.rpc(
+    "set_contract_acceptance_v2",
+    {
+      p_sponsorship: id,
+      p_accept: accept,
+      p_ip: ip,
+      p_user_agent: h.get("user-agent"),
+      p_terms_hash: terms ? termsHash(terms) : null,
+    },
+  );
   if (error || (result !== "ok" && result !== "cancelled")) {
     flash(
       contractPath,

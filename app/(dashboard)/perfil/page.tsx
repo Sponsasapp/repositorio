@@ -66,12 +66,14 @@ export default async function PerfilPage({
               Os dados da sua empresa e da campanha que você quer rodar.
             </p>
           </div>
-          <Link
-            href={`/e/${user.id}`}
-            className="text-foreground shrink-0 text-sm underline underline-offset-2"
-          >
-            Ver perfil público
-          </Link>
+          <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+            <Link href={`/e/${user.id}`} className="text-foreground underline underline-offset-2">
+              Ver perfil público
+            </Link>
+            <Link href="/perfil/dados" className="text-muted-foreground hover:text-foreground underline underline-offset-2">
+              Dados para contrato
+            </Link>
+          </div>
         </div>
         <PerfilEmpresaForm profile={profile} company={company ?? null} />
       </div>
@@ -104,12 +106,14 @@ export default async function PerfilPage({
               É assim que as marcas vão te encontrar.
             </p>
           </div>
-          <Link
-            href={publicPath(profile.type, user.id)}
-            className="text-foreground shrink-0 text-sm underline underline-offset-2"
-          >
-            Ver perfil público
-          </Link>
+          <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+            <Link href={publicPath(profile.type, user.id)} className="text-foreground underline underline-offset-2">
+              Ver perfil público
+            </Link>
+            <Link href="/perfil/dados" className="text-muted-foreground hover:text-foreground underline underline-offset-2">
+              Dados para contrato
+            </Link>
+          </div>
         </div>
         {profile.type === "track" && (
           <PerfilPistaForm
@@ -207,12 +211,14 @@ export default async function PerfilPage({
             resto (categoria, carros, conquistas, preços) é por modalidade.
           </p>
         </div>
-        <Link
-          href={`/p/${user.id}`}
-          className="text-foreground shrink-0 text-sm underline underline-offset-2"
-        >
-          Ver perfil público
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+          <Link href={`/p/${user.id}`} className="text-foreground underline underline-offset-2">
+            Ver perfil público
+          </Link>
+          <Link href="/perfil/dados" className="text-muted-foreground hover:text-foreground underline underline-offset-2">
+            Dados para contrato
+          </Link>
+        </div>
       </div>
       <PerfilPilotoForm
         key={activeValue}

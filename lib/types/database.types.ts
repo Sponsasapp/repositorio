@@ -412,6 +412,33 @@ export type Message = {
   read_at: string | null;
 };
 
+/** Dados jurídicos de empresa/pista/evento/mídia (migration 0040) — só do dono. */
+export type PartyLegalInfo = {
+  profile_id: string;
+  legal_name: string;
+  document: string;
+  rep_name: string | null;
+  rep_cpf: string | null;
+  address_zip: string;
+  address_street: string;
+  address_number: string;
+  address_complement: string | null;
+  address_district: string;
+  address_city: string;
+  address_state: string;
+  updated_at: string;
+};
+
+/** Trilha do aceite do contrato (migration 0040). */
+export type ContractAcceptance = {
+  sponsorship_id: string;
+  profile_id: string;
+  accepted_at: string;
+  ip: string | null;
+  user_agent: string | null;
+  terms_hash: string | null;
+};
+
 /** Dados pessoais do piloto (LGPD) — tabela isolada, acesso só do dono. */
 export type AthleteDocument = {
   profile_id: string;
@@ -619,6 +646,14 @@ export type Database = {
         Exclude<keyof PaymentAccount, "profile_id">
       >;
       payment_events: TableDef<PaymentEvent, "received_at">;
+      party_legal_info: TableDef<
+        PartyLegalInfo,
+        "rep_name" | "rep_cpf" | "address_complement" | "updated_at"
+      >;
+      contract_acceptances: TableDef<
+        ContractAcceptance,
+        "accepted_at" | "ip" | "user_agent" | "terms_hash"
+      >;
       athlete_documents: TableDef<
         AthleteDocument,
         "address_complement" | "updated_at"
@@ -644,6 +679,33 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      contract_parties: {
+        Args: { p_sponsorship: string };
+        Returns: {
+          role: "company" | "sponsee";
+          profile_id: string;
+          legal_name: string | null;
+          document: string | null;
+          rep_name: string | null;
+          rep_cpf: string | null;
+          address: string | null;
+          complete: boolean;
+        }[];
+      };
+      has_legal_info: {
+        Args: { p_profile: string };
+        Returns: boolean;
+      };
+      set_contract_acceptance_v2: {
+        Args: {
+          p_sponsorship: string;
+          p_accept: boolean;
+          p_ip: string | null;
+          p_user_agent: string | null;
+          p_terms_hash: string | null;
+        };
+        Returns: string;
+      };
       counter_proposal: {
         Args: {
           p_proposal: string;
