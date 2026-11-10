@@ -18,12 +18,18 @@ type AsaasWebhook = {
  * no painel do Asaas = env ASAAS_WEBHOOK_TOKEN). Idempotência por evento.
  */
 export async function POST(request: Request) {
+  // Sem token configurado = webhook desligado (antes aceitava qualquer um e
+  // dava pra forjar "pagamento confirmado").
   const token = process.env.ASAAS_WEBHOOK_TOKEN;
-  if (token) {
-    const got = request.headers.get("asaas-access-token");
-    if (got !== token) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
+  if (!token) {
+    return NextResponse.json(
+      { error: "webhook não configurado" },
+      { status: 503 },
+    );
+  }
+  const got = request.headers.get("asaas-access-token");
+  if (got !== token) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   let body: AsaasWebhook;
