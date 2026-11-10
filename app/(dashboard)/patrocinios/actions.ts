@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { loadContractTerms, termsHash } from "@/lib/contract";
+import { createSponsorshipSubscription } from "@/lib/payments";
 import { createClient } from "@/lib/supabase/server";
 import { deliverableLabel } from "@/lib/deliverables";
 import { notifyUser } from "@/lib/email";
@@ -299,4 +300,47 @@ export async function removerEntrega(formData: FormData): Promise<void> {
     flash(`/patrocinios/${sponsorshipId}`, "erro", "Só dá pra remover entrega ainda pendente.");
   }
   flash(`/patrocinios/${sponsorshipId}`, "ok", "Entrega removida.");
+}
+
+/**
+ * Empresa ativa a cobrança mensal do patrocínio no Asaas (assinatura com
+ * split pro patrocinado). Pré-requisitos checados em lib/payments.
+ */
+export async function ativarCobranca(formData: FormData): Promise<void> {
+  const { supabase, user } = await ctx();
+  if (!user) return;
+
+  const id = String(formData.get("sponsorship_id") ?? "");
+  const back = `/patrocinios/${id}`;
+  const { data: s } = await supabase
+    .from("sponsorships")
+    .select(
+      "id, athlete_id, company_id, status, payment_type, value, duration_months, start_date, athlete_accepted_at, company_accepted_at, asaas_subscription_id, athlete:profiles!sponsorships_athlete_id_fkey(name)",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!s || s.company_id !== user.id) {
+    flash(back, "erro", "Só a empresa do patrocínio ativa a cobrança.");
+  }
+
+  const row = s as unknown as Parameters<typeof createSponsorshipSubscription>[0] & {
+    athlete: { name: string | null } | null;
+  };
+  const err = await createSponsorshipSubscription(
+    { ...row, sponseeName: row.athlete?.name ?? null },
+    user.email ?? null,
+  );
+  revalidatePath(back);
+  if (err) flash(back, "erro", err);
+
+  after(() =>
+    notifyUser(row.athlete_id, {
+      type: "billing_active",
+      subject: "Cobrança do patrocínio ativada",
+      title: "A empresa ativou a cobrança mensal",
+      body: "As faturas do patrocínio agora saem pela Sponsas e a sua parte cai direto na sua conta a cada pagamento.",
+      cta: { label: "Ver patrocínio", path: back },
+    }),
+  );
+  flash(back, "ok", "Cobrança ativada — a primeira fatura já está disponível.");
 }

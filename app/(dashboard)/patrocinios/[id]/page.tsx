@@ -11,6 +11,7 @@ import {
   removerEntrega,
 } from "../actions";
 import { AddDeliverableForm, ProofForm } from "./entrega-forms";
+import { PaymentPanel } from "./payment-panel";
 import { SubmitButton } from "@/components/submit-button";
 import type {
   Sponsorship,
@@ -162,6 +163,8 @@ export default async function PatrocinioPage({
             </p>
           </div>
         )}
+
+        <PaymentPanel s={s} iAmCompany={iAmCompany} />
 
         {/* --- Entregas --- */}
         <section className="mt-8">

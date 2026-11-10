@@ -332,6 +332,7 @@ export type PaymentAccount = {
   asaas_account_id: string | null;
   asaas_wallet_id: string | null;
   onboarding_status: PaymentOnboardingStatus;
+  onboarding_url: string | null;
   asaas_customer_id: string | null;
   updated_at: string;
 };
@@ -383,7 +384,8 @@ export type NotificationType =
   | "contract_active"
   | "deliverables_due"
   | "sponsorship_ended"
-  | "proposal_countered";
+  | "proposal_countered"
+  | "billing_active";
 
 export type Notification = {
   id: string;

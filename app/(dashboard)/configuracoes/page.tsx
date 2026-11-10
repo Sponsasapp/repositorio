@@ -6,6 +6,7 @@ import { formatBRL, formatDateBR } from "@/lib/format";
 import { alternarPlanoTeste } from "./actions";
 import { Button } from "@/components/ui/button";
 import { RecebimentosCard } from "@/components/payments/recebimentos-card";
+import { asaasConfigured } from "@/lib/asaas";
 import type { CouponCommission } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Configurações — Sponsas" };
@@ -28,13 +29,36 @@ export default async function ConfiguracoesPage() {
   const isSponsee = !!profile?.type && profile.type !== "company";
   const isFree = profile?.plan !== "pro";
 
-  const { data: payAcct } = isSponsee
-    ? await supabase
-        .from("payment_accounts")
-        .select("onboarding_status, asaas_account_id")
-        .eq("profile_id", user.id)
-        .maybeSingle()
-    : { data: null };
+  const [{ data: payAcct }, { data: athleteDoc }, { data: legal }] =
+    isSponsee
+      ? await Promise.all([
+          supabase
+            .from("payment_accounts")
+            .select("onboarding_status, asaas_account_id, onboarding_url")
+            .eq("profile_id", user.id)
+            .maybeSingle(),
+          supabase
+            .from("athlete_documents")
+            .select("profile_id")
+            .eq("profile_id", user.id)
+            .maybeSingle(),
+          supabase
+            .from("party_legal_info")
+            .select("document")
+            .eq("profile_id", user.id)
+            .maybeSingle(),
+        ])
+      : [{ data: null }, { data: null }, { data: null }];
+  // De onde o cadastro no Asaas tira nome/documento/endereço.
+  const docKind: "athlete" | "cnpj" | "cpf" | "missing" = isAthlete
+    ? athleteDoc
+      ? "athlete"
+      : "missing"
+    : legal
+      ? legal.document.length === 14
+        ? "cnpj"
+        : "cpf"
+      : "missing";
   const isDev = process.env.NODE_ENV !== "production";
 
   // Uso atual
@@ -148,6 +172,9 @@ export default async function ConfiguracoesPage() {
         <RecebimentosCard
           status={payAcct?.onboarding_status ?? "none"}
           hasAccount={!!payAcct?.asaas_account_id}
+          onboardingUrl={payAcct?.onboarding_url ?? null}
+          docKind={docKind}
+          configured={asaasConfigured()}
         />
       )}
 
