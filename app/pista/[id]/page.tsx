@@ -49,6 +49,7 @@ export default async function PistaPublicaPage({
       viewerType={data.viewerType}
       canMessage={data.canMessage}
       messageHint={data.messageHint}
+      packages={data.packages}
     >
       <Panel title="A pista">
         <dl className="grid gap-2 text-sm sm:grid-cols-2">

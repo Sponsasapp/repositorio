@@ -15,11 +15,13 @@ import type {
   TrackProfile,
   EventProfile,
   MediaProfile,
+  SponseePackage,
 } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/image-upload";
+import { PackagesEditor } from "./packages-editor";
 
 const MEDIA_ROLES = [
   "Fotografia",
@@ -149,9 +151,11 @@ function BaseFields({
 export function PerfilPistaForm({
   profile,
   track,
+  packages,
 }: {
   profile: Profile;
   track: TrackProfile | null;
+  packages: SponseePackage[];
 }) {
   const [state, formAction, pending] = useActionState<PerfilState, FormData>(
     salvarPerfilPista,
@@ -218,6 +222,9 @@ export function PerfilPistaForm({
           />
         </Field>
       </Section>
+      <Section title="Cotas de patrocínio">
+        <PackagesEditor initial={packages} examples="Ex.: Placa no muro de contenção" />
+      </Section>
       <Foot state={state} pending={pending} />
     </form>
   );
@@ -226,9 +233,11 @@ export function PerfilPistaForm({
 export function PerfilEventoForm({
   profile,
   event,
+  packages,
 }: {
   profile: Profile;
   event: EventProfile | null;
+  packages: SponseePackage[];
 }) {
   const [state, formAction, pending] = useActionState<PerfilState, FormData>(
     salvarPerfilEvento,
@@ -306,6 +315,9 @@ export function PerfilEventoForm({
           />
         </Field>
       </Section>
+      <Section title="Cotas de patrocínio">
+        <PackagesEditor initial={packages} examples="Ex.: Cota Ouro" />
+      </Section>
       <Foot state={state} pending={pending} />
     </form>
   );
@@ -314,9 +326,11 @@ export function PerfilEventoForm({
 export function PerfilMidiaForm({
   profile,
   media,
+  packages,
 }: {
   profile: Profile;
   media: MediaProfile | null;
+  packages: SponseePackage[];
 }) {
   const [state, formAction, pending] = useActionState<PerfilState, FormData>(
     salvarPerfilMidia,
@@ -363,6 +377,9 @@ export function PerfilMidiaForm({
             rows={3}
           />
         </Field>
+      </Section>
+      <Section title="Cotas de patrocínio">
+        <PackagesEditor initial={packages} examples="Ex.: Cobertura completa do evento" />
       </Section>
       <Foot state={state} pending={pending} />
     </form>

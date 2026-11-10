@@ -16,6 +16,7 @@ export const metadata: Metadata = { title: "Proposta — Sponsas" };
 type Row = Proposal & {
   from: { name: string | null; type: string } | null;
   to: { name: string | null; type: string } | null;
+  package: { title: string } | null;
 };
 
 export default async function PropostaPage({
@@ -33,7 +34,7 @@ export default async function PropostaPage({
   const { data } = await supabase
     .from("proposals")
     .select(
-      "*, from:profiles!proposals_from_profile_id_fkey(name, type), to:profiles!proposals_to_profile_id_fkey(name, type)",
+      "*, from:profiles!proposals_from_profile_id_fkey(name, type), to:profiles!proposals_to_profile_id_fkey(name, type), package:sponsee_packages(title)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -107,6 +108,7 @@ export default async function PropostaPage({
         </div>
 
         <div className="border-border bg-card mt-6 flex flex-col gap-4 rounded-xl border p-6 text-sm">
+          {p.package && <Linha label="Cota">{p.package.title}</Linha>}
           <Linha label="Dinheiro">
             {p.value != null ? `${formatBRL(p.value)} / mês` : "—"}
           </Linha>

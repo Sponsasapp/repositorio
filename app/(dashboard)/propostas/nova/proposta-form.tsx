@@ -34,6 +34,7 @@ export function PropostaForm({
   oportunidade,
   counterOf,
   initial,
+  cota,
 }: {
   para: string;
   paraNome: string;
@@ -42,6 +43,8 @@ export function PropostaForm({
   counterOf?: string;
   /** Termos pré-preenchidos (os da proposta que está sendo contraproposta). */
   initial?: PropostaInitial;
+  /** Cota de patrocínio escolhida na página do patrocinado. */
+  cota?: { id: string; title: string };
 }) {
   const [state, formAction, pending] = useActionState<PropostaState, FormData>(
     counterOf ? contraProposta : enviarProposta,
@@ -64,6 +67,7 @@ export function PropostaForm({
       {counterOf && (
         <input type="hidden" name="contraproposta_de" value={counterOf} />
       )}
+      {cota && <input type="hidden" name="package_id" value={cota.id} />}
 
       <p className="text-muted-foreground text-sm">
         {counterOf ? "Contraproposta para " : "Proposta para "}
@@ -71,6 +75,12 @@ export function PropostaForm({
         {counterOf &&
           " Os termos atuais já vêm preenchidos — ajuste o que quiser mudar."}
       </p>
+      {cota && (
+        <p className="border-primary/30 bg-primary/5 rounded-md border px-3 py-2 text-sm">
+          Cota: <span className="font-semibold">{cota.title}</span> — valor da
+          tabela já preenchido, ajuste se for negociar.
+        </p>
+      )}
 
       <div className="flex flex-col gap-2">
         <Label>Forma de pagamento</Label>

@@ -128,6 +128,8 @@ export async function enviarProposta(
       from_profile_id: user.id,
       to_profile_id: to,
       opportunity_id: text(formData.get("oportunidade")),
+      // Cota da página do patrocinado; o banco ignora se não for de uma das partes.
+      package_id: text(formData.get("package_id")),
       ...terms,
     })
     .select("id")
@@ -182,10 +184,13 @@ export async function responderProposta(formData: FormData): Promise<void> {
   // Aceite/recusa passam pela RPC respond_proposal (SECURITY DEFINER):
   // é ela que cria o patrocínio e trava os termos — não dá mais pra
   // fabricar/mexer num patrocínio direto pelo client.
-  const { data: result } = await supabase.rpc("respond_proposal", {
-    p_proposal: id,
-    p_action: decision === "accepted" ? "accept" : "reject",
-  });
+  const { data: result, error: rpcError } = await supabase.rpc(
+    "respond_proposal",
+    {
+      p_proposal: id,
+      p_action: decision === "accepted" ? "accept" : "reject",
+    },
+  );
 
   if (decision === "rejected") {
     revalidatePath(back);
@@ -198,7 +203,13 @@ export async function responderProposta(formData: FormData): Promise<void> {
   if (!/^[0-9a-f-]{36}$/i.test(sponsorshipId)) {
     // não voltou um uuid → aceite falhou
     revalidatePath(back);
-    flash(back, "erro", "Não foi possível aceitar a proposta. Tente de novo.");
+    flash(
+      back,
+      "erro",
+      rpcError?.message?.includes("package_sold_out")
+        ? "Esta cota esgotou — não dá pra aceitar uma nova proposta dela."
+        : "Não foi possível aceitar a proposta. Tente de novo.",
+    );
   }
 
   after(() =>

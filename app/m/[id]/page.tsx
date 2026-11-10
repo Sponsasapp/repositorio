@@ -51,6 +51,7 @@ export default async function MidiaPublicaPage({
       viewerType={data.viewerType}
       canMessage={data.canMessage}
       messageHint={data.messageHint}
+      packages={data.packages}
     >
       <Panel title="A mídia">
         <dl className="grid gap-2 text-sm sm:grid-cols-2">

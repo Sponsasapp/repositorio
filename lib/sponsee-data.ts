@@ -4,6 +4,7 @@ import type {
   ProfileType,
   RankConfig,
   SocialLink,
+  SponseePackage,
   SponseeRank,
 } from "@/lib/types/database.types";
 
@@ -29,6 +30,8 @@ export async function getSponsee(id: string, type: ProfileType, table: Table) {
     { data: auth },
     { data: rank },
     { data: rankCfg },
+    { data: pkgs },
+    { data: sold },
   ] = await Promise.all([
     supabase.from(table).select("*").eq("profile_id", id).maybeSingle(),
     supabase
@@ -39,7 +42,18 @@ export async function getSponsee(id: string, type: ProfileType, table: Table) {
     supabase.auth.getUser(),
     supabase.from("sponsee_rank").select("*").eq("profile_id", id).maybeSingle(),
     supabase.from("rank_config").select("*").maybeSingle(),
+    supabase
+      .from("sponsee_packages")
+      .select("*")
+      .eq("profile_id", id)
+      .order("position"),
+    supabase.rpc("sponsee_package_sold", { p_profile: id }),
   ]);
+  const soldBy = new Map((sold ?? []).map((r) => [r.package_id, r.sold]));
+  const packages = ((pkgs ?? []) as SponseePackage[]).map((p) => ({
+    ...p,
+    sold: soldBy.get(p.id) ?? 0,
+  }));
 
   const viewerId = auth.user?.id ?? null;
   let viewerType: ProfileType | null = null;
@@ -80,5 +94,6 @@ export async function getSponsee(id: string, type: ProfileType, table: Table) {
     viewerType,
     canMessage,
     messageHint,
+    packages,
   };
 }

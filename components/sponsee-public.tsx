@@ -3,6 +3,7 @@ import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import { iniciarConversa } from "@/app/(dashboard)/mensagens/actions";
 import { PARTICIPANT } from "@/lib/participant-types";
+import { formatBRL } from "@/lib/format";
 import { DEFAULT_RANK_CONFIG, POINT_LABELS, RANK_TIERS, tierProgress } from "@/lib/rank";
 import type {
   Profile,
@@ -10,6 +11,7 @@ import type {
   RankConfig,
   RankFactors,
   SocialLink,
+  SponseePackage,
   SponseeRank,
 } from "@/lib/types/database.types";
 
@@ -42,6 +44,7 @@ export function SponseePublic({
   viewerType,
   canMessage,
   messageHint,
+  packages = [],
   children,
 }: {
   profile: Profile;
@@ -54,6 +57,8 @@ export function SponseePublic({
   viewerType: ProfileType | null;
   canMessage: boolean;
   messageHint: string | null;
+  /** Cotas de patrocínio com vagas já ocupadas (migration 0041). */
+  packages?: (SponseePackage & { sold: number })[];
   children: React.ReactNode;
 }) {
   const isOwner = viewerId === profile.id;
@@ -100,6 +105,67 @@ export function SponseePublic({
         <div className="grid gap-6 md:grid-cols-[1fr_320px]">
           <div className="flex flex-col gap-6">
             {children}
+
+            {packages.length > 0 && (
+              <Panel title="Cotas de patrocínio">
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {packages.map((p) => {
+                    const left =
+                      p.quantity != null ? Math.max(p.quantity - p.sold, 0) : null;
+                    const soldOut = left === 0;
+                    return (
+                      <li
+                        key={p.id}
+                        className={
+                          soldOut
+                            ? "border-border flex flex-col rounded-lg border p-4 opacity-60"
+                            : "border-primary/40 flex flex-col rounded-lg border p-4"
+                        }
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-semibold">{p.title}</p>
+                          <span
+                            className={
+                              soldOut
+                                ? "bg-muted text-muted-foreground shrink-0 rounded-full px-2 py-0.5 text-[11px]"
+                                : "bg-success-soft text-success shrink-0 rounded-full px-2 py-0.5 text-[11px]"
+                            }
+                          >
+                            {soldOut
+                              ? "Esgotada"
+                              : left != null
+                                ? `${left} de ${p.quantity} ${left === 1 ? "vaga" : "vagas"}`
+                                : "Disponível"}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-lg font-semibold">
+                          {p.price != null ? formatBRL(p.price) : "Sob consulta"}
+                        </p>
+                        {p.description && (
+                          <p className="text-muted-foreground mt-1 text-sm whitespace-pre-line">
+                            {p.description}
+                          </p>
+                        )}
+                        {isCompany && !soldOut && (
+                          <Button asChild size="sm" className="mt-3 self-start">
+                            <Link
+                              href={`/propostas/nova?para=${profile.id}&cota=${p.id}`}
+                            >
+                              Propor esta cota
+                            </Link>
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {!viewerId && (
+                  <p className="text-muted-foreground mt-3 text-xs">
+                    Entre como empresa pra propor uma cota.
+                  </p>
+                )}
+              </Panel>
+            )}
 
             {rank && (
               <SponseeRankPanel
@@ -170,7 +236,7 @@ export function SponseePublic({
                     Enviar proposta
                   </Link>
                 ) : viewerId ? (
-                  <Link href="/pilotos">Ver pilotos</Link>
+                  <Link href="/empresas">Encontrar patrocinadores</Link>
                 ) : (
                   <Link href={`/login?next=/${meta.urlSingular}/${profile.id}`}>
                     Entrar para enviar proposta

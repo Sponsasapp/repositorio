@@ -10,9 +10,9 @@ export const metadata: Metadata = { title: "Nova proposta — Sponsas" };
 export default async function NovaPropostaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ para?: string; oportunidade?: string }>;
+  searchParams: Promise<{ para?: string; oportunidade?: string; cota?: string }>;
 }) {
-  const { para, oportunidade } = await searchParams;
+  const { para, oportunidade, cota: cotaId } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,6 +31,16 @@ export default async function NovaPropostaPage({
     .select("name, type")
     .eq("id", para)
     .maybeSingle();
+
+  // Cota escolhida na página do patrocinado: só vale se for dele.
+  const { data: cota } = cotaId
+    ? await supabase
+        .from("sponsee_packages")
+        .select("id, title, price")
+        .eq("id", cotaId)
+        .eq("profile_id", para)
+        .maybeSingle()
+    : { data: null };
 
   const problema =
     !dest
@@ -59,6 +69,19 @@ export default async function NovaPropostaPage({
             para={para}
             paraNome={dest!.name}
             oportunidade={oportunidade}
+            cota={cota ? { id: cota.id, title: cota.title } : undefined}
+            initial={
+              cota
+                ? {
+                    payment_type: "cash",
+                    value: cota.price,
+                    trade_description: null,
+                    trade_value: null,
+                    duration_months: null,
+                    deliverables: null,
+                  }
+                : undefined
+            }
           />
         )}
       </div>

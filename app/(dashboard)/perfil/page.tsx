@@ -26,6 +26,7 @@ import type {
   TrackProfile,
   EventProfile,
   MediaProfile,
+  SponseePackage,
 } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Meu perfil — Sponsas" };
@@ -91,11 +92,15 @@ export default async function PerfilPage({
         : profile.type === "event"
           ? "event_profiles"
           : "media_profiles";
-    const { data: row } = await supabase
-      .from(table)
-      .select("*")
-      .eq("profile_id", user.id)
-      .maybeSingle();
+    const [{ data: row }, { data: pkgs }] = await Promise.all([
+      supabase.from(table).select("*").eq("profile_id", user.id).maybeSingle(),
+      supabase
+        .from("sponsee_packages")
+        .select("*")
+        .eq("profile_id", user.id)
+        .order("position"),
+    ]);
+    const packages = (pkgs ?? []) as SponseePackage[];
 
     return (
       <div className="mx-auto max-w-2xl">
@@ -119,18 +124,21 @@ export default async function PerfilPage({
           <PerfilPistaForm
             profile={profile}
             track={(row as TrackProfile | null) ?? null}
+            packages={packages}
           />
         )}
         {profile.type === "event" && (
           <PerfilEventoForm
             profile={profile}
             event={(row as EventProfile | null) ?? null}
+            packages={packages}
           />
         )}
         {profile.type === "media" && (
           <PerfilMidiaForm
             profile={profile}
             media={(row as MediaProfile | null) ?? null}
+            packages={packages}
           />
         )}
       </div>

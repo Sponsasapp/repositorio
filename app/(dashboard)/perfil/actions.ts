@@ -469,6 +469,71 @@ async function salvarBase(formData: FormData) {
 const list = (fd: FormData, key: string) =>
   [...new Set(fd.getAll(key).map(String).filter(Boolean))];
 
+/**
+ * Cotas de patrocínio (pista/evento/mídia, migration 0041). Upsert por id
+ * (mantém o vínculo com propostas já feitas) e apaga só as removidas.
+ */
+async function salvarCotas(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  formData: FormData,
+): Promise<string | null> {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(formData.get("packages") ?? "[]"));
+  } catch {
+    return "Cotas inválidas.";
+  }
+  if (!Array.isArray(raw)) return null;
+
+  const rows = raw
+    .map((r, i) => {
+      const o = r as Record<string, unknown>;
+      const title = String(o.title ?? "").trim().slice(0, 120);
+      if (!title) return null;
+      const qty = parseNumberBR(String(o.quantity ?? ""));
+      return {
+        id: typeof o.id === "string" && o.id ? o.id : undefined,
+        profile_id: userId,
+        title,
+        description: String(o.description ?? "").trim().slice(0, 600) || null,
+        price: parseNumberBR(String(o.price ?? "")),
+        quantity: qty != null && qty >= 1 ? Math.round(qty) : null,
+        position: i,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .slice(0, 20);
+
+  const keepIds = rows.map((r) => r.id).filter((id): id is string => !!id);
+  let del = supabase.from("sponsee_packages").delete().eq("profile_id", userId);
+  if (keepIds.length > 0) del = del.not("id", "in", `(${keepIds.join(",")})`);
+  const { error: eDel } = await del;
+  if (eDel) return "Não foi possível salvar as cotas.";
+
+  const fields = (r: (typeof rows)[number]) => ({
+    profile_id: r.profile_id,
+    title: r.title,
+    description: r.description,
+    price: r.price,
+    quantity: r.quantity,
+    position: r.position,
+  });
+  const existing = rows
+    .filter((r) => r.id)
+    .map((r) => ({ id: r.id as string, ...fields(r) }));
+  const fresh = rows.filter((r) => !r.id).map(fields);
+  if (existing.length > 0) {
+    const { error } = await supabase.from("sponsee_packages").upsert(existing);
+    if (error) return "Não foi possível salvar as cotas.";
+  }
+  if (fresh.length > 0) {
+    const { error } = await supabase.from("sponsee_packages").insert(fresh);
+    if (error) return "Não foi possível salvar as cotas.";
+  }
+  return null;
+}
+
 export async function salvarPerfilPista(
   _prev: PerfilState,
   formData: FormData,
@@ -488,6 +553,8 @@ export async function salvarPerfilPista(
     updated_at: new Date().toISOString(),
   });
   if (e2) return { error: "Não foi possível salvar os dados da pista." };
+  const eCotas = await salvarCotas(supabase, user.id, formData);
+  if (eCotas) return { error: eCotas };
 
   revalidatePath("/perfil");
   revalidatePath("/pistas");
@@ -515,6 +582,8 @@ export async function salvarPerfilEvento(
     updated_at: new Date().toISOString(),
   });
   if (e2) return { error: "Não foi possível salvar os dados do evento." };
+  const eCotas = await salvarCotas(supabase, user.id, formData);
+  if (eCotas) return { error: eCotas };
 
   revalidatePath("/perfil");
   revalidatePath("/eventos");
@@ -539,6 +608,8 @@ export async function salvarPerfilMidia(
     updated_at: new Date().toISOString(),
   });
   if (e2) return { error: "Não foi possível salvar os dados de mídia." };
+  const eCotas = await salvarCotas(supabase, user.id, formData);
+  if (eCotas) return { error: eCotas };
 
   revalidatePath("/perfil");
   revalidatePath("/midias");

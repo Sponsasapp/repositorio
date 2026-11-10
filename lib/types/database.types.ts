@@ -281,6 +281,8 @@ export type Proposal = {
   opportunity_id: string | null;
   /** Proposta que esta contrapropõe (migration 0039). */
   parent_id: string | null;
+  /** Cota de patrocínio que a proposta usa (migration 0041). */
+  package_id: string | null;
   value: number | null;
   duration_months: number | null;
   deliverables: string[] | null;
@@ -410,6 +412,18 @@ export type Message = {
   body: string;
   created_at: string;
   read_at: string | null;
+};
+
+/** Cota de patrocínio de pista/evento/mídia (migration 0041) — pública. */
+export type SponseePackage = {
+  id: string;
+  profile_id: string;
+  title: string;
+  description: string | null;
+  price: number | null;
+  quantity: number | null;
+  position: number;
+  created_at: string;
 };
 
 /** Dados jurídicos de empresa/pista/evento/mídia (migration 0040) — só do dono. */
@@ -597,6 +611,7 @@ export type Database = {
         | "id"
         | "opportunity_id"
         | "parent_id"
+        | "package_id"
         | "value"
         | "duration_months"
         | "deliverables"
@@ -646,6 +661,10 @@ export type Database = {
         Exclude<keyof PaymentAccount, "profile_id">
       >;
       payment_events: TableDef<PaymentEvent, "received_at">;
+      sponsee_packages: TableDef<
+        SponseePackage,
+        "id" | "description" | "price" | "quantity" | "position" | "created_at"
+      >;
       party_legal_info: TableDef<
         PartyLegalInfo,
         "rep_name" | "rep_cpf" | "address_complement" | "updated_at"
@@ -679,6 +698,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      sponsee_package_sold: {
+        Args: { p_profile: string };
+        Returns: { package_id: string; sold: number }[];
+      };
       contract_parties: {
         Args: { p_sponsorship: string };
         Returns: {
