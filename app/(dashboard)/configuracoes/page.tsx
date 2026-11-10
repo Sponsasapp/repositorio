@@ -50,6 +50,7 @@ export default async function ConfiguracoesPage() {
       .from("proposals")
       .select("id", { count: "exact", head: true })
       .eq("from_profile_id", user.id)
+      .is("parent_id", null)
       .gte("created_at", startOfMonthISO()),
     isAthlete
       ? supabase

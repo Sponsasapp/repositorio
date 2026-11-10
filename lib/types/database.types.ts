@@ -12,7 +12,12 @@
 export type ProfileType = "athlete" | "company" | "track" | "event" | "media";
 export type OpportunityStatus = "open" | "closed";
 export type ApplicationStatus = "pending" | "accepted" | "rejected";
-export type ProposalStatus = "pending" | "accepted" | "rejected" | "withdrawn";
+export type ProposalStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "withdrawn"
+  | "countered";
 export type ProposalPaymentType = "cash" | "trade" | "mixed";
 export type SponsorshipStatus = "active" | "ended" | "cancelled";
 export type DeliverableStatus = "pending" | "submitted" | "approved" | "rejected";
@@ -274,6 +279,8 @@ export type Proposal = {
   from_profile_id: string;
   to_profile_id: string;
   opportunity_id: string | null;
+  /** Proposta que esta contrapropõe (migration 0039). */
+  parent_id: string | null;
   value: number | null;
   duration_months: number | null;
   deliverables: string[] | null;
@@ -373,7 +380,8 @@ export type NotificationType =
   | "contract_accepted"
   | "contract_active"
   | "deliverables_due"
-  | "sponsorship_ended";
+  | "sponsorship_ended"
+  | "proposal_countered";
 
 export type Notification = {
   id: string;
@@ -561,6 +569,7 @@ export type Database = {
         Proposal,
         | "id"
         | "opportunity_id"
+        | "parent_id"
         | "value"
         | "duration_months"
         | "deliverables"
@@ -635,6 +644,19 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      counter_proposal: {
+        Args: {
+          p_proposal: string;
+          p_payment_type: ProposalPaymentType;
+          p_value: number | null;
+          p_trade_description: string | null;
+          p_trade_value: number | null;
+          p_duration_months: number | null;
+          p_deliverables: string[];
+          p_message: string | null;
+        };
+        Returns: string;
+      };
       get_athlete_prices: {
         Args: { p_athlete: string };
         Returns: { package_id: string; price: number | null }[];

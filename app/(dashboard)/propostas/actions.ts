@@ -22,6 +22,57 @@ function text(v: FormDataEntryValue | null): string | null {
   return s || null;
 }
 
+type Terms = {
+  payment_type: ProposalPaymentType;
+  value: number | null;
+  trade_description: string | null;
+  trade_value: number | null;
+  duration_months: number | null;
+  deliverables: string[];
+  message: string | null;
+};
+
+/** Lê e valida os termos do form (proposta nova e contraproposta). */
+function parseTerms(formData: FormData): Terms | { error: string } {
+  const paymentType = String(
+    formData.get("payment_type") ?? "cash",
+  ) as ProposalPaymentType;
+  if (!["cash", "trade", "mixed"].includes(paymentType)) {
+    return { error: "Tipo de pagamento inválido." };
+  }
+
+  const value =
+    paymentType === "trade" ? null : parseNumberBR(formData.get("value"));
+  const tradeDescription =
+    paymentType === "cash" ? null : text(formData.get("trade_description"));
+  const tradeValue =
+    paymentType === "cash" ? null : parseNumberBR(formData.get("trade_value"));
+
+  if (paymentType !== "trade" && (value == null || value <= 0)) {
+    return { error: "Informe o valor em dinheiro." };
+  }
+  if (paymentType !== "cash" && !tradeDescription) {
+    return { error: "Descreva o produto ou serviço da permuta." };
+  }
+
+  // Duração é em meses inteiros (a coluna é int — "1,5" quebrava o envio).
+  const rawDuration = parseNumberBR(formData.get("duration_months"));
+  const duration = rawDuration == null ? null : Math.round(rawDuration);
+  if (duration != null && duration < 1) {
+    return { error: "Duração precisa ser de pelo menos 1 mês." };
+  }
+
+  return {
+    payment_type: paymentType,
+    value,
+    trade_description: tradeDescription,
+    trade_value: tradeValue,
+    duration_months: duration,
+    deliverables: formData.getAll("deliverables").map(String),
+    message: text(formData.get("message")),
+  };
+}
+
 async function ctx() {
   const supabase = await createClient();
   const {
@@ -56,36 +107,20 @@ export async function enviarProposta(
   }
 
   if (me.plan === "free") {
+    // Contraproposta (parent_id) não conta no limite — é negociação.
     const { count } = await supabase
       .from("proposals")
       .select("id", { count: "exact", head: true })
       .eq("from_profile_id", user.id)
+      .is("parent_id", null)
       .gte("created_at", startOfMonthISO());
     if ((count ?? 0) >= PLAN_LIMITS.proposalsPerMonth) {
       return { error: limitMessage("proposalsPerMonth") };
     }
   }
 
-  const paymentType = String(
-    formData.get("payment_type") ?? "cash",
-  ) as ProposalPaymentType;
-  if (!["cash", "trade", "mixed"].includes(paymentType)) {
-    return { error: "Tipo de pagamento inválido." };
-  }
-
-  const value =
-    paymentType === "trade" ? null : parseNumberBR(formData.get("value"));
-  const tradeDescription =
-    paymentType === "cash" ? null : text(formData.get("trade_description"));
-  const tradeValue =
-    paymentType === "cash" ? null : parseNumberBR(formData.get("trade_value"));
-
-  if (paymentType !== "trade" && value == null) {
-    return { error: "Informe o valor em dinheiro." };
-  }
-  if (paymentType !== "cash" && !tradeDescription) {
-    return { error: "Descreva o produto ou serviço da permuta." };
-  }
+  const terms = parseTerms(formData);
+  if ("error" in terms) return terms;
 
   const { data, error } = await supabase
     .from("proposals")
@@ -93,13 +128,7 @@ export async function enviarProposta(
       from_profile_id: user.id,
       to_profile_id: to,
       opportunity_id: text(formData.get("oportunidade")),
-      payment_type: paymentType,
-      value,
-      trade_description: tradeDescription,
-      trade_value: tradeValue,
-      duration_months: parseNumberBR(formData.get("duration_months")),
-      deliverables: formData.getAll("deliverables").map(String),
-      message: text(formData.get("message")),
+      ...terms,
     })
     .select("id")
     .single();
@@ -213,4 +242,76 @@ export async function retirarProposta(formData: FormData): Promise<void> {
     flash(`/propostas/${id}`, "erro", "Não foi possível retirar — a proposta já foi respondida?");
   }
   flash(`/propostas/${id}`, "ok", "Proposta retirada.");
+}
+
+const COUNTER_ERR: Record<string, string> = {
+  no_auth: "Sua sessão expirou. Entre de novo.",
+  not_pending: "Esta proposta já foi respondida, retirada ou contraproposta.",
+  not_recipient: "Só quem recebeu a proposta pode fazer contraproposta.",
+  bad_value: "Informe o valor em dinheiro.",
+  bad_trade: "Descreva o produto ou serviço da permuta.",
+};
+
+/**
+ * Contraproposta: quem recebeu devolve outros termos. Vira uma proposta nova
+ * na direção oposta (parent_id → a anterior, que fica "countered"), via RPC
+ * `counter_proposal` (migration 0039). Não conta no limite do plano Free.
+ */
+export async function contraProposta(
+  _prev: PropostaState,
+  formData: FormData,
+): Promise<PropostaState> {
+  const { supabase, user } = await ctx();
+  if (!user) return { error: "Entre para responder." };
+
+  const original = String(formData.get("contraproposta_de") ?? "");
+  if (!original) return { error: "Proposta inválida." };
+
+  const terms = parseTerms(formData);
+  if ("error" in terms) return terms;
+
+  const { data: result, error } = await supabase.rpc("counter_proposal", {
+    p_proposal: original,
+    p_payment_type: terms.payment_type,
+    p_value: terms.value,
+    p_trade_description: terms.trade_description,
+    p_trade_value: terms.trade_value,
+    p_duration_months: terms.duration_months,
+    p_deliverables: terms.deliverables,
+    p_message: terms.message,
+  });
+
+  const newId = String(result ?? "");
+  if (error || !/^[0-9a-f-]{36}$/i.test(newId)) {
+    return {
+      error:
+        COUNTER_ERR[newId] ?? "Não foi possível enviar a contraproposta.",
+    };
+  }
+
+  const { data: prev } = await supabase
+    .from("proposals")
+    .select("from_profile_id")
+    .eq("id", original)
+    .maybeSingle();
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+  if (prev) {
+    after(() =>
+      notifyUser(prev.from_profile_id, {
+        type: "proposal_countered",
+        subject: "Você recebeu uma contraproposta",
+        title: `${me?.name ?? "A outra parte"} fez uma contraproposta`,
+        body: "Os termos da sua proposta voltaram com ajustes. Abra pra aceitar, recusar ou contrapropor de novo.",
+        cta: { label: "Ver contraproposta", path: `/propostas/${newId}` },
+      }),
+    );
+  }
+
+  revalidatePath(`/propostas/${original}`);
+  revalidatePath("/propostas");
+  flash(`/propostas/${newId}`, "ok", "Contraproposta enviada.");
 }

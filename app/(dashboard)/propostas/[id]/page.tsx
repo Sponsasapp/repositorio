@@ -47,6 +47,17 @@ export default async function PropostaPage({
 
   const st = PROPOSAL_STATUS[p.status];
 
+  // Negociação: proposta anterior (esta é contraproposta) e a seguinte
+  // (esta foi contraproposta).
+  const { data: next } =
+    p.status === "countered"
+      ? await supabase
+          .from("proposals")
+          .select("id")
+          .eq("parent_id", p.id)
+          .maybeSingle()
+      : { data: null };
+
   let sponsorshipId: string | null = null;
   if (p.status === "accepted") {
     const { data: sp } = await supabase
@@ -70,12 +81,24 @@ export default async function PropostaPage({
         <div className="mt-4 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl">
+              {p.parent_id ? "Contraproposta" : "Proposta"}{" "}
               {amRecipient
-                ? `Proposta de ${p.from?.name ?? "—"}`
-                : `Proposta para ${p.to?.name ?? "—"}`}
+                ? `de ${p.from?.name ?? "—"}`
+                : `para ${p.to?.name ?? "—"}`}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Enviada {timeAgo(p.created_at)}
+              {p.parent_id && (
+                <>
+                  {" · "}
+                  <Link
+                    href={`/propostas/${p.parent_id}`}
+                    className="underline underline-offset-2"
+                  >
+                    ver proposta anterior
+                  </Link>
+                </>
+              )}
             </p>
           </div>
           <span className={`shrink-0 rounded-full px-3 py-1 text-xs ${st?.cls}`}>
@@ -138,11 +161,16 @@ export default async function PropostaPage({
 
         {/* Ações */}
         {p.status === "pending" && amRecipient && (
-          <form action={responderProposta} className="mt-6 flex gap-2">
+          <form action={responderProposta} className="mt-6 flex flex-wrap gap-2">
             <input type="hidden" name="proposal_id" value={p.id} />
             <SubmitButton name="decision" value="accepted" size="lg">
               Aceitar
             </SubmitButton>
+            <Button asChild size="lg" variant="outline">
+              <Link href={`/propostas/${p.id}/contraproposta`}>
+                Contraproposta
+              </Link>
+            </Button>
             <SubmitButton
               name="decision"
               value="rejected"
@@ -153,6 +181,21 @@ export default async function PropostaPage({
               Recusar
             </SubmitButton>
           </form>
+        )}
+
+        {p.status === "countered" && (
+          <div className="border-border bg-card mt-6 rounded-xl border p-4 text-sm">
+            <p>
+              {amRecipient
+                ? "Você respondeu com uma contraproposta."
+                : "A outra parte respondeu com uma contraproposta."}
+            </p>
+            {next && (
+              <Button asChild size="sm" className="mt-3">
+                <Link href={`/propostas/${next.id}`}>Ver contraproposta</Link>
+              </Button>
+            )}
+          </div>
         )}
 
         {p.status === "pending" && amSender && (

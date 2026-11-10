@@ -8,4 +8,5 @@ export const PROPOSAL_STATUS: Record<
   accepted: { label: "Aceita", cls: "bg-success-soft text-success" },
   rejected: { label: "Recusada", cls: "bg-muted text-muted-foreground" },
   withdrawn: { label: "Retirada", cls: "bg-muted text-muted-foreground" },
+  countered: { label: "Em negociação", cls: "bg-accent text-accent-foreground" },
 };

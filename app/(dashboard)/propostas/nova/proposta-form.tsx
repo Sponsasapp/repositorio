@@ -1,7 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { enviarProposta, type PropostaState } from "../actions";
+import {
+  contraProposta,
+  enviarProposta,
+  type PropostaState,
+} from "../actions";
 import { OFFERED_DELIVERABLES } from "@/lib/deliverables";
 import type { ProposalPaymentType } from "@/lib/types/database.types";
 import { Button } from "@/components/ui/button";
@@ -15,20 +19,38 @@ const TIPOS: { value: ProposalPaymentType; label: string; hint: string }[] = [
   { value: "mixed", label: "Dinheiro + permuta", hint: "Os dois" },
 ];
 
+export type PropostaInitial = {
+  payment_type: ProposalPaymentType;
+  value: number | null;
+  trade_description: string | null;
+  trade_value: number | null;
+  duration_months: number | null;
+  deliverables: string[] | null;
+};
+
 export function PropostaForm({
   para,
   paraNome,
   oportunidade,
+  counterOf,
+  initial,
 }: {
   para: string;
   paraNome: string;
   oportunidade?: string;
+  /** Id da proposta recebida: o form vira contraproposta. */
+  counterOf?: string;
+  /** Termos pré-preenchidos (os da proposta que está sendo contraproposta). */
+  initial?: PropostaInitial;
 }) {
   const [state, formAction, pending] = useActionState<PropostaState, FormData>(
-    enviarProposta,
+    counterOf ? contraProposta : enviarProposta,
     undefined,
   );
-  const [tipo, setTipo] = useState<ProposalPaymentType>("cash");
+  const [tipo, setTipo] = useState<ProposalPaymentType>(
+    initial?.payment_type ?? "cash",
+  );
+  const num = (n: number | null | undefined) => (n != null ? String(n) : "");
 
   const showCash = tipo === "cash" || tipo === "mixed";
   const showTrade = tipo === "trade" || tipo === "mixed";
@@ -39,9 +61,15 @@ export function PropostaForm({
       {oportunidade && (
         <input type="hidden" name="oportunidade" value={oportunidade} />
       )}
+      {counterOf && (
+        <input type="hidden" name="contraproposta_de" value={counterOf} />
+      )}
 
       <p className="text-muted-foreground text-sm">
-        Proposta para <span className="text-foreground font-medium">{paraNome}</span>.
+        {counterOf ? "Contraproposta para " : "Proposta para "}
+        <span className="text-foreground font-medium">{paraNome}</span>.
+        {counterOf &&
+          " Os termos atuais já vêm preenchidos — ajuste o que quiser mudar."}
       </p>
 
       <div className="flex flex-col gap-2">
@@ -75,6 +103,7 @@ export function PropostaForm({
             name="value"
             inputMode="numeric"
             placeholder="2000"
+            defaultValue={num(initial?.value)}
           />
         </div>
       )}
@@ -87,6 +116,7 @@ export function PropostaForm({
               id="trade_description"
               name="trade_description"
               placeholder="Ex: 1 jogo de pneus por etapa"
+              defaultValue={initial?.trade_description ?? ""}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -96,6 +126,7 @@ export function PropostaForm({
               name="trade_value"
               inputMode="numeric"
               placeholder="3200"
+              defaultValue={num(initial?.trade_value)}
             />
           </div>
         </div>
@@ -109,6 +140,7 @@ export function PropostaForm({
           inputMode="numeric"
           placeholder="6"
           className="max-w-32"
+          defaultValue={num(initial?.duration_months)}
         />
       </div>
 
@@ -124,6 +156,7 @@ export function PropostaForm({
                 type="checkbox"
                 name="deliverables"
                 value={d.value}
+                defaultChecked={initial?.deliverables?.includes(d.value)}
                 className="accent-primary"
               />
               {d.label}
@@ -152,7 +185,11 @@ export function PropostaForm({
       )}
 
       <Button type="submit" size="lg" disabled={pending} className="self-start">
-        {pending ? "Enviando…" : "Enviar proposta"}
+        {pending
+          ? "Enviando…"
+          : counterOf
+            ? "Enviar contraproposta"
+            : "Enviar proposta"}
       </Button>
     </form>
   );
