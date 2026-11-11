@@ -50,8 +50,9 @@ export async function PaymentPanel({
 
       {!iAmCompany && net != null && (
         <p className="text-muted-foreground mt-1 text-sm">
-          Você recebe {formatBRL(net)} por mês, direto na sua conta (taxa
-          Sponsas de {fee}%).
+          Você recebe {100 - fee}% de cada pagamento — até {formatBRL(net)}{" "}
+          por mês — direto na sua conta. O percentual vale sobre o valor já
+          descontada a tarifa do meio de pagamento (PIX, boleto ou cartão).
         </p>
       )}
 
